@@ -14,14 +14,21 @@ import os
 
 from pathlib import Path
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ['SECRET_KEY']
+DATABASE_NAME = os.environ['DATABASE_NAME']
+DATABASE_USER = os.environ['DATABASE_USER']
+DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
+EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+
+VERSION = 'v0-alpha'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-from .secret import SECRET_KEY
 
 
 # Retrieve production stage environment variable
@@ -48,11 +55,13 @@ else:
     raise InvalidEnvironmentVariable(
         'The value of environment variable STAGE is not valid.')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 # Application definition
 
 INSTALLED_APPS = [
+    'api',
+    'api.authentication',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -60,6 +69,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_smtp_ssl',
 ]
 
 MIDDLEWARE = [
@@ -97,8 +110,12 @@ WSGI_APPLICATION = 'iconopedia.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': DATABASE_NAME,
+        'USER': DATABASE_USER,
+        'PASSWORD': DATABASE_PASSWORD,
+        'HOST': '',
+        'PORT': '',
     }
 }
 
@@ -141,3 +158,23 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Django REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES':
+    ('rest_framework_simplejwt.authentication.JWTAuthentication', ),
+}
+
+# Custom user model
+AUTH_USER_MODEL = 'authentication.User'
+
+# Email
+DEFAULT_FROM_EMAIL = SERVER_EMAIL = EMAIL_HOST_USER
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST = 'smtp.zoho.com'
+EMAIL_PORT = 465
+EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
+
+# Site ID
+SITE_ID = 1

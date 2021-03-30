@@ -1,0 +1,12 @@
+asgiref>=3.3.1
+Django>=3.1.7
+django-rest-framework>=0.1.0
+django-smtp-ssl>=1.0
+djangorestframework>=3.12.4
+djangorestframework-simplejwt>=4.6.0
+docutils>=0.16
+psycopg2>=2.8.6
+PyJWT>=2.0.1
+pytz>=2021.1
+sqlparse>=0.4.1
+yapf>=0.31.0
