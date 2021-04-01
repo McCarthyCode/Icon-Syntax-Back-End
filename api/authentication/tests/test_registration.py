@@ -15,15 +15,14 @@ VERSION = settings.VERSION
 
 class RegistrationTests(APITestCase):
     """
-    Tests to check registration endpoints. Checks against a hard-coded URL and a URN in eleven tests, which check for an OPTIONS request and POST requests that validate user input.
+    Tests to check registration endpoints. Checks against a hard-coded URL and a reverse-lookup name in fifteen tests, which check for an OPTIONS request and POST requests that validate user input.
     """
     client = APIClient()
 
     def check_urls(self, check):
         """
-        Helper function to run each test under both URL and URN formats.
+        Method to run each test under both URL and reverse-lookup name formats.
         """
-
         check(f'/api/{VERSION}/auth/register/')
         User.objects.all().delete()
         check(reverse('api:auth:register'))
@@ -32,48 +31,115 @@ class RegistrationTests(APITestCase):
         """
         Ensure we can successfully get data from an OPTIONS request.
         """
-        options = {
-            'name':
-            'Register',
-            'description':
-            "View for taking in a new user's credentials and sending a confirmation email to verify.",
-            'renders': ['application/json', 'text/html'],
-            'parses': [
-                'application/json', 'application/x-www-form-urlencoded',
-                'multipart/form-data'
-            ],
-            'actions': {
-                'POST': {
-                    'username': {
-                        'type': 'string',
-                        'required': True,
-                        'read_only': False,
-                        'label': 'Username',
-                        'max_length': 40
-                    },
-                    'email': {
-                        'type': 'email',
-                        'required': True,
-                        'read_only': False,
-                        'label': 'Email address',
-                        'max_length': 80
-                    },
-                    'password': {
-                        'type': 'string',
-                        'required': True,
-                        'read_only': False,
-                        'label': 'Password',
-                        'min_length': 8
-                    }
-                }
-            }
-        }
-
         def check(url):
             response = self.client.options(url, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data, options)
+
+            options = response.data
+
+            self.assertIn('name', options)
+            self.assertIn('description', options)
+            self.assertIn('renders', options)
+            self.assertIn('parses', options)
+            self.assertIn('actions', options)
+            self.assertIn('POST', options['actions'])
+
+            POST = options['actions']['POST']
+
+            self.assertIn('username', POST)
+            self.assertIn('email', POST)
+            self.assertIn('password', POST)
+
+            for key_a in POST:
+                keys = {'type', 'required', 'read_only', 'label', 'max_length'}
+                for key_b in keys:
+                    self.assertIn(key_b, POST[key_a])
+
+            self.assertIn('min_length', POST['password'])
+
+        self.check_urls(check)
+
+    def test_blank_input(self):
+        """
+        Ensure that a the proper error messages are sent on blank input.
+        """
+        body = {
+            'username': '',
+            'email': '',
+            'password': '',
+        }
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            for key in {'username', 'email', 'password'}:
+                self.assertEqual(
+                    response.data[key], ['This field may not be blank.'])
+
+        self.check_urls(check)
+
+    def test_missing_input(self):
+        """
+        Ensure that a the proper error messages are sent on missing input.
+        """
+        body = {}
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            for key in {'username', 'email', 'password'}:
+                self.assertEqual(
+                    response.data[key], ['This field is required.'])
+
+        self.check_urls(check)
+
+    def test_partial_input(self):
+        """
+        Ensure that a the proper error messages are sent on partial input.
+        """
+        bodies = [
+            {
+                'username': ''
+            },
+            {
+                'email': ''
+            },
+            {
+                'password': ''
+            },
+            {
+                'username': '',
+                'email': '',
+            },
+            {
+                'username': '',
+                'password': ''
+            },
+            {
+                'email': '',
+                'password': ''
+            },
+        ]
+
+        def check(url):
+            for body in bodies:
+                response = self.client.post(url, body, format='json')
+
+                self.assertEqual(
+                    response.status_code, status.HTTP_400_BAD_REQUEST)
+
+                keys = {'username', 'email', 'password'}
+                for key, in_body in zip(keys, (key in body for key in keys)):
+                    self.assertEqual(
+                        response.data[key], [
+                            'This field may not be blank.'
+                            if in_body else 'This field is required.'
+                        ])
 
         self.check_urls(check)
 
@@ -81,7 +147,6 @@ class RegistrationTests(APITestCase):
         """
         Ensure we can successfully register a user.
         """
-
         body = {
             'username': 'alice',
             'email': 'alice@example.com',
@@ -92,8 +157,20 @@ class RegistrationTests(APITestCase):
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+            self.assertIn('success', response.data)
+            self.assertIn('username', response.data)
+            self.assertIn('email', response.data)
+
+            self.assertEqual(
+                response.data['success'],
+                'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.'
+            )
             self.assertEqual(response.data['username'], 'alice')
             self.assertEqual(response.data['email'], 'alice@example.com')
+
+            self.assertNotIn('password', response.data)
+            self.assertNotIn('non_field_errors', response.data)
 
         self.check_urls(check)
 
@@ -101,7 +178,6 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account with an existing username.
         """
-
         body = {
             'username': 'bob',
             'email': 'bob@example.com',
@@ -112,10 +188,11 @@ class RegistrationTests(APITestCase):
             self.client.post(url, body, format='json')
             response = self.client.post(url, body, format='json')
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn(
-                'user with this username already exists.',
-                response.data['username'])
+            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+            self.assertEqual(
+                response.data['username'],
+                'A user with this username already exists.',
+            )
 
         self.check_urls(check)
 
@@ -123,7 +200,6 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account with an existing email address.
         """
-
         body = {
             'username': 'carol',
             'email': 'carol@example.com',
@@ -134,10 +210,37 @@ class RegistrationTests(APITestCase):
             self.client.post(url, body, format='json')
             response = self.client.post(url, body, format='json')
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn(
-                'user with this email address already exists.',
-                response.data['email'])
+            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+            self.assertEqual(
+                response.data['email'],
+                'A user with this email address already exists.',
+            )
+
+        self.check_urls(check)
+
+    def test_username_and_email_exist(self):
+        """
+        Ensure that a user cannot create an account with an existing username and email address.
+        """
+        body = {
+            'username': 'dave',
+            'email': 'dave@example.com',
+            'password': 'easypass123',
+        }
+
+        def check(url):
+            self.client.post(url, body, format='json')
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+            self.assertEqual(
+                response.data['username'],
+                'A user with this username already exists.',
+            )
+            self.assertEqual(
+                response.data['email'],
+                'A user with this email address already exists.',
+            )
 
         self.check_urls(check)
 
@@ -145,10 +248,9 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account if the supplied password is too common.
         """
-
         body = {
-            'username': 'dave',
-            'email': 'dave@example.com',
+            'username': 'erin',
+            'email': 'erin@example.com',
             'password': 'password',
         }
 
@@ -166,10 +268,9 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account if the supplied password is only numbers.
         """
-
         body = {
-            'username': 'erin',
-            'email': 'erin@example.com',
+            'username': 'frank',
+            'email': 'frank@example.com',
             'password': '123456789012345678901234567890',
         }
 
@@ -187,10 +288,9 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account if the supplied password is at least eight characters.
         """
-
         body = {
-            'username': 'frank',
-            'email': 'frank@example.com',
+            'username': 'gina',
+            'email': 'gina@example.com',
             'password': 'abc123',
         }
 
@@ -208,11 +308,10 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account if the supplied password is identical to the supplied username.
         """
-
         body = {
-            'username': 'gina123456',
-            'email': 'gina@example.com',
-            'password': 'gina123456',
+            'username': 'harold123456',
+            'email': 'hidethepain@example.com',
+            'password': 'harold123456',
         }
 
         def check(url):
@@ -230,11 +329,10 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account if the supplied password is identical to the supplied email address.
         """
-
         body = {
-            'username': 'harold',
-            'email': 'hidethepain@example.com',
-            'password': 'hidethepain@example.com',
+            'username': 'isabelle',
+            'email': 'isabelle@example.com',
+            'password': 'isabelle@example.com',
         }
 
         def check(url):
@@ -252,10 +350,9 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account if the supplied password is too similar to the supplied username.
         """
-
         body = {
             'username': 'supercoolusername',
-            'email': 'isabelle@example.com',
+            'email': 'joshua@example.com',
             'password': 'supercoolusername1',
         }
 
@@ -274,11 +371,10 @@ class RegistrationTests(APITestCase):
         """
         Ensure that a user cannot create an account if the supplied password is too similar to the supplied email address.
         """
-
         body = {
-            'username': 'joshua',
-            'email': 'joshua@example.com',
-            'password': 'joshua@example.com123',
+            'username': 'kelly',
+            'email': 'kelly@example.com',
+            'password': 'kelly@example.com123',
         }
 
         def check(url):

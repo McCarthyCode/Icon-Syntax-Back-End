@@ -3,6 +3,8 @@ from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin)
 from django.utils.translation import gettext_lazy as _
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 class UserManager(BaseUserManager):
     """
@@ -43,8 +45,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model including timestamps.
     """
-    username = models.CharField(_('username'), max_length=40, unique=True)
-    email = models.EmailField(_('email address'), max_length=80, unique=True)
+    username = models.CharField(
+        _('username'), max_length=64, unique=True, blank=False, default=None)
+    email = models.EmailField(
+        _('email address'),
+        max_length=254,
+        unique=True,
+        blank=False,
+        default=None)
     is_active = models.BooleanField(_('is active'), default=True)
     is_staff = models.BooleanField(_('is staff'), default=False)
     is_superuser = models.BooleanField(_('is superuser'), default=False)
@@ -57,14 +65,26 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+    def __str__(self):
+        """
+        Returns a string describing the model instance.
+        """
+        return ' '.join(
+            (
+                self.username,
+                self.email,
+                'superuser' if self.is_superuser else \
+                    'staff' if self.is_staff else 'user',
+                'verified' if self.is_verified else 'unverified',
+            ))
+
     def tokens(self):
         """
-        Returns refresh and access tokens. Yet to be implemented.
+        Returns the user's refresh and access tokens.
         """
-        raise NotImplementedError(
-            'This method will return refresh and access tokens, but this '
-            'feature has not been implemented yet.')
+        refresh = RefreshToken.for_user(self)
+
         return {
-            'refresh': '',
-            'access': '',
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
         }

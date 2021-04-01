@@ -2,21 +2,22 @@ import jwt
 
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
+from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-from rest_framework import status
+from rest_framework import status, exceptions
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .serializers import RegisterSerializer
+from .serializers import *
 from .utils import Util
 
-from api.authentication.models import User
-
+from .models import User
+from api.authentication.exceptions import ConflictError
 
 class RegisterView(GenericAPIView):
     """
@@ -29,7 +30,10 @@ class RegisterView(GenericAPIView):
         POST method that performs validation, creates a user instance, and sends a verication email.
         """
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ConflictError as e:
+            return Response(e.detail, status.HTTP_409_CONFLICT)
         serializer.save()
 
         user = User.objects.get(
@@ -47,10 +51,7 @@ class RegisterView(GenericAPIView):
 
         Util.send_email(
             'Verify your email address with Iconopedia',
-            'Thank you for registering an account with Iconopedia! Please '
-            'follow the link below to complete the registration process. If '
-            'the link does not work, try copying and pasting the URL into your '
-            'address bar.\n\n'
+            'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If the link does not work, try copying and pasting the URL into your address bar.\n\n'
             f'{scheme}://{domain}{path}{query_string}',
             [user.email],
         )
@@ -59,8 +60,7 @@ class RegisterView(GenericAPIView):
             {
                 **serializer.data,
                 'success':
-                'Step 1 of user registration successful. Check your email for '
-                'a confirmation link to complete the process.',
+                'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.',
             }, status.HTTP_201_CREATED)
 
 
@@ -68,6 +68,8 @@ class VerifyView(APIView):
     """
     View for accepting a generated token from a new user to complete the registration process.
     """
+    serializer_class = VerifySerializer
+
     def get(self, request):
         """
         GET method for taking a token from a query string, checking if it is valid, and marking its associated user's email as verified.
@@ -100,7 +102,32 @@ class VerifyView(APIView):
         return Response(
             {
                 'success':
-                'You have successfully verified your email address and '
-                'completed the registration process! You may now login.'
+                'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.',
+                **self.serializer_class(data=user)
             },
             status=status.HTTP_200_OK)
+
+
+class LoginView(GenericAPIView):
+    """
+    View for taking in an existing user's credentials and authorizing them if valid or denying access if invalid.
+    """
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except exceptions.ValidationError as e:
+            return Response(
+                {
+                    'error': 'The credentials used to login were invalid.',
+                    **e.detail,
+                },
+                status=status.HTTP_400_BAD_REQUEST)
+        except exceptions.AuthenticationFailed as e:
+            return Response(
+                {'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
