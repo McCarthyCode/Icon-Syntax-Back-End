@@ -27,7 +27,7 @@ class RegisterView(GenericAPIView):
 
     def post(self, request):
         """
-        POST method that performs validation, creates a user instance, and sends a verication email.
+        POST method that performs validation, creates a user instance, and sends a verification email.
         """
         serializer = self.serializer_class(data=request.data)
         try:
