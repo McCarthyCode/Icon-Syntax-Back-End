@@ -7,9 +7,9 @@ from rest_framework.test import APIClient, APITestCase
 from api.authentication.models import User
 
 
-class VerifyTests(APITestCase):
+class RegisterVerifyTests(APITestCase):
     """
-    Tests to check email verification endpoints. Checks against a hard-coded URL and a reverse-lookup name in X tests, which check for an OPTIONS request and POST requests that validate a query string.
+    Tests to check email verification endpoints. Checks against a hard-coded URL and a reverse-lookup name in five tests, which check for an OPTIONS request and POST requests that validate a query string.
     """
     client = APIClient()
 
@@ -17,7 +17,7 @@ class VerifyTests(APITestCase):
         """
         Method to run each test under both URL and reverse-lookup name formats.
         """
-        check(f'/api/{settings.VERSION}/auth/verify/')
+        check(f'/api/{settings.VERSION}/auth/register/verify')
         User.objects.all().delete()
         check(reverse('api:auth:verify'))
 
@@ -41,7 +41,7 @@ class VerifyTests(APITestCase):
 
     def test_blank_token(self):
         """
-        Ensure that the proper error messages are sent when no value for token is provided (i.e. '/api/{VERSION}/auth/verify/?token').
+        Ensure that the proper error messages are sent when no value for token is provided (i.e. '/api/{VERSION}/auth/register/verify?token').
         """
         def check(url):
             response = self.client.get(url, params={'token': ''})
@@ -54,7 +54,7 @@ class VerifyTests(APITestCase):
 
     def test_missing_token(self):
         """
-        Ensure that the proper error messages are sent when no value for token is provided (i.e. '/api/{VERSION}/auth/verify/').
+        Ensure that the proper error messages are sent when no value for token is provided (i.e. '/api/{VERSION}/auth/register/verify').
         """
         def check(url):
             response = self.client.get(url)

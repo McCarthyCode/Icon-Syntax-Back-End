@@ -34,7 +34,7 @@ class LoginTests(APITestCase):
         """
         Method to run test under both URL and URL and reverse-lookup name formats.
         """
-        check(f'/api/{settings.VERSION}/auth/login/')
+        check(f'/api/{settings.VERSION}/auth/login')
         check(reverse('api:auth:login'))
 
     def test_options(self):

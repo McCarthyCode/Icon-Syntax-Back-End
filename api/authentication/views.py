@@ -52,7 +52,7 @@ class RegisterView(GenericAPIView):
 
         Util.send_email(
             'Verify your email address with Iconopedia',
-            'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If the link does not work, try copying and pasting the URL into your address bar.\n\n'
+            'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.\n\n'
             f'{scheme}://{domain}{path}{query_string}',
             [user.email],
         )
@@ -65,7 +65,7 @@ class RegisterView(GenericAPIView):
             }, status.HTTP_201_CREATED)
 
 
-class VerifyView(APIView):
+class RegisterVerifyView(APIView):
     """
     View for accepting a generated token from a new user to complete the registration process.
     """

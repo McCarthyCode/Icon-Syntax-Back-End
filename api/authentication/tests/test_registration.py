@@ -19,7 +19,7 @@ class RegistrationTests(APITestCase):
         """
         Method to run each test under both URL and reverse-lookup name formats.
         """
-        check(f'/api/{settings.VERSION}/auth/register/')
+        check(f'/api/{settings.VERSION}/auth/register')
         User.objects.all().delete()
         check(reverse('api:auth:register'))
 
