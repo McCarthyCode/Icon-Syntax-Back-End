@@ -19,6 +19,7 @@ from .utils import Util
 from .models import User
 from api.authentication.exceptions import ConflictError
 
+
 class RegisterView(GenericAPIView):
     """
     View for taking in a new user's credentials and sending a confirmation email to verify.
@@ -92,18 +93,24 @@ class VerifyView(APIView):
             user = User.objects.get(id=payload['user_id'])
         except User.DoesNotExist:
             return Response(
-                {'error': 'The specified user does not exist.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                {
+                    'error':
+                    'The user associated with this token no longer exists.'
+                },
+                status=status.HTTP_404_NOT_FOUND)
 
         if not user.is_verified:
             user.is_verified = True
             user.save()
 
+        serializer = self.serializer_class(data={'username': user.username})
+        serializer.is_valid(raise_exception=True)
+
         return Response(
             {
                 'success':
                 'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.',
-                **self.serializer_class(data=user)
+                **serializer.data,
             },
             status=status.HTTP_200_OK)
 

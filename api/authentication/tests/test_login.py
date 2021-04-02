@@ -8,8 +8,6 @@ from rest_framework.test import APIClient, APITestCase
 
 from api.authentication.models import User
 
-VERSION = settings.VERSION
-
 
 class LoginTests(APITestCase):
     """

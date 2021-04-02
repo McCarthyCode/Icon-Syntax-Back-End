@@ -1,7 +1,5 @@
 import json
 
-from collections import OrderedDict
-
 from django.conf import settings
 from django.urls import reverse
 
@@ -9,8 +7,6 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from api.authentication.models import User
-
-VERSION = settings.VERSION
 
 
 class RegistrationTests(APITestCase):
@@ -23,7 +19,7 @@ class RegistrationTests(APITestCase):
         """
         Method to run each test under both URL and reverse-lookup name formats.
         """
-        check(f'/api/{VERSION}/auth/register/')
+        check(f'/api/{settings.VERSION}/auth/register/')
         User.objects.all().delete()
         check(reverse('api:auth:register'))
 
@@ -62,7 +58,7 @@ class RegistrationTests(APITestCase):
 
     def test_blank_input(self):
         """
-        Ensure that a the proper error messages are sent on blank input.
+        Ensure that the proper error messages are sent on blank input.
         """
         body = {
             'username': '',
@@ -83,7 +79,7 @@ class RegistrationTests(APITestCase):
 
     def test_missing_input(self):
         """
-        Ensure that a the proper error messages are sent on missing input.
+        Ensure that the proper error messages are sent on missing input.
         """
         body = {}
 
@@ -100,7 +96,7 @@ class RegistrationTests(APITestCase):
 
     def test_partial_input(self):
         """
-        Ensure that a the proper error messages are sent on partial input.
+        Ensure that the proper error messages are sent on partial input.
         """
         bodies = [
             {
@@ -158,6 +154,9 @@ class RegistrationTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+            self.assertNotIn('password', response.data)
+            self.assertNotIn('non_field_errors', response.data)
+
             self.assertIn('success', response.data)
             self.assertIn('username', response.data)
             self.assertIn('email', response.data)
@@ -168,9 +167,6 @@ class RegistrationTests(APITestCase):
             )
             self.assertEqual(response.data['username'], 'alice')
             self.assertEqual(response.data['email'], 'alice@example.com')
-
-            self.assertNotIn('password', response.data)
-            self.assertNotIn('non_field_errors', response.data)
 
         self.check_urls(check)
 

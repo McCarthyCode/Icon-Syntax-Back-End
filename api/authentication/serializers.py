@@ -72,8 +72,8 @@ class VerifySerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email', 'tokens']
 
-    username = serializers.CharField(max_length=64, read_only=True)
-    email = serializers.CharField(max_length=254, read_only=True)
+    username = serializers.CharField(max_length=64)
+    email = serializers.SerializerMethodField(read_only=True)
     tokens = serializers.SerializerMethodField(read_only=True)
 
     def get_tokens(self, obj):
@@ -81,6 +81,12 @@ class VerifySerializer(serializers.ModelSerializer):
         Return output of object's tokens method for use in the tokens serializer field.
         """
         return User.objects.get(username=obj['username']).tokens()
+
+    def get_email(self, obj):
+        """
+        Return user's email based on provided username.
+        """
+        return User.objects.get(username=obj['username']).email
 
 class LoginSerializer(serializers.ModelSerializer):
     """
