@@ -155,7 +155,7 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
             self.assertNotIn('password', response.data)
-            self.assertNotIn('non_field_errors', response.data)
+            self.assertNotIn('errors', response.data)
 
             self.assertIn('success', response.data)
             self.assertIn('username', response.data)
@@ -255,7 +255,7 @@ class RegistrationTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(
-                response.data['non_field_errors'],
+                response.data['errors'],
                 ['This password is too common.'])
 
         self.check_urls(check)
@@ -276,7 +276,7 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertIn(
                 'This password is entirely numeric.',
-                response.data['non_field_errors'])
+                response.data['errors'])
 
         self.check_urls(check)
 
@@ -317,7 +317,7 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertIn(
                 'The password is too similar to the username.',
-                response.data['non_field_errors'])
+                response.data['errors'])
 
         self.check_urls(check)
 
@@ -338,7 +338,7 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(
                 ['The password is too similar to the email address.'],
-                data['non_field_errors'])
+                data['errors'])
 
         self.check_urls(check)
 
@@ -359,7 +359,7 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertIn(
                 'The password is too similar to the username.',
-                data['non_field_errors'])
+                data['errors'])
 
         self.check_urls(check)
 
@@ -380,6 +380,6 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(
                 ['The password is too similar to the email address.'],
-                data['non_field_errors'])
+                data['errors'])
 
         self.check_urls(check)

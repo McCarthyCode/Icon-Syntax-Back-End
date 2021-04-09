@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
 import os
 
 from pathlib import Path
@@ -70,9 +69,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django_smtp_ssl',
     'rest_framework',
     'rest_framework.authtoken',
-    'django_smtp_ssl',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -161,8 +161,10 @@ STATIC_URL = '/static/'
 
 # Django REST Framework
 REST_FRAMEWORK = {
+    'NON_FIELD_ERRORS_KEY':
+    'errors',
     'DEFAULT_AUTHENTICATION_CLASSES':
-    ('rest_framework_simplejwt.authentication.JWTAuthentication', ),
+    ['rest_framework_simplejwt.authentication.JWTAuthentication'],
 }
 
 # Custom user model
@@ -178,3 +180,6 @@ EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 
 # Site ID
 SITE_ID = 1
+
+# Regular expression defining access and refresh tokens
+TOKEN_REGEX = r'^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'

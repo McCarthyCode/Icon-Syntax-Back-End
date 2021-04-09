@@ -41,27 +41,41 @@ class RegisterVerifyTests(APITestCase):
 
     def test_blank_token(self):
         """
-        Ensure that the proper error messages are sent when no value for token is provided (i.e. '/api/{VERSION}/auth/register/verify?token').
+        Ensure that the proper error messages are sent when no value for 'access' is provided (i.e. '/api/{version}/auth/register/verify?access').
         """
         def check(url):
-            response = self.client.get(url, params={'token': ''})
+            response = self.client.get(url, {'access': ''})
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
             self.assertEqual(
-                response.data['error'], 'The activation link was invalid.')
+                response.data['errors'], ['The activation link was invalid.'])
 
         self.check_urls(check)
 
     def test_missing_token(self):
         """
-        Ensure that the proper error messages are sent when no value for token is provided (i.e. '/api/{VERSION}/auth/register/verify').
+        Ensure that the proper error messages are sent when no value for 'access' is provided (i.e. '/api/{version}/auth/register/verify').
         """
         def check(url):
             response = self.client.get(url)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(
-                response.data['error'], 'The activation link was invalid.')
+                response.data['errors'], ['The activation link was invalid.'])
+
+        self.check_urls(check)
+
+    def test_invalid_token(self):
+        """
+        Ensure that the proper error messages are sent when an incorrect for 'token' is provided (i.e. '/api/{version}/auth/register/verify?access=abc').
+        """
+        def check(url):
+            response = self.client.get(url, {'access': 'abc123'})
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(
+                response.data['errors'], ['The activation link was invalid.'])
 
         self.check_urls(check)
 
@@ -72,14 +86,14 @@ class RegisterVerifyTests(APITestCase):
         def check(url):
             user = User.objects.create_user(
                 'alice', 'alice@example.com', 'easypass123')
-            token = user.tokens()['access']
+            access = user.tokens()['access']
 
-            response = self.client.get(url, {'token': token})
+            response = self.client.get(url, {'access': access})
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
             self.assertNotIn('password', response.data)
-            self.assertNotIn('non_field_errors', response.data)
+            self.assertNotIn('errors', response.data)
 
             self.assertIn('success', response.data)
             self.assertIn('username', response.data)
@@ -94,9 +108,9 @@ class RegisterVerifyTests(APITestCase):
 
             for key in {'access', 'refresh'}:
                 self.assertIn(key, tokens)
-                self.assertRegexpMatches(
-                    tokens[key],
-                    r'^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
-                )
+                self.assertRegexpMatches(tokens[key], settings.TOKEN_REGEX)
+
+            self.assertEqual(
+                User.objects.get(username='alice').is_verified, True)
 
         self.check_urls(check)

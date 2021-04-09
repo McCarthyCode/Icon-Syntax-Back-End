@@ -66,8 +66,8 @@ class LoginTests(APITestCase):
                 for key_b in {'type', 'required', 'read_only', 'label'}:
                     self.assertIn(key_b, POST[key_a])
 
-            for key_a in {'username', 'email', 'password'}:
-                self.assertIn('max_length', POST[key_a])
+            for key in {'username', 'email', 'password'}:
+                self.assertIn('max_length', POST[key])
 
             self.assertIn('min_length', POST['password'])
 
@@ -151,9 +151,7 @@ class LoginTests(APITestCase):
 
             tokens = response.data['tokens']
             for key in tokens:
-                self.assertRegexpMatches(
-                    tokens[key],
-                    r'^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$')
+                self.assertRegexpMatches(tokens[key], settings.TOKEN_REGEX)
 
         self.check_urls(check)
 
@@ -166,7 +164,7 @@ class LoginTests(APITestCase):
 
             self.assertEqual(
                 response.status_code, status.HTTP_401_UNAUTHORIZED)
-            self.assertEqual(response.data['error'], message)
+            self.assertEqual(response.data['errors'], [message])
 
         self.check_urls(check)
 
