@@ -1,7 +1,5 @@
-import json
-
 from django.conf import settings
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
