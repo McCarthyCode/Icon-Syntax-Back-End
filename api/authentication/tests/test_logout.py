@@ -49,3 +49,46 @@ class LogoutTests(APITestCase):
                 response_logout.status_code, status.HTTP_205_RESET_CONTENT)
 
         self.check_urls(check)
+
+    def test_missing_header(self):
+        """
+        Ensure that a user cannot logout with a missing header.
+        """
+        def check(url):
+            response = self.client.post(url)
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.check_urls(check)
+
+    def test_malformed_header(self):
+        """
+        Ensure that a user cannot logout with a malformed header.
+        """
+        body = {'username': 'alice', 'password': 'easypass123'}
+
+        def check(url):
+            response_login = self.client.post(reverse('api:auth:login'), body)
+
+            access = self.user.tokens()["access"]
+            self.client.credentials(HTTP_AUTHORIZATION=f'Token {access}')
+            response_logout = self.client.post(url)
+
+            self.assertEqual(
+                response_logout.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.check_urls(check)
+
+        self.check_urls(check)
+
+    def test_invalid_token(self):
+        """
+        Ensure that a user cannot logout with an invalid token.
+        """
+        def check(url):
+            self.client.credentials(HTTP_AUTHORIZATION='Bearer abc123')
+            response = self.client.post(url)
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.check_urls(check)
