@@ -73,9 +73,9 @@ class LoginTests(APITestCase):
 
         self.check_urls(check)
 
-    def test_blank_input(self):
+    def test_blank_input_with_username(self):
         """
-        Ensure that a the proper error messages are sent on blank input.
+        Ensure that a the proper error messages are sent on blank input. This test uses a blank username field.
         """
         body = {
             'username': '',
@@ -87,9 +87,26 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            for key in {'username', 'password'}:
-                self.assertEqual(
-                    response.data[key], ['This field may not be blank.'])
+            response.data['password'], ['This field may not be blank.']
+
+        self.check_urls(check)
+
+    def test_blank_input_with_email(self):
+        """
+        Ensure that a the proper error messages are sent on blank input. This test uses a blank email address field.
+        """
+        body = {
+            'email': '',
+            'password': '',
+        }
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn(
+                'This field may not be blank.', response.data['password'])
 
         self.check_urls(check)
 
@@ -104,9 +121,8 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            for key in {'username', 'password'}:
-                self.assertEqual(
-                    response.data[key], ['This field is required.'])
+            self.assertIn(
+                'This field is required.', response.data['password'])
 
         self.check_urls(check)
 
@@ -114,7 +130,17 @@ class LoginTests(APITestCase):
         """
         Ensure that a the proper error messages are sent on partial input.
         """
-        bodies = [{'username': ''}, {'password': ''}]
+        bodies = [
+            {
+                'username': 'alice',
+            },
+            {
+                'email': 'alice@example.com',
+            },
+            {
+                'password': 'easypass123'
+            },
+        ]
 
         def check(url):
             for body in bodies:
@@ -123,17 +149,57 @@ class LoginTests(APITestCase):
                 self.assertEqual(
                     response.status_code, status.HTTP_400_BAD_REQUEST)
 
-                keys = {'username', 'password'}
-                for key, in_body in zip(keys, (key in body for key in keys)):
-                    self.assertEqual(
-                        response.data[key], [
-                            'This field may not be blank.'
-                            if in_body else 'This field is required.'
-                        ])
+                if 'password' in body:
+                    self.assertIn(
+                        'A username or email is required.',
+                        response.data['errors'],
+                    )
+                else:
+                    self.assertIn(
+                        'The credentials used to login were invalid.',
+                        response.data['errors'],
+                    )
+                    self.assertIn(
+                        'This field is required.', response.data['password'])
 
         self.check_urls(check)
 
-    def test_success(self):
+    def test_partial_blank_input(self):
+        """
+        Ensure that a the proper error messages are sent on partial, but blank, input.
+        """
+        bodies = [
+            {
+                'username': ''
+            },
+            {
+                'email': ''
+            },
+            {
+                'password': ''
+            },
+        ]
+
+        def check(url):
+            for body, key in zip(bodies, ['username', 'email', 'password']):
+                response = self.client.post(url, body, format='json')
+
+                self.assertEqual(
+                    response.status_code, status.HTTP_400_BAD_REQUEST)
+
+                self.assertIn(
+                    'The credentials used to login were invalid.',
+                    response.data['errors'],
+                )
+
+                self.assertIn(
+                    'This field may not be blank.',
+                    response.data[key],
+                )
+
+        self.check_urls(check)
+
+    def test_success_username(self):
         """
         Ensure that we can login successfully with a username and password.
         """
@@ -149,6 +215,34 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+            self.assertEqual(response.data['username'], 'alice')
+            self.assertEqual(response.data['email'], 'alice@example.com')
+
+            tokens = response.data['tokens']
+            for key in tokens:
+                self.assertRegexpMatches(tokens[key], settings.TOKEN_REGEX)
+
+        self.check_urls(check)
+
+    def test_success_email(self):
+        """
+        Ensure that we can login successfully with a username and password.
+        """
+        self.spoof_verification()
+
+        body = {
+            'email': 'alice@example.com',
+            'password': 'easypass123',
+        }
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+            self.assertEqual(response.data['username'], 'alice')
+            self.assertEqual(response.data['email'], 'alice@example.com')
+
             tokens = response.data['tokens']
             for key in tokens:
                 self.assertRegexpMatches(tokens[key], settings.TOKEN_REGEX)
@@ -162,9 +256,8 @@ class LoginTests(APITestCase):
         def check(url):
             response = self.client.post(url, body, format='json')
 
-            self.assertEqual(
-                response.status_code, status.HTTP_401_UNAUTHORIZED)
-            self.assertEqual(response.data['errors'], [message])
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+            self.assertIn(message, response.data['errors'])
 
         self.check_urls(check)
 

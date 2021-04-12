@@ -17,26 +17,39 @@ class LoginSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email', 'password', 'tokens']
 
-    username = serializers.CharField(max_length=64)
-    email = serializers.CharField(max_length=254, read_only=True)
+    username = serializers.CharField(max_length=64, required=False)
+    email = serializers.EmailField(max_length=254, required=False)
     password = serializers.CharField(
         min_length=8, max_length=64, write_only=True)
-    tokens = serializers.SerializerMethodField(read_only=True)
-
-    def get_tokens(self, obj):
-        """
-        Return output of object's tokens method for use in the tokens serializer field.
-        """
-        return User.objects.get(username=obj['username']).tokens()
 
     def validate(self, data):
         """
         Authenticate the user and return serialized data on success. On failure, raise an AuthenticationFailed exception with an appropriate error message.
         """
-        username = data.get('username', '')
-        password = data.get('password', '')
+        username = data.get('username', None)
+        email = data.get('email', None)
+        password = data.get('password', None)
 
-        authenticated_user = authenticate(username=username, password=password)
+        if not (username or email):
+            raise exceptions.ValidationError(
+                'A username or email is required.')
+
+        if username:
+            authenticated_user = authenticate(
+                username=username, password=password)
+        elif email:
+            try:
+                username = User.objects.get(email=email).username
+            except User.DoesNotExist:
+                raise exceptions.AuthenticationFailed(
+                    'The credentials used to login were invalid.')
+
+            authenticated_user = authenticate(
+                username=username, password=password)
+        else:
+            raise exceptions.AuthenticationFailed(
+                'The credentials used to login were invalid.')
+
         if not authenticated_user:
             try:
                 unauthenticated_user = User.objects.get(username=username)

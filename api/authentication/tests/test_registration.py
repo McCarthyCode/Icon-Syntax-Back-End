@@ -72,8 +72,8 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             for key in {'username', 'email', 'password'}:
-                self.assertEqual(
-                    response.data[key], ['This field may not be blank.'])
+                self.assertIn(
+                    'This field may not be blank.', response.data[key])
 
         self.check_urls(check)
 
@@ -89,8 +89,7 @@ class RegistrationTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             for key in {'username', 'email', 'password'}:
-                self.assertEqual(
-                    response.data[key], ['This field is required.'])
+                self.assertIn('This field is required.', response.data[key])
 
         self.check_urls(check)
 
@@ -131,11 +130,9 @@ class RegistrationTests(APITestCase):
 
                 keys = {'username', 'email', 'password'}
                 for key, in_body in zip(keys, (key in body for key in keys)):
-                    self.assertEqual(
-                        response.data[key], [
-                            'This field may not be blank.'
-                            if in_body else 'This field is required.'
-                        ])
+                    self.assertIn(
+                        'This field may not be blank.' if in_body else
+                        'This field is required.', response.data[key])
 
         self.check_urls(check)
 
@@ -185,10 +182,9 @@ class RegistrationTests(APITestCase):
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-            self.assertEqual(
-                response.data['username'],
+            self.assertIn(
                 'A user with this username already exists.',
-            )
+                response.data['username'])
 
         self.check_urls(check)
 
@@ -207,10 +203,9 @@ class RegistrationTests(APITestCase):
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-            self.assertEqual(
-                response.data['email'],
+            self.assertIn(
                 'A user with this email address already exists.',
-            )
+                response.data['email'])
 
         self.check_urls(check)
 
@@ -229,14 +224,12 @@ class RegistrationTests(APITestCase):
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-            self.assertEqual(
-                response.data['username'],
+            self.assertIn(
                 'A user with this username already exists.',
-            )
-            self.assertEqual(
-                response.data['email'],
+                response.data['username'])
+            self.assertIn(
                 'A user with this email address already exists.',
-            )
+                response.data['email'])
 
         self.check_urls(check)
 
@@ -254,9 +247,8 @@ class RegistrationTests(APITestCase):
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(
-                response.data['errors'],
-                ['This password is too common.'])
+            self.assertIn(
+                'This password is too common.', response.data['errors'])
 
         self.check_urls(check)
 
@@ -275,8 +267,7 @@ class RegistrationTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertIn(
-                'This password is entirely numeric.',
-                response.data['errors'])
+                'This password is entirely numeric.', response.data['errors'])
 
         self.check_urls(check)
 
@@ -336,8 +327,8 @@ class RegistrationTests(APITestCase):
 
             data = json.loads(json.dumps(response.data))
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(
-                ['The password is too similar to the email address.'],
+            self.assertIn(
+                'The password is too similar to the email address.',
                 data['errors'])
 
         self.check_urls(check)
@@ -358,8 +349,7 @@ class RegistrationTests(APITestCase):
             data = json.loads(json.dumps(response.data))
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertIn(
-                'The password is too similar to the username.',
-                data['errors'])
+                'The password is too similar to the username.', data['errors'])
 
         self.check_urls(check)
 
@@ -378,8 +368,8 @@ class RegistrationTests(APITestCase):
 
             data = json.loads(json.dumps(response.data))
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(
-                ['The password is too similar to the email address.'],
+            self.assertIn(
+                'The password is too similar to the email address.',
                 data['errors'])
 
         self.check_urls(check)

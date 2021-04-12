@@ -47,9 +47,10 @@ class LogoutView(GenericAPIView):
         """
         POST method for taking a token from a request body, checking if it is valid, and logging out the user if valid, or returning an error response if invalid.
         """
-        auth = request.META.get('HTTP_AUTHORIZATION', None).split(' ')
+        auth = request.META.get('HTTP_AUTHORIZATION', '').split(' ')
 
         try:
+            assert len(auth) == 2
             assert auth[0] == 'Bearer'
         except AssertionError:
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)

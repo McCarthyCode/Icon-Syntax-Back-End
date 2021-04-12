@@ -48,8 +48,8 @@ class RegisterVerifyTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertEqual(
-                response.data['errors'], ['The activation link was invalid.'])
+            self.assertIn(
+                'The activation link was invalid.', response.data['errors'])
 
         self.check_urls(check)
 
@@ -61,8 +61,8 @@ class RegisterVerifyTests(APITestCase):
             response = self.client.get(url)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(
-                response.data['errors'], ['The activation link was invalid.'])
+            self.assertIn(
+                'The activation link was invalid.', response.data['errors'])
 
         self.check_urls(check)
 
@@ -74,8 +74,8 @@ class RegisterVerifyTests(APITestCase):
             response = self.client.get(url, {'access': 'abc123'})
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(
-                response.data['errors'], ['The activation link was invalid.'])
+            self.assertIn(
+                'The activation link was invalid.', response.data['errors'])
 
         self.check_urls(check)
 

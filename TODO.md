@@ -13,8 +13,11 @@
 
 ## Medium Priorities
 
-- Change inheritance of serializers
+*None at this time.*
 
 ## Low Priorities
 
-- Add gettext methods to success and error messages.
+- Refactor success and error messages
+  - Define `default_error_messages` dictionary for use with `self.fail()` method
+  - Add `gettext as _` methods to messages for later use in translation
+  - Replace uses of `ValidationError` with `self.fail()` method

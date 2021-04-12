@@ -44,10 +44,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         if username_exists or email_exists:
             username_dict = {
-                'username': 'A user with this username already exists.'
+                'username': ['A user with this username already exists.']
             } if username_exists else {}
             email_dict = {
-                'email': 'A user with this email address already exists.'
+                'email': ['A user with this email address already exists.']
             } if email_exists else {}
 
             raise ConflictError(dict(username_dict, **email_dict))
