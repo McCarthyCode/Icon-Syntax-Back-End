@@ -9,6 +9,7 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 
+from ..exceptions import GoneError
 from ..models import User
 
 
@@ -64,11 +65,14 @@ class AccessTokenAbstractSerializer(serializers.Serializer):
             assert auth[0] == 'Bearer'
             assert re.match(settings.TOKEN_REGEX, auth[1])
         except AssertionError:
-            self.error_messages['invalid']
+            raise ValidationError(self.error_messages['invalid'], 'invalid')
 
         return auth[1]
 
     def create(self, obj):
+        """
+        Method required by ModelSerializer. Since we don't need to actually create any model instances here, we simply return obj.
+        """
         return obj
 
 

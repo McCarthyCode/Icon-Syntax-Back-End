@@ -86,7 +86,7 @@ class RegisterVerifyTests(APITestCase):
         Ensure that the proper error messages are sent when an incorrect for 'token' is provided (i.e. '/api/{version}/auth/register/verify?access=abc').
         """
         def check(url):
-            response = self.client.get(url, {'access': 'Bearer abc123'})
+            response = self.client.get(url, {'access': 'abc123'})
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -111,7 +111,7 @@ class RegisterVerifyTests(APITestCase):
                 'alice', 'alice@example.com', 'easypass123')
             access = user.tokens()['access']
 
-            response = self.client.get(url, {'access': f'Bearer {access}'})
+            response = self.client.get(url, {'access': access})
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 

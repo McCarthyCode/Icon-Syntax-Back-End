@@ -62,10 +62,11 @@
 
 ## Medium Priorities
 
-- Change format of Response objects from HTML to JSON
+- Assert that all Response objects are of content-type 'application/json'
 
 ## Low Priorities
 
-- Work out any translation bugs
 - Move password errors to password field in registration endpoint
 - Change serializer imports to only include abstract.py
+- Change TOKEN_REGEX to a regular expression object
+- Remove unused imports
