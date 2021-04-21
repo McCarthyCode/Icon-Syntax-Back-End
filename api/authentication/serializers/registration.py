@@ -27,7 +27,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField(max_length=64)
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(
-        min_length=8, max_length=64, write_only=True)
+        min_length=8,
+        max_length=64,
+        write_only=True,
+        style={'input_type': 'password'})
 
     default_error_messages = {
         'invalid':
