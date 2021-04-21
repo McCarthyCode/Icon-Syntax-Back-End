@@ -4,8 +4,10 @@ from django.conf import settings
 from django.urls import reverse
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient, APITestCase
 
+from api.authentication import NON_FIELD_ERRORS_KEY
 from api.authentication.models import User
 
 
@@ -87,7 +89,15 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            response.data['password'], ['This field may not be blank.']
+            self.assertIn('password', response.data)
+            password = response.data['password']
+
+            self.assertIsInstance(password, list)
+            self.assertEqual(len(password), 1)
+
+            self.assertIsInstance(password[0], ErrorDetail)
+            self.assertEqual('This field may not be blank.', password[0])
+            self.assertEqual('blank', password[0].code)
 
         self.check_urls(check)
 
@@ -105,8 +115,15 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn(
-                'This field may not be blank.', response.data['password'])
+            self.assertIn('password', response.data)
+            password = response.data['password']
+
+            self.assertIsInstance(password, list)
+            self.assertEqual(len(password), 1)
+
+            self.assertIsInstance(password[0], ErrorDetail)
+            self.assertEqual('This field may not be blank.', password[0])
+            self.assertEqual('blank', password[0].code)
 
         self.check_urls(check)
 
@@ -121,8 +138,15 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn(
-                'This field is required.', response.data['password'])
+            self.assertIn('password', response.data)
+            password = response.data['password']
+
+            self.assertIsInstance(password, list)
+            self.assertEqual(len(password), 1)
+
+            self.assertIsInstance(password[0], ErrorDetail)
+            self.assertEqual('This field is required.', password[0])
+            self.assertEqual('required', password[0].code)
 
         self.check_urls(check)
 
@@ -150,17 +174,26 @@ class LoginTests(APITestCase):
                     response.status_code, status.HTTP_400_BAD_REQUEST)
 
                 if 'password' in body:
-                    self.assertIn(
-                        'A username or email is required.',
-                        response.data['errors'],
-                    )
+                    self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+                    errors = response.data[NON_FIELD_ERRORS_KEY]
+
+                    self.assertIsInstance(errors, list)
+                    self.assertEqual(len(errors), 1)
+
+                    self.assertIsInstance(errors[0], ErrorDetail)
+                    self.assertEqual(
+                        'A username or email is required.', errors[0])
+                    self.assertEqual('id_required', errors[0].code)
                 else:
-                    self.assertIn(
-                        'The credentials used to login were invalid.',
-                        response.data['errors'],
-                    )
-                    self.assertIn(
-                        'This field is required.', response.data['password'])
+                    self.assertIn('password', response.data)
+                    password = response.data['password']
+
+                    self.assertIsInstance(password, list)
+                    self.assertEqual(len(password), 1)
+
+                    self.assertIsInstance(password[0], ErrorDetail)
+                    self.assertEqual('This field is required.', password[0])
+                    self.assertEqual('required', password[0].code)
 
         self.check_urls(check)
 
@@ -168,34 +201,22 @@ class LoginTests(APITestCase):
         """
         Ensure that a the proper error messages are sent on partial, but blank, input.
         """
-        bodies = [
-            {
-                'username': ''
-            },
-            {
-                'email': ''
-            },
-            {
-                'password': ''
-            },
-        ]
-
         def check(url):
-            for body, key in zip(bodies, ['username', 'email', 'password']):
-                response = self.client.post(url, body, format='json')
+            for key in {'username', 'email', 'password'}:
+                response = self.client.post(url, {key: ''}, format='json')
 
                 self.assertEqual(
                     response.status_code, status.HTTP_400_BAD_REQUEST)
 
-                self.assertIn(
-                    'The credentials used to login were invalid.',
-                    response.data['errors'],
-                )
+                self.assertIn(key, response.data)
+                field_errors = response.data[key]
 
-                self.assertIn(
-                    'This field may not be blank.',
-                    response.data[key],
-                )
+                self.assertIsInstance(field_errors, list)
+                self.assertEqual(len(field_errors), 1)
+
+                self.assertIsInstance(field_errors[0], ErrorDetail)
+                self.assertEqual(
+                    'This field may not be blank.', field_errors[0])
 
         self.check_urls(check)
 
@@ -215,12 +236,23 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+            self.assertIn('username', response.data)
+            username = response.data['username']
+            self.assertIsInstance(username, str)
             self.assertEqual(response.data['username'], 'alice')
-            self.assertEqual(response.data['email'], 'alice@example.com')
 
+            self.assertIn('email', response.data)
+            email = response.data['email']
+            self.assertIsInstance(email, str)
+            self.assertEqual(email, 'alice@example.com')
+
+            self.assertIn('tokens', response.data)
             tokens = response.data['tokens']
-            for key in tokens:
-                self.assertRegexpMatches(tokens[key], settings.TOKEN_REGEX)
+            self.assertIsInstance(tokens, dict)
+
+            for key, value in tokens.items():
+                self.assertIsInstance(value, str)
+                self.assertRegexpMatches(value, settings.TOKEN_REGEX)
 
         self.check_urls(check)
 
@@ -240,24 +272,23 @@ class LoginTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+            self.assertIn('username', response.data)
+            username = response.data['username']
+            self.assertIsInstance(username, str)
             self.assertEqual(response.data['username'], 'alice')
-            self.assertEqual(response.data['email'], 'alice@example.com')
 
+            self.assertIn('email', response.data)
+            email = response.data['email']
+            self.assertIsInstance(email, str)
+            self.assertEqual(email, 'alice@example.com')
+
+            self.assertIn('tokens', response.data)
             tokens = response.data['tokens']
-            for key in tokens:
-                self.assertRegexpMatches(tokens[key], settings.TOKEN_REGEX)
+            self.assertIsInstance(tokens, dict)
 
-        self.check_urls(check)
-
-    def check_invalid_login(self, body, message):
-        """
-        Method to assist with tests that contain invalid credentials or user data.
-        """
-        def check(url):
-            response = self.client.post(url, body, format='json')
-
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-            self.assertIn(message, response.data['errors'])
+            for key, value in tokens.items():
+                self.assertIsInstance(value, str)
+                self.assertRegexpMatches(value, settings.TOKEN_REGEX)
 
         self.check_urls(check)
 
@@ -265,33 +296,81 @@ class LoginTests(APITestCase):
         """
         Ensure that we are denied access with an invalid username.
         """
-        self.check_invalid_login(
-            {
-                'username': 'bob',
-                'password': 'easypass123',
-            }, 'The credentials used to login were invalid.')
+        body = {
+            'username': 'bob',
+            'password': 'easypass123',
+        }
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+
+            self.assertIsInstance(errors, list)
+            self.assertEqual(len(errors), 1)
+
+            self.assertIsInstance(errors[0], str)
+            self.assertEqual(
+                'The credentials used to login were invalid.', errors[0])
+            self.assertEqual('invalid', errors[0].code)
+
+        self.check_urls(check)
 
     def test_invalid_password(self):
         """
         Ensure that we are denied access with an invalid password.
         """
-        self.check_invalid_login(
-            {
-                'username': 'alice',
-                'password': 'whatwasmypasswordagain???',
-            }, 'The credentials used to login were invalid.')
+        body = {
+            'username': 'alice',
+            'password': 'whatwasmypasswordagain???',
+        }
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+
+            self.assertIsInstance(errors, list)
+            self.assertEqual(len(errors), 1)
+
+            self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual(
+                'The credentials used to login were invalid.', errors[0])
+            self.assertEqual('invalid', errors[0].code)
+
+        self.check_urls(check)
 
     def test_unverified_email(self):
         """
         Ensure that we are denied access when a verification link has not been followed.
         """
-        self.check_invalid_login(
-            {
-                'username': 'alice',
-                'password': 'easypass123',
-            },
-            'Your account has not been verified. Please check your email for a confirmation link.'
-        )
+        body = {
+            'username': 'alice',
+            'password': 'easypass123',
+        },
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+
+            self.assertIsInstance(errors, list)
+            self.assertEqual(len(errors), 1)
+
+            self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your account has not been verified. Please check your email for a confirmation link.',
+                errors[0])
+            self.assertEqual('unverified', errors[0].code)
 
     def test_inactive_user(self):
         """
@@ -301,10 +380,53 @@ class LoginTests(APITestCase):
         self.user.is_active = False
         self.user.save()
 
-        self.check_invalid_login(
-            {
-                'username': 'alice',
-                'password': 'easypass123',
-            },
-            'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.'
-        )
+        body = {
+            'username': 'alice',
+            'password': 'easypass123',
+        },
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+
+            self.assertIsInstance(errors, list)
+            self.assertEqual(len(errors), 1)
+
+            self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
+                errors[0])
+            self.assertEqual('inactive', errors[0].code)
+
+    def test_user_not_found(self):
+        """
+        Ensure that if a valid token is generated, but the user gets destroyed in the process, the appropriate error message is displayed.
+        """
+        self.spoof_verification()
+
+        body = {
+            'username': 'alice',
+            'password': 'easypass123',
+        },
+
+        def check(url):
+            self.user.delete()
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+
+            self.assertIsInstance(errors, list)
+            self.assertEqual(len(errors), 1)
+
+            self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
+                errors[0])
+            self.assertEqual('not_found', errors[0].code)

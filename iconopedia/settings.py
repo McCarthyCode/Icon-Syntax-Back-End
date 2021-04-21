@@ -183,3 +183,8 @@ SITE_ID = 1
 
 # Regular expression defining access and refresh tokens
 TOKEN_REGEX = r'^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+
+# Define default auto field to account for BigAutoField support added in 3.2
+# Here we use the old standard, but we may need to change this to scale up in
+# the future.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

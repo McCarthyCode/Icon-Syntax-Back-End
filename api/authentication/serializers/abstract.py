@@ -2,9 +2,12 @@ import re
 import jwt
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
-from rest_framework import serializers
+from jwt.exceptions import DecodeError, ExpiredSignatureError
+
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
 
 from ..models import User
 
@@ -17,21 +20,36 @@ class AccessTokenAbstractSerializer(serializers.Serializer):
     user = None
 
     default_error_messages = {
-        'bad_token': 'Access token is expired or invalid.'
+        'invalid': _('The token provided is invalid.'),
+        'expired': _('The token provided has expired.'),
+        'user_gone': _('The user associated with this token no longer exists.'),
     }
 
     def _get_user(self, obj):
         """
-        Retrieve the user instance defined by the given access token. On failure, one of four possible exceptions will be raised: jwt.exceptions.DecodeError, jwt.exceptions.ExpiredSignatureError, rest_framework.exceptions.ValidationError, or api.authentication.models.User.DoesNotExist
+        Retrieve the user instance defined by the given access token. On failure, ValidationError or GoneError is raised.
         """
         if not self.user:
-            payload = jwt.decode(
-                obj['access'],
-                settings.SECRET_KEY,
-                algorithms=['HS256'],
-            )
+            try:
+                payload = jwt.decode(
+                    obj['access'],
+                    settings.SECRET_KEY,
+                    algorithms=['HS256'],
+                )
+            except DecodeError:
+                raise ValidationError(
+                    {'access': self.error_messages['invalid']}, 'invalid')
+            except ExpiredSignatureError:
+                raise GoneError(
+                    {'access': self.error_messages['expired']}, 'expired')
 
-            self.user = User.objects.get(id=payload['user_id'])
+            try:
+                self.user = User.objects.get(id=payload['user_id'])
+            except User.NotFound:
+                raise ValidationError(
+                    self.error_messages['user_gone'],
+                    'user_gone',
+                    status_code=status.HTTP_410_GONE)
 
         return self.user
 
@@ -39,12 +57,16 @@ class AccessTokenAbstractSerializer(serializers.Serializer):
         """
         Validate the access token, checking against TOKEN_REGEX, and logout its associated user on success. On failure, raise a ValidationError exception with an appropriate error message.
         """
-        try:
-            assert re.match(settings.TOKEN_REGEX, value)
-        except AssertionError:
-            self.fail('bad_token')
+        auth = value.split(' ')
 
-        return value
+        try:
+            assert len(auth) == 2
+            assert auth[0] == 'Bearer'
+            assert re.match(settings.TOKEN_REGEX, auth[1])
+        except AssertionError:
+            self.error_messages['invalid']
+
+        return auth[1]
 
     def create(self, obj):
         return obj

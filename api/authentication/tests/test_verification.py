@@ -2,8 +2,10 @@ from django.conf import settings
 from django.urls import reverse
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient, APITestCase
 
+from api.authentication import NON_FIELD_ERRORS_KEY
 from api.authentication.models import User
 
 
@@ -48,8 +50,14 @@ class RegisterVerifyTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn(
-                'The activation link was invalid.', response.data['errors'])
+            self.assertIn('access', response.data)
+            field_errors = response.data['access']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('This field may not be blank.', field_errors[0])
+            self.assertEqual('blank', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -61,8 +69,15 @@ class RegisterVerifyTests(APITestCase):
             response = self.client.get(url)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn(
-                'The activation link was invalid.', response.data['errors'])
+
+            self.assertIn('access', response.data)
+            field_errors = response.data['access']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('This field is required.', field_errors[0])
+            self.assertEqual('required', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -71,11 +86,19 @@ class RegisterVerifyTests(APITestCase):
         Ensure that the proper error messages are sent when an incorrect for 'token' is provided (i.e. '/api/{version}/auth/register/verify?access=abc').
         """
         def check(url):
-            response = self.client.get(url, {'access': 'abc123'})
+            response = self.client.get(url, {'access': 'Bearer abc123'})
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn(
-                'The activation link was invalid.', response.data['errors'])
+
+            self.assertIn('access', response.data)
+            field_errors = response.data['access']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'The activation link was invalid.', field_errors[0])
+            self.assertEqual('invalid', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -88,12 +111,12 @@ class RegisterVerifyTests(APITestCase):
                 'alice', 'alice@example.com', 'easypass123')
             access = user.tokens()['access']
 
-            response = self.client.get(url, {'access': access})
+            response = self.client.get(url, {'access': f'Bearer {access}'})
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
             self.assertNotIn('password', response.data)
-            self.assertNotIn('errors', response.data)
+            self.assertNotIn(NON_FIELD_ERRORS_KEY, response.data)
 
             self.assertIn('success', response.data)
             self.assertIn('username', response.data)

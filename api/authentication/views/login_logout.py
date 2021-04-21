@@ -1,11 +1,16 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api.authentication import NON_FIELD_ERRORS_KEY
+
 from ..serializers import *
 
-from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, ValidationError
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 
 class LoginView(GenericAPIView):
@@ -22,16 +27,9 @@ class LoginView(GenericAPIView):
 
         try:
             serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
+        except AuthenticationFailed as exc:
             return Response(
-                {
-                    'errors': ['The credentials used to login were invalid.'],
-                    **e.detail,
-                },
-                status=status.HTTP_400_BAD_REQUEST)
-        except AuthenticationFailed as e:
-            return Response(
-                {'errors': [str(e)]}, status=status.HTTP_401_UNAUTHORIZED)
+                {NON_FIELD_ERRORS_KEY: [exc.detail]}, status=exc.status_code)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -43,32 +41,34 @@ class LogoutView(GenericAPIView):
     serializer_class = LogoutSerializer
     permission_classes = [IsAuthenticated]
 
+    def initial(self, request, *args, **kwargs):
+        """
+        This method overrides the default APIView method so exceptions can be handled.
+        """
+        try:
+            super().initial(request, *args, **kwargs)
+        except (AuthenticationFailed, InvalidToken) as exc:
+            raise AuthenticationFailed(
+                {NON_FIELD_ERRORS_KEY: [_('The provided token is invalid.')]},
+                'invalid')
+        except NotAuthenticated as exc:
+            raise NotAuthenticated(
+                {
+                    NON_FIELD_ERRORS_KEY:
+                    [_('Authentication credentials were not provided.')]
+                }, 'not_authenticated')
+
+
     def post(self, request):
         """
         POST method for taking a token from a request body, checking if it is valid, and logging out the user if valid, or returning an error response if invalid.
         """
-        auth = request.META.get('HTTP_AUTHORIZATION', '').split(' ')
-
-        try:
-            assert len(auth) == 2
-            assert auth[0] == 'Bearer'
-        except AssertionError:
-            return Response({}, status=status.HTTP_401_UNAUTHORIZED)
-
-        serializer = self.serializer_class(data={'access': auth[1]})
+        access = request.META.get('HTTP_AUTHORIZATION', '')
+        serializer = self.serializer_class(data={'access': access})
 
         try:
             serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            return Response(
-                {
-                    'errors': [
-                        'The token used to logout was invalid. You may have successfully logged out already.'
-                    ],
-                    **e.detail,
-                },
-                status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as exc:
+            return Response(exc.detail, exc.status_code)
 
-        body = serializer.save()
-
-        return Response(body, status=status.HTTP_205_RESET_CONTENT)
+        return Response(status=status.HTTP_205_RESET_CONTENT)

@@ -9,15 +9,63 @@
   - Change password
     - Reset with code and new password
 - Create dictionary app
-  - Define models
+  - Define class structure
+    - Abstract models
+      - TimestampedModel
+        - date_created
+        - date_updated
+    - Interfaces
+      - Word
+        - get_entries()
+        - is_homograph()
+        - get_word()
+    - Enumerations
+      - IconCategory
+        - adjective
+        - adverb
+        - connective
+        - noun
+        - preposition
+        - punctuation
+        - verbIrregular
+        - verbModal
+        - verbRegular
+        - verbTwoPart
+    - Models
+      - DictionaryEntry
+        - id
+        - icon
+        - mp3
+        - data
+        - get_data()
+        - set_data(str)
+      - SingleEntry
+      - Homograph
+        - dictionary_entries
+      - SearchTerm
+        - id
+        - get_words()
+      - SearchResult
+        - id
+        - term
+        - word
+      - MP3
+        - id
+        - data
+        - get_data_b64()
+      - Icon
+        - id
+        - data
+        - category
+        - get_data_b64()
+        - get_dictionary_entries()
 
 ## Medium Priorities
 
-*None at this time.*
+- Change format of Response objects from HTML to JSON
 
 ## Low Priorities
 
-- Refactor success and error messages
-  - Define `default_error_messages` dictionary for use with `self.fail()` method
-  - Add `gettext as _` methods to messages for later use in translation
-  - Replace uses of `ValidationError` with `self.fail()` method
+- Work out any translation bugs
+- Move password errors to password field in registration endpoint
+- Change serializer imports to only include abstract.py

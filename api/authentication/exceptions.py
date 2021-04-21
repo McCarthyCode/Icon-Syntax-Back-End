@@ -1,10 +1,16 @@
-from django.core.exceptions import ValidationError
-from typing import Any
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
 
-class ConflictError(Exception):
+
+class ConflictError(ValidationError):
     """
-    Exception to be used with the HTTP 409 CONFLICT status code.
-     Inherits from django.core.exceptions.ValidationError.
+    Exception to be used with the HTTP 409 CONFLICT status code. Inherits from rest_framework.exceptions.ValidationError.
     """
-    def __init__(self, detail: Any):
-        self.detail = detail
+    status_code = status.HTTP_409_CONFLICT
+
+
+class GoneError(ValidationError):
+    """
+    Exception to be used with the HTTP 410 GONE status code. Inherits from rest_framework.exceptions.ValidationError.
+    """
+    status_code = status.HTTP_410_GONE

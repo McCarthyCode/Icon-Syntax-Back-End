@@ -1,6 +1,14 @@
-from django.contrib.auth import password_validation as validators
+import re
+import jwt
 
-from rest_framework import serializers
+from django.conf import settings
+from django.contrib.auth import password_validation as validators
+from django.utils.translation import gettext_lazy as _
+
+from jwt.exceptions import DecodeError, ExpiredSignatureError
+
+from rest_framework import serializers, status
+from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from ..exceptions import ConflictError
 from ..models import User
@@ -20,6 +28,17 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(
         min_length=8, max_length=64, write_only=True)
+
+    default_error_messages = {
+        'invalid':
+        _('The activation link was invalid.'),
+        'expired':
+        _('The activation link has expired.'),
+        'username_exists':
+        _('A user with this username already exists. Please try again.'),
+        'email_exists':
+        _('A user with this email address already exists. Please try again.')
+    }
 
     def validate(self, data):
         """
@@ -44,13 +63,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         if username_exists or email_exists:
             username_dict = {
-                'username': ['A user with this username already exists.']
+                'username': [
+                    ErrorDetail(
+                        self.error_messages['username_exists'],
+                        'username_exists')
+                ]
             } if username_exists else {}
             email_dict = {
-                'email': ['A user with this email address already exists.']
+                'email': [
+                    ErrorDetail(
+                        self.error_messages['email_exists'], 'email_exists')
+                ]
             } if email_exists else {}
 
-            raise ConflictError(dict(username_dict, **email_dict))
+            raise ConflictError({**username_dict, **email_dict})
 
         return super().validate(data)
 
@@ -65,9 +91,11 @@ class RegisterVerifySerializer(AuthAbstractSerializer):
     """
     Serializes username, email, and tokens from an access token for logging in after verifying an email address.
     """
-    class Meta():
-        model = User
-        fields = ['access', 'username', 'email', 'tokens']
+    default_error_messages = {
+        'invalid': _('The activation link was invalid.'),
+        'expired': _('The activation link has expired.'),
+        'user_gone': _('The user associated with this token no longer exists.'),
+    }
 
     def validate(self, data):
         """
@@ -78,3 +106,9 @@ class RegisterVerifySerializer(AuthAbstractSerializer):
         user.save()
 
         return data
+
+    def create(self, obj):
+        """
+        Method required by ModelSerializer. Since we don't need to actually create any model instances here, we simply return obj.
+        """
+        return obj

@@ -1,20 +1,19 @@
 from django.conf import settings
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from ..exceptions import ConflictError
 from ..models import User
 from ..serializers import *
 from ..utils import Util
-
-from jwt.exceptions import DecodeError, ExpiredSignatureError
-from rest_framework.exceptions import ValidationError
-from api.authentication.exceptions import ConflictError
 
 
 class RegisterView(GenericAPIView):
@@ -30,8 +29,12 @@ class RegisterView(GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-        except ConflictError as e:
-            return Response(e.detail, status.HTTP_409_CONFLICT)
+        except ValidationError as exc:
+            for key, errors in exc.detail.items():
+                for error in errors:
+                    if error.code == f'{key}_exists':
+                        return Response(exc.detail, status.HTTP_409_CONFLICT)
+            return Response(exc.detail, exc.status_code)
         serializer.save()
 
         user = User.objects.get(
@@ -48,17 +51,20 @@ class RegisterView(GenericAPIView):
         query_string = f'?access={access}'
 
         Util.send_email(
-            'Verify your email address with Iconopedia',
-            'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.\n\n'
-            f'{scheme}://{domain}{path}{query_string}',
+            _('Verify your email address with Iconopedia'),
+            _(
+                'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
+            ) + f'\n\n{scheme}://{domain}{path}{query_string}',
             [user.email],
         )
 
         return Response(
             {
-                **serializer.data,
                 'success':
-                'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.',
+                _(
+                    'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.'
+                ),
+                **serializer.data
             }, status.HTTP_201_CREATED)
 
 
@@ -77,30 +83,15 @@ class RegisterVerifyView(APIView):
 
         try:
             serializer.is_valid(raise_exception=True)
-        except (DecodeError, ValidationError):
-            return Response(
-                {'errors': ['The activation link was invalid.']},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except User.DoesNotExist:
-            return Response(
-                {
-                    'errors':
-                    ['The user associated with this token no longer exists.']
-                },
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        except ExpiredSignatureError:
-            return Response(
-                {'errors': ['The activation link has expired.']},
-                status=status.HTTP_410_GONE,
-            )
+        except ValidationError as exc:
+            return Response(exc.detail, exc.status_code)
 
         return Response(
             {
                 'success':
-                'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.',
-                **serializer.data,
+                _(
+                    'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.'
+                ),
+                **serializer.data
             },
             status=status.HTTP_200_OK)
-
