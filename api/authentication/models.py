@@ -12,7 +12,7 @@ class UserManager(BaseUserManager):
     """
     def create_user(self, username, email, password):
         """
-        Creates and saves a User with the given username, email, and password.
+        Creates and saves a User with the given username, email, and raw password.
         """
         user = self.model(
             username=username,
@@ -26,7 +26,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, username, email, password):
         """
-        Creates and saves a superuser with the given username, email, and password.
+        Creates and saves a superuser with the given username, email, and raw password.
         """
         user = self.create_user(
             username,
@@ -78,13 +78,32 @@ class User(AbstractBaseUser, PermissionsMixin):
                 'verified' if self.is_verified else 'unverified',
             ))
 
-    def tokens(self):
+    @property
+    def access(self):
         """
-        Returns the user's refresh and access tokens.
+        Returns the user's access token.
+        """
+        return str(RefreshToken.for_user(self).access_token)
+
+    @property
+    def refresh(self):
+        """
+        Returns the user's refresh token.
+        """
+        return str(RefreshToken.for_user(self))
+
+    @property
+    def credentials(self):
+        """
+        Returns the user's username and email along with refresh and access tokens.
         """
         refresh = RefreshToken.for_user(self)
 
         return {
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
+            'username': self.username,
+            'email': self.email,
+            'tokens': {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            }
         }

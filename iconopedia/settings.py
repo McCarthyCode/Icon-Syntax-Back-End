@@ -139,6 +139,22 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME':
         'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsUppercaseValidator',
+    },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsLowercaseValidator',
+    },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsNumberValidator',
+    },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsPunctuationValidator',
+    },
 ]
 
 # Internationalization

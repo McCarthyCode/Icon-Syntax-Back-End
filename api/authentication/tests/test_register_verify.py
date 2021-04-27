@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
@@ -8,8 +9,10 @@ from rest_framework.test import APIClient, APITestCase
 from api.authentication import NON_FIELD_ERRORS_KEY
 from api.authentication.models import User
 
+from .mixins import TestCaseShortcutsMixin
 
-class RegisterVerifyTests(APITestCase):
+
+class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
     """
     Tests to check email verification endpoints. Checks against a hard-coded URL and a reverse-lookup name in five tests, which check for an OPTIONS request and POST requests that validate a query string.
     """
@@ -31,13 +34,7 @@ class RegisterVerifyTests(APITestCase):
             response = self.client.options(url, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-            options = response.data
-
-            self.assertIn('name', options)
-            self.assertIn('description', options)
-            self.assertIn('renders', options)
-            self.assertIn('parses', options)
+            self.assertDictTypes(response.data, self.options_types)
 
         self.check_urls(check)
 
@@ -56,8 +53,9 @@ class RegisterVerifyTests(APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('This field may not be blank.', field_errors[0])
-            self.assertEqual('blank', field_errors[0].code)
+            self.assertEqual(
+                'The activation link was invalid.', field_errors[0])
+            self.assertEqual('invalid', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -76,8 +74,9 @@ class RegisterVerifyTests(APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('This field is required.', field_errors[0])
-            self.assertEqual('required', field_errors[0].code)
+            self.assertEqual(
+                'The activation link was invalid.', field_errors[0])
+            self.assertEqual('invalid', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -109,31 +108,22 @@ class RegisterVerifyTests(APITestCase):
         def check(url):
             user = User.objects.create_user(
                 'alice', 'alice@example.com', 'easypass123')
-            access = user.tokens()['access']
 
-            response = self.client.get(url, {'access': access})
-
+            self.assertFalse(user.is_verified)
+            response = self.client.get(url, {'access': user.access})
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-            self.assertNotIn('password', response.data)
-            self.assertNotIn(NON_FIELD_ERRORS_KEY, response.data)
+            values = {
+                'success':
+                _(
+                    'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.'
+                ),
+                'credentials':
+                None,
+            }
+            self.check_values_in_dict(response.data, values)
+            self.check_credentials(response.data['credentials'])
 
-            self.assertIn('success', response.data)
-            self.assertIn('username', response.data)
-            self.assertIn('email', response.data)
-            self.assertIn('tokens', response.data)
-
-            self.assertEqual(
-                'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.',
-                response.data['success'])
-
-            tokens = response.data['tokens']
-
-            for key in {'access', 'refresh'}:
-                self.assertIn(key, tokens)
-                self.assertRegexpMatches(tokens[key], settings.TOKEN_REGEX)
-
-            self.assertEqual(
-                User.objects.get(username='alice').is_verified, True)
+            self.assertTrue(User.objects.get(username='alice').is_verified)
 
         self.check_urls(check)

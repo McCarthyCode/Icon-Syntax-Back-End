@@ -1,0 +1,391 @@
+import json
+
+from django.conf import settings
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+
+from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
+from rest_framework.test import APIClient, APITestCase
+
+from api.authentication import NON_FIELD_ERRORS_KEY
+from api.authentication.models import User
+
+from .mixins import TestCaseShortcutsMixin
+
+
+class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
+    """
+    Tests to check password reset endpoints. Checks against a hard-coded URL and a reverse-lookup name in nine tests, which check for an OPTIONS request and POST requests that validate user input.
+    """
+    client = APIClient()
+    user = None
+
+    def setUp(self):
+        """
+        Set-up method for constructing the test class. Creates a new user.
+        """
+        self.user = User.objects.create_user(
+            'alice', 'alice@example.com', 'Easypass123!')
+
+    def spoof_verification(self):
+        """
+        Method to set is_verified field to True, simulating the user receiving a verification email and clicking the link.
+        """
+        self.user.is_verified = True
+        self.user.save()
+
+    def check_urls(self, check):
+        """
+        Method to run test under both URL and URL and reverse-lookup name formats. This sets the password back to its original value in case the value has changed.
+        """
+        check(f'/api/{settings.VERSION}/auth/password/reset')
+
+        self.user.set_password('Easypass123!')
+        self.user.save()
+
+        check(reverse('api:auth:password-reset'))
+
+    def test_options(self):
+        """
+        Ensure we can successfully get data from an OPTIONS request.
+        """
+        def check(url):
+            response = self.client.options(url, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            types = {
+                'actions': {
+                    'POST': {
+                        'oldPassword': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'min_length': int,
+                            'max_length': int
+                        },
+                        'newPassword': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'min_length': int,
+                            'max_length': int
+                        },
+                        **self.credentials_types
+                    }
+                },
+                **self.options_types
+            }
+            self.assertDictTypes(response.data, types)
+
+        self.check_urls(check)
+
+    def test_blank_input(self):
+        """
+        Ensure that the proper error messages are sent on blank input.
+        """
+        body = {
+            'oldPassword': '',
+            'newPassword': '',
+        }
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            for key in body:
+                self.assertIn(key, response.data)
+                field_errors = response.data[key]
+
+                self.assertIsInstance(field_errors, list)
+                self.assertEqual(len(field_errors), 1)
+                self.assertIsInstance(field_errors[0], ErrorDetail)
+                self.assertEqual(
+                    'This field may not be blank.', field_errors[0])
+
+        self.check_urls(check)
+
+    def test_missing_input(self):
+        """
+        Ensure that the proper error messages are sent on missing input.
+        """
+        body = {}
+
+        def check(url):
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            for key in {'oldPassword', 'newPassword'}:
+                self.assertIn(key, response.data)
+                field_errors = response.data[key]
+
+                self.assertIsInstance(field_errors, list)
+                self.assertEqual(len(field_errors), 1)
+                self.assertIsInstance(field_errors[0], ErrorDetail)
+                self.assertEqual('This field is required.', field_errors[0])
+
+        self.check_urls(check)
+
+    def test_partial_input(self):
+        """
+        Ensure that the proper error messages are sent on partial input.
+        """
+        keys = {'oldPassword', 'newPassword'}
+        bodies = [{key: 'Easypass123!'} for key in keys]
+
+        def check(url):
+            for body in bodies:
+                access = self.user.access
+                self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+                response = self.client.post(url, body, format='json')
+
+                self.assertEqual(
+                    response.status_code, status.HTTP_400_BAD_REQUEST)
+
+                for key in keys.intersection(response.data):
+                    self.assertIn(key, response.data)
+                    field_errors = response.data[key]
+
+                    self.assertIsInstance(field_errors, list)
+                    self.assertEqual(len(field_errors), 1)
+                    self.assertIsInstance(field_errors[0], ErrorDetail)
+
+                    self.assertEqual('This field is required.', field_errors[0])
+
+        self.check_urls(check)
+
+    def test_success(self):
+        """
+        Ensure that the user can successfully reset a password, and that the proper credentials are outputted.
+        """
+        self.spoof_verification()
+
+        body = {
+            'oldPassword': 'Easypass123!',
+            'newPassword': 'Newerpass123!',
+        }
+
+        def check(url):
+            self.assertTrue(self.user.check_password(body['oldPassword']))
+
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+            values = {
+                'success': _('Your password has been reset successfully.'),
+                'credentials': None,
+            }
+            self.check_values_in_dict(response.data, values)
+            self.check_credentials(response.data['credentials'])
+
+            self.user = User.objects.get(pk=self.user.pk)
+            self.assertTrue(self.user.check_password(body['newPassword']))
+
+        self.check_urls(check)
+
+    def test_no_header(self):
+        """
+        Ensure that the user cannot successfully reset a password if there is no Authorization header.
+        """
+        self.spoof_verification()
+
+        body = {
+            'oldPassword': 'Easypass123!',
+            'newPassword': 'Newerpass123!',
+        }
+
+        def check(url):
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+
+            self.assertIsInstance(errors, list)
+            self.assertEqual(len(errors), 1)
+
+            self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual(
+                'The authorization token was missing or invalid.', errors[0])
+            self.assertEqual('invalid', errors[0].code)
+
+        self.check_urls(check)
+
+    def test_old_password_mismatch(self):
+        """
+        Ensure that the user cannot successfully reset a password if the old password supplied does not match the user's current password.
+        """
+        self.spoof_verification()
+
+        body = {
+            'oldPassword': 'wrongpass123',
+            'newPassword': 'Newerpass123!',
+        }
+
+        def check(url):
+            self.assertFalse(self.user.check_password(body['oldPassword']))
+
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+
+            self.assertIsInstance(errors, list)
+            self.assertEqual(len(errors), 1)
+
+            self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual(
+                'The old password was not correct. If you have forgotten your password, please use the "forgot password" link.',
+                errors[0])
+            self.assertEqual('mismatch', errors[0].code)
+
+        self.check_urls(check)
+
+    def test_new_password_missing_uppercase(self):
+        """
+        Ensure that the user cannot successfully reset a password if the new password supplied does not contain an uppercase letter.
+        """
+        self.spoof_verification()
+
+        body = {
+            'oldPassword': 'Easypass123!',
+            'newPassword': 'easypass123!',
+        }
+
+        def check(url):
+            self.assertTrue(self.user.check_password(body['oldPassword']))
+
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('newPassword', response.data)
+            field_errors = response.data['newPassword']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your password must contain at least 1 uppercase character.',
+                field_errors[0])
+            self.assertEqual('password_missing_upper', field_errors[0].code)
+
+        self.check_urls(check)
+
+    def test_new_password_missing_lowercase(self):
+        """
+        Ensure that the user cannot successfully reset a password if the new password supplied does not contain a lowercase letter.
+        """
+        self.spoof_verification()
+
+        body = {
+            'oldPassword': 'Easypass123!',
+            'newPassword': 'EASYPASS123!',
+        }
+
+        def check(url):
+            self.assertTrue(self.user.check_password(body['oldPassword']))
+
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('newPassword', response.data)
+            field_errors = response.data['newPassword']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your password must contain at least 1 lowercase character.',
+                field_errors[0])
+            self.assertEqual('password_missing_lower', field_errors[0].code)
+
+        self.check_urls(check)
+
+    def test_new_password_missing_number(self):
+        """
+        Ensure that the user cannot successfully reset a password if the new password supplied does not contain a number.
+        """
+        self.spoof_verification()
+
+        body = {
+            'oldPassword': 'Easypass123!',
+            'newPassword': 'Easypass!',
+        }
+
+        def check(url):
+            self.assertTrue(self.user.check_password(body['oldPassword']))
+
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('newPassword', response.data)
+            field_errors = response.data['newPassword']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your password must contain at least 1 number.',
+                field_errors[0])
+            self.assertEqual('password_missing_num', field_errors[0].code)
+
+        self.check_urls(check)
+
+    def test_new_password_missing_punctuation(self):
+        """
+        Ensure that the user cannot successfully reset a password if the new password supplied does not contain a punctuation character.
+        """
+        self.spoof_verification()
+
+        body = {
+            'oldPassword': 'Easypass123!',
+            'newPassword': 'Easypass123',
+        }
+
+        def check(url):
+            self.assertTrue(self.user.check_password(body['oldPassword']))
+
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('newPassword', response.data)
+            field_errors = response.data['newPassword']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                r'Your password must contain at least 1 of the following punctuation characters: !"#$%&'
+                "'"
+                r'()*+,-./:;<=>?@[\]^_`{|}~', field_errors[0])
+            self.assertEqual('password_missing_punc', field_errors[0].code)
+
+        self.check_urls(check)

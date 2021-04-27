@@ -6,8 +6,6 @@
   - Forgot password
     - Enter email and send reset link
     - Reset with code and new password
-  - Change password
-    - Reset with code and new password
 - Create dictionary app
   - Define class structure
     - Abstract models
@@ -59,14 +57,18 @@
         - category
         - get_data_b64()
         - get_dictionary_entries()
+- Set throttle limits
 
 ## Medium Priorities
 
 - Assert that all Response objects are of content-type 'application/json'
+- Change instances of Registration to Register for consistency
 
 ## Low Priorities
 
+- Change verbiage of views to make sense for OPTIONS outputs
 - Move password errors to password field in registration endpoint
 - Change serializer imports to only include abstract.py
 - Change TOKEN_REGEX to a regular expression object
 - Remove unused imports
+- Implement and test multiple errors on field and non-field bases

@@ -10,8 +10,10 @@ from rest_framework.test import APIClient, APITestCase
 from api.authentication import NON_FIELD_ERRORS_KEY
 from api.authentication.models import User
 
+from .mixins import TestCaseShortcutsMixin
 
-class LoginTests(APITestCase):
+
+class LoginTests(TestCaseShortcutsMixin, APITestCase):
     """
     Tests to check login endpoints. Checks against a hard-coded URL and a reverse-lookup name in nine tests, which check for an OPTIONS request and POST requests that validate user input.
     """
@@ -47,31 +49,37 @@ class LoginTests(APITestCase):
             response = self.client.options(url, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-            options = response.data
-
-            self.assertIn('name', options)
-            self.assertIn('description', options)
-            self.assertIn('renders', options)
-            self.assertIn('parses', options)
-            self.assertIn('actions', options)
-            self.assertIn('POST', options['actions'])
-
-            POST = options['actions']['POST']
-
-            self.assertIn('username', POST)
-            self.assertIn('email', POST)
-            self.assertIn('password', POST)
-            self.assertIn('tokens', POST)
-
-            for key_a in POST:
-                for key_b in {'type', 'required', 'read_only', 'label'}:
-                    self.assertIn(key_b, POST[key_a])
-
-            for key in {'username', 'email', 'password'}:
-                self.assertIn('max_length', POST[key])
-
-            self.assertIn('min_length', POST['password'])
+            types = {
+                'actions': {
+                    'POST': {
+                        'username': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'max_length': int
+                        },
+                        'email': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'max_length': int
+                        },
+                        'password': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'min_length': int,
+                            'max_length': int
+                        },
+                        **self.credentials_types
+                    }
+                },
+                **self.options_types
+            }
+            self.assertDictTypes(response.data, types)
 
         self.check_urls(check)
 
@@ -234,25 +242,16 @@ class LoginTests(APITestCase):
         def check(url):
             response = self.client.post(url, body, format='json')
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-            self.assertIn('username', response.data)
-            username = response.data['username']
-            self.assertIsInstance(username, str)
-            self.assertEqual(response.data['username'], 'alice')
+            values = {
+                'success': 'You have successfully logged in.',
+                'next': '/',
+                'credentials': None,
+            }
 
-            self.assertIn('email', response.data)
-            email = response.data['email']
-            self.assertIsInstance(email, str)
-            self.assertEqual(email, 'alice@example.com')
-
-            self.assertIn('tokens', response.data)
-            tokens = response.data['tokens']
-            self.assertIsInstance(tokens, dict)
-
-            for key, value in tokens.items():
-                self.assertIsInstance(value, str)
-                self.assertRegexpMatches(value, settings.TOKEN_REGEX)
+            self.check_values_in_dict(response.data, values)
+            self.check_credentials(response.data['credentials'])
 
         self.check_urls(check)
 
@@ -270,25 +269,16 @@ class LoginTests(APITestCase):
         def check(url):
             response = self.client.post(url, body, format='json')
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-            self.assertIn('username', response.data)
-            username = response.data['username']
-            self.assertIsInstance(username, str)
-            self.assertEqual(response.data['username'], 'alice')
+            values = {
+                'success': 'You have successfully logged in.',
+                'next': '/',
+                'credentials': None,
+            }
 
-            self.assertIn('email', response.data)
-            email = response.data['email']
-            self.assertIsInstance(email, str)
-            self.assertEqual(email, 'alice@example.com')
-
-            self.assertIn('tokens', response.data)
-            tokens = response.data['tokens']
-            self.assertIsInstance(tokens, dict)
-
-            for key, value in tokens.items():
-                self.assertIsInstance(value, str)
-                self.assertRegexpMatches(value, settings.TOKEN_REGEX)
+            self.check_values_in_dict(response.data, values)
+            self.check_credentials(response.data['credentials'])
 
         self.check_urls(check)
 

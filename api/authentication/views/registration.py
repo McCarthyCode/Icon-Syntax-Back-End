@@ -39,7 +39,6 @@ class RegisterView(GenericAPIView):
 
         user = User.objects.get(
             username=serializer.validated_data.get('username'))
-        access = RefreshToken.for_user(user).access_token
 
         if settings.STAGE == 'development':
             scheme = 'http'
@@ -48,7 +47,7 @@ class RegisterView(GenericAPIView):
             scheme = 'https'
             domain = get_current_site(request).domain
         path = reverse('api:auth:verify')
-        query_string = f'?access={access}'
+        query_string = f'?access={user.access}'
 
         Util.send_email(
             _('Verify your email address with Iconopedia'),
@@ -78,13 +77,15 @@ class RegisterVerifyView(APIView):
         """
         GET method for taking a token from a query string, checking if it is valid, and marking its associated user's email address as verified.
         """
-        access = request.GET.get('access', None)
-        serializer = self.serializer_class(data=request.GET)
+        serializer = self.serializer_class(
+            data={}, context={'request': request})
 
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError as exc:
             return Response(exc.detail, exc.status_code)
+
+        serializer.save()
 
         return Response(
             {
@@ -92,6 +93,6 @@ class RegisterVerifyView(APIView):
                 _(
                     'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.'
                 ),
-                **serializer.data
+                **serializer.validated_data
             },
             status=status.HTTP_200_OK)

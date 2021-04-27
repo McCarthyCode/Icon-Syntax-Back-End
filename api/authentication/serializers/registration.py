@@ -2,7 +2,7 @@ import re
 import jwt
 
 from django.conf import settings
-from django.contrib.auth import password_validation as validators
+from django.contrib.auth import password_validation as validation
 from django.utils.translation import gettext_lazy as _
 
 from jwt.exceptions import DecodeError, ExpiredSignatureError
@@ -10,10 +10,12 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from rest_framework import serializers, status
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
+from api.authentication import NON_FIELD_ERRORS_KEY
+
 from ..exceptions import ConflictError
 from ..models import User
 
-from .abstract import AuthAbstractSerializer
+from .credentials import CredentialsSerializer
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -25,7 +27,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password']
 
     username = serializers.CharField(max_length=64)
-    email = serializers.EmailField(max_length=254)
+    email = serializers.EmailField(label='Email Address', max_length=254)
     password = serializers.CharField(
         min_length=8,
         max_length=64,
@@ -57,7 +59,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             # POST
             user = User(**data)
 
-        validators.validate_password(password=data.get('password'), user=user)
+        try:
+            validation.validate_password(
+                password=data.get('password'), user=user)
+        except ValidationError as exc:
+            raise ValidationError({'password': exc.detail})
 
         # Check for existing username and password
         username_exists = User.objects.filter(
@@ -90,32 +96,66 @@ class RegisterSerializer(serializers.ModelSerializer):
         return User.objects.create_user(**validated_data)
 
 
-class RegisterVerifySerializer(AuthAbstractSerializer):
+class RegisterVerifySerializer(serializers.Serializer):
     """
     Serializes username, email, and tokens from an access token for logging in after verifying an email address.
     """
+    credentials = CredentialsSerializer(read_only=True)
+
     default_error_messages = {
         'invalid': _('The activation link was invalid.'),
         'expired': _('The activation link has expired.'),
         'user_gone': _('The user associated with this token no longer exists.'),
     }
 
-    def validate_access(self, value):
+    _user = None
+
+    def _get_user(self):
         """
-        Validate the access token, checking against TOKEN_REGEX, and logout its associated user on success. On failure, raise a ValidationError exception with an appropriate error message.
+        Retrieve the user instance defined by the given access token. On failure, ValidationError or GoneError is raised.
         """
-        try:
-            assert re.match(settings.TOKEN_REGEX, value)
-        except AssertionError:
-            raise ValidationError(self.error_messages['invalid'], 'invalid')
-        return value
+        if not self._user:
+            try:
+                payload = jwt.decode(
+                    self.context['request'].GET.get('access', None),
+                    settings.SECRET_KEY,
+                    algorithms=['HS256'],
+                )
+            except DecodeError:
+                raise ValidationError(
+                    {'access': self.error_messages['invalid']}, 'invalid')
+            except ExpiredSignatureError:
+                raise GoneError(
+                    {'access': self.error_messages['expired']}, 'expired')
+
+            try:
+                self._user = User.objects.get(id=payload['user_id'])
+            except User.NotFound:
+                raise ValidationError(
+                    self.error_messages['user_gone'],
+                    'user_gone',
+                    status_code=status.HTTP_410_GONE)
+
+            return self._user
+
+        return self._user
 
     def validate(self, data):
         """
-        Retrieve the user, mark their email address as verified, and return serialized data on success. On failure, the _get_user() method called by validate() will raise one of four possible exceptions, as outlined in the _get_user() docstring.
+        Retrieve the user, mark their email address as verified, and return serialized data.
         """
-        user = self._get_user(data)
-        user.is_verified = True
-        user.save()
+        user = self._get_user()
 
-        return data
+        if user.is_anonymous:
+            self.fail('invalid')
+
+        return {**data, 'credentials': user.credentials}
+
+    def save(self, **kwargs):
+        """
+        Retrieve the user, mark their email address as verified, and return the updated instance.
+        """
+        user = self._get_user()
+        user.is_verified = True
+
+        return user.save()

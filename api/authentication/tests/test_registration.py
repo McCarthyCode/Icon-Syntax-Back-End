@@ -2,16 +2,18 @@ import json
 
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient, APITestCase
-
 from api.authentication import NON_FIELD_ERRORS_KEY
 from api.authentication.models import User
 
+from .mixins import TestCaseShortcutsMixin
 
-class RegistrationTests(APITestCase):
+
+class RegistrationTests(TestCaseShortcutsMixin, APITestCase):
     """
     Tests to check registration endpoints. Checks against a hard-coded URL and a reverse-lookup name in fifteen tests, which check for an OPTIONS request and POST requests that validate user input.
     """
@@ -19,7 +21,7 @@ class RegistrationTests(APITestCase):
 
     def check_urls(self, check):
         """
-        Method to run each test under both URL and reverse-lookup name formats.
+        Helper method to run each test under both URL and reverse-lookup name formats.
         """
         check(f'/api/{settings.VERSION}/auth/register')
         User.objects.all().delete()
@@ -33,28 +35,36 @@ class RegistrationTests(APITestCase):
             response = self.client.options(url, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-            options = response.data
-
-            self.assertIn('name', options)
-            self.assertIn('description', options)
-            self.assertIn('renders', options)
-            self.assertIn('parses', options)
-            self.assertIn('actions', options)
-            self.assertIn('POST', options['actions'])
-
-            POST = options['actions']['POST']
-
-            self.assertIn('username', POST)
-            self.assertIn('email', POST)
-            self.assertIn('password', POST)
-
-            for key_a in POST:
-                keys = {'type', 'required', 'read_only', 'label', 'max_length'}
-                for key_b in keys:
-                    self.assertIn(key_b, POST[key_a])
-
-            self.assertIn('min_length', POST['password'])
+            types = {
+                'actions': {
+                    'POST': {
+                        'username': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'max_length': int
+                        },
+                        'email': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'max_length': int
+                        },
+                        'password': {
+                            'type': str,
+                            'required': bool,
+                            'read_only': bool,
+                            'label': str,
+                            'min_length': int,
+                            'max_length': int
+                        },
+                    }
+                },
+                **self.options_types
+            }
+            self.assertDictTypes(response.data, types)
 
         self.check_urls(check)
 
@@ -163,27 +173,24 @@ class RegistrationTests(APITestCase):
         body = {
             'username': 'alice',
             'email': 'alice@example.com',
-            'password': 'easypass123',
+            'password': 'Easypass123!',
         }
 
         def check(url):
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-            self.assertNotIn('password', response.data)
-            self.assertNotIn(NON_FIELD_ERRORS_KEY, response.data)
-
-            self.assertIn('success', response.data)
-            self.assertIn('username', response.data)
-            self.assertIn('email', response.data)
-
-            self.assertEqual(
-                response.data['success'],
-                'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.'
-            )
-            self.assertEqual(response.data['username'], 'alice')
-            self.assertEqual(response.data['email'], 'alice@example.com')
+            values = {
+                'success':
+                _(
+                    'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.'
+                ),
+                'username':
+                'alice',
+                'email':
+                'alice@example.com',
+            }
+            self.check_values_in_dict(response.data, values)
 
         self.check_urls(check)
 
@@ -192,9 +199,9 @@ class RegistrationTests(APITestCase):
         Ensure that a user cannot create an account with an existing username.
         """
         body = {
-            'username': 'bob',
-            'email': 'bob@example.com',
-            'password': 'easypass123',
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'Easypass123!',
         }
 
         def check(url):
@@ -220,9 +227,9 @@ class RegistrationTests(APITestCase):
         Ensure that a user cannot create an account with an existing email address.
         """
         body = {
-            'username': 'carol',
-            'email': 'carol@example.com',
-            'password': 'easypass123',
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'Easypass123!',
         }
 
         def check(url):
@@ -248,9 +255,9 @@ class RegistrationTests(APITestCase):
         Ensure that a user cannot create an account with an existing username and email address.
         """
         body = {
-            'username': 'dave',
-            'email': 'dave@example.com',
-            'password': 'easypass123',
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'Easypass123!',
         }
 
         def check(url):
@@ -277,9 +284,9 @@ class RegistrationTests(APITestCase):
         Ensure that a user cannot create an account if the supplied password is too common.
         """
         body = {
-            'username': 'erin',
-            'email': 'erin@example.com',
-            'password': 'password',
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'P@ssw0rd',
         }
 
         def check(url):
@@ -297,39 +304,14 @@ class RegistrationTests(APITestCase):
 
         self.check_urls(check)
 
-    def test_password_only_numbers(self):
-        """
-        Ensure that a user cannot create an account if the supplied password is only numbers.
-        """
-        body = {
-            'username': 'frank',
-            'email': 'frank@example.com',
-            'password': '123456789012345678901234567890',
-        }
-
-        def check(url):
-            response = self.client.post(url, body, format='json')
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual('This password is entirely numeric.', errors[0])
-
-        self.check_urls(check)
-
     def test_password_too_short(self):
         """
         Ensure that a user cannot create an account if the supplied password is at least eight characters.
         """
         body = {
-            'username': 'gina',
-            'email': 'gina@example.com',
-            'password': 'abc123',
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'Abc123!',
         }
 
         def check(url):
@@ -345,6 +327,110 @@ class RegistrationTests(APITestCase):
             self.assertIsInstance(field_errors[0], ErrorDetail)
             self.assertEqual(
                 'Ensure this field has at least 8 characters.', field_errors[0])
+
+        self.check_urls(check)
+
+    def test_password_missing_uppercase(self):
+        body = {
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'easypass123!',
+        }
+
+        def check(url):
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('password', response.data)
+            field_errors = response.data['password']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your password must contain at least 1 uppercase character.',
+                field_errors[0])
+            self.assertEqual('password_missing_upper', field_errors[0].code)
+
+        self.check_urls(check)
+
+    def test_password_missing_lowercase(self):
+        body = {
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'EASYPASS123!',
+        }
+
+        def check(url):
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('password', response.data)
+            field_errors = response.data['password']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your password must contain at least 1 lowercase character.',
+                field_errors[0])
+            self.assertEqual('password_missing_lower', field_errors[0].code)
+
+        self.check_urls(check)
+
+    def test_password_missing_number(self):
+        body = {
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'Easypass!',
+        }
+
+        def check(url):
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('password', response.data)
+            field_errors = response.data['password']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your password must contain at least 1 number.',
+                field_errors[0])
+            self.assertEqual('password_missing_num', field_errors[0].code)
+
+        self.check_urls(check)
+
+    def test_password_missing_punctuation(self):
+        body = {
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'Easypass123',
+        }
+
+        def check(url):
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('password', response.data)
+            field_errors = response.data['password']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual(
+                'Your password must contain at least 1 of the following punctuation characters: !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
+                field_errors[0])
+            self.assertEqual('password_missing_punc', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -371,9 +457,9 @@ class RegistrationTests(APITestCase):
         Ensure that a user cannot create an account if the supplied password is identical to the supplied username.
         """
         body = {
-            'username': 'harold123456',
+            'username': 'Harold!23456',
             'email': 'hidethepain@example.com',
-            'password': 'harold123456',
+            'password': 'Harold!23456',
         }
 
         def check(url):
@@ -387,8 +473,8 @@ class RegistrationTests(APITestCase):
         """
         body = {
             'username': 'isabelle',
-            'email': 'isabelle@example.com',
-            'password': 'isabelle@example.com',
+            'email': 'Isabelle1@example.com',
+            'password': 'Isabelle1@example.com',
         }
 
         def check(url):
@@ -403,7 +489,7 @@ class RegistrationTests(APITestCase):
         body = {
             'username': 'supercoolusername',
             'email': 'joshua@example.com',
-            'password': 'supercoolusername1',
+            'password': 'supercoolusername1!AWWYEAH',
         }
 
         def check(url):
@@ -417,8 +503,8 @@ class RegistrationTests(APITestCase):
         """
         body = {
             'username': 'kelly',
-            'email': 'kelly@example.com',
-            'password': 'kelly@example.com123',
+            'email': 'Kelly@example.com',
+            'password': 'Kelly@example.com123',
         }
 
         def check(url):
