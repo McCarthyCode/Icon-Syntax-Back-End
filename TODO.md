@@ -61,8 +61,7 @@
 
 ## Medium Priorities
 
-- Assert that all Response objects are of content-type 'application/json'
-- Change instances of Registration to Register for consistency
+_None at this time_
 
 ## Low Priorities
 
