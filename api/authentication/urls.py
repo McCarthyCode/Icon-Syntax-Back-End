@@ -11,4 +11,8 @@ urlpatterns = [
     re_path('^logout$', LogoutView.as_view(), name='logout'),
     re_path(
         '^password/reset$', PasswordResetView.as_view(), name='password-reset'),
+    re_path(
+        '^password/forgot$',
+        PasswordForgotView.as_view(),
+        name='password-forgot'),
 ]

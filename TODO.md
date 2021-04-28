@@ -4,8 +4,11 @@
 
 - Finish custom auth app
   - Forgot password
-    - Enter email and send reset link
     - Reset with code and new password
+  - Refresh token
+  - Set token timeouts and update email messages to say when links expire.
+  - Test and confirm RegisterVerify and PasswordForgotVerify cases where
+    activation link has already been clicked.
 - Create dictionary app
   - Define class structure
     - Abstract models
@@ -61,7 +64,7 @@
 
 ## Medium Priorities
 
-_None at this time_
+_None at this time._
 
 ## Low Priorities
 

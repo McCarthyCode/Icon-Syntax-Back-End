@@ -7,7 +7,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api.authentication.serializers import PasswordResetSerializer
+from ..serializers import PasswordResetSerializer
 
 
 class PasswordResetView(GenericAPIView):

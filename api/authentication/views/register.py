@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from ..exceptions import ConflictError
 from ..models import User
-from ..serializers import *
+from ..serializers.register import *
 from ..utils import Util
 
 
@@ -35,26 +35,14 @@ class RegisterView(GenericAPIView):
                     if error.code == f'{key}_exists':
                         return Response(exc.detail, status.HTTP_409_CONFLICT)
             return Response(exc.detail, exc.status_code)
-        serializer.save()
 
-        user = User.objects.get(
-            username=serializer.validated_data.get('username'))
-
-        if settings.STAGE == 'development':
-            scheme = 'http'
-            domain = 'localhost:8000'
-        else:
-            scheme = 'https'
-            domain = get_current_site(request).domain
-        path = reverse('api:auth:verify')
-        query_string = f'?access={user.access}'
-
-        Util.send_email(
+        Util.send_email_link(
             _('Verify your email address with Iconopedia'),
             _(
                 'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
-            ) + f'\n\n{scheme}://{domain}{path}{query_string}',
-            [user.email],
+            ),
+            serializer.save(),
+            reverse('api:auth:verify'),
         )
 
         return Response(
