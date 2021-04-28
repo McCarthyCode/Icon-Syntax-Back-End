@@ -25,7 +25,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         Set-up method for constructing the test class. Creates a new user.
         """
         self.user = User.objects.create_user(
-            'alice', 'alice@example.com', 'easypass123')
+            'alice', 'alice@example.com', 'Easypass123!')
 
     def spoof_verification(self):
         """
@@ -36,7 +36,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
     def check_urls(self, check):
         """
-        Method to run test under both URL and URL and reverse-lookup name formats.
+        Method to run test under both URL and reverse-lookup name formats.
         """
         check(f'/api/{settings.VERSION}/auth/login')
         check(reverse('api:auth:login'))
@@ -104,8 +104,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(password), 1)
 
             self.assertIsInstance(password[0], ErrorDetail)
-            self.assertEqual('This field may not be blank.', password[0])
             self.assertEqual('blank', password[0].code)
+            self.assertEqual('This field may not be blank.', password[0])
 
         self.check_urls(check)
 
@@ -130,8 +130,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(password), 1)
 
             self.assertIsInstance(password[0], ErrorDetail)
-            self.assertEqual('This field may not be blank.', password[0])
             self.assertEqual('blank', password[0].code)
+            self.assertEqual('This field may not be blank.', password[0])
 
         self.check_urls(check)
 
@@ -153,8 +153,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(password), 1)
 
             self.assertIsInstance(password[0], ErrorDetail)
-            self.assertEqual('This field is required.', password[0])
             self.assertEqual('required', password[0].code)
+            self.assertEqual('This field is required.', password[0])
 
         self.check_urls(check)
 
@@ -170,7 +170,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                 'email': 'alice@example.com',
             },
             {
-                'password': 'easypass123'
+                'password': 'Easypass123!'
             },
         ]
 
@@ -189,9 +189,9 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                     self.assertEqual(len(errors), 1)
 
                     self.assertIsInstance(errors[0], ErrorDetail)
+                    self.assertEqual('id_required', errors[0].code)
                     self.assertEqual(
                         'A username or email is required.', errors[0])
-                    self.assertEqual('id_required', errors[0].code)
                 else:
                     self.assertIn('password', response.data)
                     password = response.data['password']
@@ -200,8 +200,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                     self.assertEqual(len(password), 1)
 
                     self.assertIsInstance(password[0], ErrorDetail)
-                    self.assertEqual('This field is required.', password[0])
                     self.assertEqual('required', password[0].code)
+                    self.assertEqual('This field is required.', password[0])
 
         self.check_urls(check)
 
@@ -223,6 +223,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                 self.assertEqual(len(field_errors), 1)
 
                 self.assertIsInstance(field_errors[0], ErrorDetail)
+                self.assertEqual('blank', field_errors[0].code)
                 self.assertEqual(
                     'This field may not be blank.', field_errors[0])
 
@@ -236,7 +237,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
         body = {
             'username': 'alice',
-            'password': 'easypass123',
+            'password': 'Easypass123!',
         }
 
         def check(url):
@@ -250,8 +251,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                 'credentials': None,
             }
 
-            self.check_values_in_dict(response.data, values)
-            self.check_credentials(response.data['credentials'])
+            self.assertDictValues(response.data, values)
+            self.assertCredentialsValid(response.data['credentials'])
 
         self.check_urls(check)
 
@@ -263,7 +264,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
         body = {
             'email': 'alice@example.com',
-            'password': 'easypass123',
+            'password': 'Easypass123!',
         }
 
         def check(url):
@@ -277,8 +278,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                 'credentials': None,
             }
 
-            self.check_values_in_dict(response.data, values)
-            self.check_credentials(response.data['credentials'])
+            self.assertDictValues(response.data, values)
+            self.assertCredentialsValid(response.data['credentials'])
 
         self.check_urls(check)
 
@@ -288,7 +289,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         """
         body = {
             'username': 'bob',
-            'password': 'easypass123',
+            'password': 'Easypass123!',
         }
 
         def check(url):
@@ -303,9 +304,9 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(errors), 1)
 
             self.assertIsInstance(errors[0], str)
+            self.assertEqual('invalid', errors[0].code)
             self.assertEqual(
                 'The credentials used to login were invalid.', errors[0])
-            self.assertEqual('invalid', errors[0].code)
 
         self.check_urls(check)
 
@@ -330,9 +331,9 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(errors), 1)
 
             self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual('invalid', errors[0].code)
             self.assertEqual(
                 'The credentials used to login were invalid.', errors[0])
-            self.assertEqual('invalid', errors[0].code)
 
         self.check_urls(check)
 
@@ -342,8 +343,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         """
         body = {
             'username': 'alice',
-            'password': 'easypass123',
-        },
+            'password': 'Easypass123!',
+        }
 
         def check(url):
             response = self.client.post(url, body, format='json')
@@ -357,10 +358,10 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(errors), 1)
 
             self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual('unverified', errors[0].code)
             self.assertEqual(
                 'Your account has not been verified. Please check your email for a confirmation link.',
                 errors[0])
-            self.assertEqual('unverified', errors[0].code)
 
     def test_inactive_user(self):
         """
@@ -372,8 +373,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
         body = {
             'username': 'alice',
-            'password': 'easypass123',
-        },
+            'password': 'Easypass123!',
+        }
 
         def check(url):
             response = self.client.post(url, body, format='json')
@@ -387,10 +388,10 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(errors), 1)
 
             self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual('inactive', errors[0].code)
             self.assertEqual(
                 'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
                 errors[0])
-            self.assertEqual('inactive', errors[0].code)
 
     def test_user_not_found(self):
         """
@@ -400,8 +401,8 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
         body = {
             'username': 'alice',
-            'password': 'easypass123',
-        },
+            'password': 'Easypass123!',
+        }
 
         def check(url):
             self.user.delete()
@@ -416,7 +417,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(errors), 1)
 
             self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual('not_found', errors[0].code)
             self.assertEqual(
                 'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
                 errors[0])
-            self.assertEqual('not_found', errors[0].code)

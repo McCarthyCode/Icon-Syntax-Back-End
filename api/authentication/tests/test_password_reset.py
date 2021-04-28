@@ -182,8 +182,8 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                 'success': _('Your password has been reset successfully.'),
                 'credentials': None,
             }
-            self.check_values_in_dict(response.data, values)
-            self.check_credentials(response.data['credentials'])
+            self.assertDictValues(response.data, values)
+            self.assertCredentialsValid(response.data['credentials'])
 
             self.user = User.objects.get(pk=self.user.pk)
             self.assertTrue(self.user.check_password(body['newPassword']))

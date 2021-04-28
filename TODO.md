@@ -71,3 +71,4 @@ _None at this time_
 - Change TOKEN_REGEX to a regular expression object
 - Remove unused imports
 - Implement and test multiple errors on field and non-field bases
+- Import camelCase library

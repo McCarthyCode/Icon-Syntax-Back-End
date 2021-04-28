@@ -90,6 +90,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 self.assertIsInstance(field_errors, list)
                 self.assertEqual(len(field_errors), 1)
                 self.assertIsInstance(field_errors[0], ErrorDetail)
+                self.assertEqual('blank', field_errors[0].code)
                 self.assertEqual(
                     'This field may not be blank.', field_errors[0])
 
@@ -113,6 +114,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 self.assertIsInstance(field_errors, list)
                 self.assertEqual(len(field_errors), 1)
                 self.assertIsInstance(field_errors[0], ErrorDetail)
+                self.assertEqual('required', field_errors[0].code)
                 self.assertEqual('This field is required.', field_errors[0])
 
         self.check_urls(check)
@@ -161,6 +163,9 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                     self.assertEqual(len(field_errors), 1)
                     self.assertIsInstance(field_errors[0], ErrorDetail)
                     self.assertEqual(
+                        'blank' if in_body else 'required',
+                        field_errors[0].code)
+                    self.assertEqual(
                         'This field may not be blank.' if in_body else
                         'This field is required.', field_errors[0])
 
@@ -190,7 +195,34 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 'email':
                 'alice@example.com',
             }
-            self.check_values_in_dict(response.data, values)
+            self.assertDictValues(response.data, values)
+
+        self.check_urls(check)
+
+    def test_invalid_email(self):
+        """
+        Ensure that a user cannot create an account with an invalid email address.
+        """
+        body = {
+            'username': 'alice',
+            'email': 'alice',
+            'password': 'Easypass123!',
+        }
+
+        def check(url):
+            self.client.post(url, body, format='json')
+            response = self.client.post(url, body, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            self.assertIn('email', response.data)
+            field_errors = response.data['email']
+
+            self.assertIsInstance(field_errors, list)
+            self.assertEqual(len(field_errors), 1)
+            self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('invalid', field_errors[0].code)
+            self.assertEqual('Enter a valid email address.', field_errors[0])
 
         self.check_urls(check)
 
@@ -216,6 +248,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('username_exists', field_errors[0].code)
             self.assertEqual(
                 'A user with this username already exists. Please try again.',
                 field_errors[0])
@@ -244,6 +277,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('email_exists', field_errors[0].code)
             self.assertEqual(
                 'A user with this email address already exists. Please try again.',
                 field_errors[0])
@@ -273,6 +307,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 self.assertIsInstance(field_errors, list)
                 self.assertEqual(len(field_errors), 1)
                 self.assertIsInstance(field_errors[0], ErrorDetail)
+                self.assertEqual(f'{key}_exists', field_errors[0].code)
                 self.assertEqual(
                     f"A user with this {'email address' if key == 'email' else 'username'} already exists. Please try again.",
                     field_errors[0])
@@ -300,6 +335,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertIsInstance(errors, list)
             self.assertEqual(len(errors), 1)
             self.assertIsInstance(errors[0], ErrorDetail)
+            self.assertEqual('password_too_common', errors[0].code)
             self.assertEqual('This password is too common.', errors[0])
 
         self.check_urls(check)
@@ -325,6 +361,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('min_length', field_errors[0].code)
             self.assertEqual(
                 'Ensure this field has at least 8 characters.', field_errors[0])
 
@@ -349,10 +386,10 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(field_errors), 1)
 
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('password_missing_upper', field_errors[0].code)
             self.assertEqual(
                 'Your password must contain at least 1 uppercase character.',
                 field_errors[0])
-            self.assertEqual('password_missing_upper', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -375,10 +412,10 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(field_errors), 1)
 
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('password_missing_lower', field_errors[0].code)
             self.assertEqual(
                 'Your password must contain at least 1 lowercase character.',
                 field_errors[0])
-            self.assertEqual('password_missing_lower', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -401,10 +438,10 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(field_errors), 1)
 
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('password_missing_num', field_errors[0].code)
             self.assertEqual(
                 'Your password must contain at least 1 number.',
                 field_errors[0])
-            self.assertEqual('password_missing_num', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -427,10 +464,10 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(len(field_errors), 1)
 
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('password_missing_punc', field_errors[0].code)
             self.assertEqual(
                 'Your password must contain at least 1 of the following punctuation characters: !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
                 field_errors[0])
-            self.assertEqual('password_missing_punc', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -449,6 +486,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
         self.assertIsInstance(errors, list)
         self.assertEqual(len(errors), 1)
         self.assertIsInstance(errors[0], ErrorDetail)
+        self.assertEqual('password_too_similar', errors[0].code)
         self.assertEqual(
             f'The password is too similar to the {field_name}.', errors[0])
 

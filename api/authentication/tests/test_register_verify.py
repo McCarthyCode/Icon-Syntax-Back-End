@@ -53,9 +53,9 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('invalid', field_errors[0].code)
             self.assertEqual(
                 'The activation link was invalid.', field_errors[0])
-            self.assertEqual('invalid', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -74,9 +74,9 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('invalid', field_errors[0].code)
             self.assertEqual(
                 'The activation link was invalid.', field_errors[0])
-            self.assertEqual('invalid', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -95,9 +95,9 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
             self.assertIsInstance(field_errors, list)
             self.assertEqual(len(field_errors), 1)
             self.assertIsInstance(field_errors[0], ErrorDetail)
+            self.assertEqual('invalid', field_errors[0].code)
             self.assertEqual(
                 'The activation link was invalid.', field_errors[0])
-            self.assertEqual('invalid', field_errors[0].code)
 
         self.check_urls(check)
 
@@ -107,7 +107,7 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
         """
         def check(url):
             user = User.objects.create_user(
-                'alice', 'alice@example.com', 'easypass123')
+                'alice', 'alice@example.com', 'Easypass123!')
 
             self.assertFalse(user.is_verified)
             response = self.client.get(url, {'access': user.access})
@@ -121,8 +121,8 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
                 'credentials':
                 None,
             }
-            self.check_values_in_dict(response.data, values)
-            self.check_credentials(response.data['credentials'])
+            self.assertDictValues(response.data, values)
+            self.assertCredentialsValid(response.data['credentials'])
 
             self.assertTrue(User.objects.get(username='alice').is_verified)
 

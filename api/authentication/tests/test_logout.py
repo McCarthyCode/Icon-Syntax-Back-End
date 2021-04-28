@@ -23,7 +23,7 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
         Set-up method for constructing the test class. Creates a new (verified) user.
         """
         self.user = User.objects.create_user(
-            'alice', 'alice@example.com', 'easypass123')
+            'alice', 'alice@example.com', 'Easypass123!')
         self.user.is_verified = True
         self.user.save()
 
@@ -51,7 +51,7 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that a user can logout successfully.
         """
-        body = {'username': 'alice', 'password': 'easypass123'}
+        body = {'username': 'alice', 'password': 'Easypass123!'}
 
         def check(url):
             access = self.user.access
@@ -62,7 +62,7 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
                 response.status_code, status.HTTP_205_RESET_CONTENT)
 
             values = {'success': 'You have successfully logged out.'}
-            self.check_values_in_dict(response.data, values)
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -92,7 +92,7 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that a user cannot logout with a malformed header. This test uses the keyword 'Token' rather than 'Bearer' with a valid access token.
         """
-        body = {'username': 'alice', 'password': 'easypass123'}
+        body = {'username': 'alice', 'password': 'Easypass123!'}
 
         def check(url):
             access = self.user.access
@@ -141,7 +141,7 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that a user cannot logout with a token belonging to a user that has been destroyed.
         """
-        body = {'username': 'alice', 'password': 'easypass123'}
+        body = {'username': 'alice', 'password': 'Easypass123!'}
 
         def check(url):
             access = self.user.access
@@ -163,6 +163,6 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual('authentication_failed', errors[0].code)
 
             self.user = User.objects.create_user(
-                'alice', 'alice@example.com', 'easypass123')
+                'alice', 'alice@example.com', 'Easypass123!')
 
         self.check_urls(check)
