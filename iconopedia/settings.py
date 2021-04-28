@@ -32,18 +32,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Retrieve production stage environment variable
 class MissingEnvironmentVariable(Exception):
-    pass
+    def __init__(self, variable):
+        super().__init__(f'Environment variable {variable} is not defined.')
 
 
 class InvalidEnvironmentVariable(Exception):
-    pass
+    def __init__(self, variable):
+        super().__init__(
+            f'The value of environment variable {variable} is not valid.')
 
 
 try:
     STAGE = os.environ['STAGE']
 except KeyError:
-    raise MissingEnvironmentVariable(
-        'Environment variable STAGE is not defined.')
+    raise MissingEnvironmentVariable('STAGE')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if STAGE == 'development' or STAGE == 'staging':
@@ -51,8 +53,7 @@ if STAGE == 'development' or STAGE == 'staging':
 elif STAGE == 'production':
     DEBUG = False
 else:
-    raise InvalidEnvironmentVariable(
-        'The value of environment variable STAGE is not valid.')
+    raise InvalidEnvironmentVariable('STAGE')
 
 ALLOWED_HOSTS = ['localhost']
 
