@@ -72,6 +72,8 @@ class TestCaseShortcutsMixin():
         """
         Method to check the type of members of a given list, based on a given type.
         """
+        self.assertIsInstance(_list, list)
+
         for item in _list:
             self.assertIsInstance(item, _type)
 
@@ -79,7 +81,10 @@ class TestCaseShortcutsMixin():
         """
         Method to check fields within a given dictionary, based a dictionary of values. First, the field is compared to the type of the value, then the value itself. If value is None, the value check is skipped.
         """
-        self.assertEqual(len(values_dict), len(obj))
+        self.assertIsInstance(obj, dict)
+        self.assertIsInstance(values_dict, dict)
+        self.assertEqual(len(obj), len(values_dict))
+
         for key, value in values_dict.items():
             self.assertIn(key, obj)
 
@@ -101,7 +106,10 @@ class TestCaseShortcutsMixin():
         """
         Method to check if the values of an object match the types defined in a second dictionary.
         """
+        self.assertIsInstance(obj, dict)
+        self.assertIsInstance(types, dict)
         self.assertEqual(len(obj), len(types))
+
         for key, value in obj.items():
             if isinstance(value, dict):
                 self.assertDictTypes(value, types[key])
@@ -123,3 +131,15 @@ class TestCaseShortcutsMixin():
         for key, value in tokens.items():
             self.assertIsInstance(value, str)
             self.assertRegexpMatches(value, settings.TOKEN_REGEX)
+
+    def assertErrorsEqual(self, errors, values):
+        """
+        Method to compare a list of ErrorDetail objects to a list of accepted values.
+        """
+        self.assertIsInstance(errors, list)
+        self.assertIsInstance(values, list)
+        self.assertEqual(len(errors), len(values))
+
+        for index in range(len(errors)):
+            self.assertIsInstance(error, ErrorDetail)
+            self.assertEqual(errors[index], values[index])
