@@ -48,9 +48,27 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
     def test_options(self):
         """
-        Ensure we can successfully get data from an OPTIONS request.
+        Ensure we can successfully get data from an OPTIONS request when a user is not authenticated.
         """
+        self.spoof_verification()
+
         def check(url):
+            response = self.client.options(url, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertDictTypes(response.data, self.options_types)
+
+        self.check_urls(check)
+
+    def test_options_authenticated_verified(self):
+        """
+        Ensure we can successfully get data from an OPTIONS request when a user is authenticated and verified.
+        """
+        self.spoof_verification()
+
+        def check(url):
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
             response = self.client.options(url, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -86,25 +104,28 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that the proper error messages are sent on blank input.
         """
+        self.spoof_verification()
         body = {
             'oldPassword': '',
             'newPassword': '',
         }
 
         def check(url):
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            for key in body:
-                self.assertIn(key, response.data)
-                field_errors = response.data[key]
-
-                self.assertIsInstance(field_errors, list)
-                self.assertEqual(len(field_errors), 1)
-                self.assertIsInstance(field_errors[0], ErrorDetail)
-                self.assertEqual(
-                    'This field may not be blank.', field_errors[0])
+            values = dict(
+                [
+                    (
+                        key, [
+                            ErrorDetail(
+                                'This field may not be blank.', code='blank')
+                        ]) for key in body
+                ])
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -112,21 +133,25 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that the proper error messages are sent on missing input.
         """
+        self.spoof_verification()
         body = {}
 
         def check(url):
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
             response = self.client.post(url, body, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            for key in {'oldPassword', 'newPassword'}:
-                self.assertIn(key, response.data)
-                field_errors = response.data[key]
-
-                self.assertIsInstance(field_errors, list)
-                self.assertEqual(len(field_errors), 1)
-                self.assertIsInstance(field_errors[0], ErrorDetail)
-                self.assertEqual('This field is required.', field_errors[0])
+            values = dict(
+                [
+                    (
+                        key, [
+                            ErrorDetail(
+                                'This field is required.', code='required')
+                        ]) for key in {'oldPassword', 'newPassword'}
+                ])
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -134,6 +159,8 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that the proper error messages are sent on partial input.
         """
+        self.spoof_verification()
+
         keys = {'oldPassword', 'newPassword'}
         bodies = [{key: 'Easypass123!'} for key in keys]
 
@@ -147,14 +174,13 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                     response.status_code, status.HTTP_400_BAD_REQUEST)
 
                 for key in keys.intersection(response.data):
-                    self.assertIn(key, response.data)
-                    field_errors = response.data[key]
-
-                    self.assertIsInstance(field_errors, list)
-                    self.assertEqual(len(field_errors), 1)
-                    self.assertIsInstance(field_errors[0], ErrorDetail)
-
-                    self.assertEqual('This field is required.', field_errors[0])
+                    values = {
+                        key: [
+                            ErrorDetail(
+                                'This field is required.', code='required')
+                        ]
+                    }
+                    self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -190,6 +216,39 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
         self.check_urls(check)
 
+    def test_unverified(self):
+        """
+        Ensure that the user cannot reset their password without first verifying their email address.
+        """
+        body = {
+            'oldPassword': 'Easypass123!',
+            'newPassword': 'Newerpass123!',
+        }
+
+        def check(url):
+            self.assertTrue(self.user.check_password(body['oldPassword']))
+            self.assertFalse(self.user.is_verified)
+
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+            response = self.client.post(url, body)
+
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'You do not have permission to perform this action.',
+                        'permission_denied')
+                ],
+            }
+            self.assertDictValues(response.data, values)
+
+            self.user = User.objects.get(pk=self.user.pk)
+            self.assertTrue(self.user.check_password(body['oldPassword']))
+
+        self.check_urls(check)
+
     def test_no_header(self):
         """
         Ensure that the user cannot successfully reset a password if there is no Authorization header.
@@ -206,16 +265,14 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual(
-                'The authorization token was missing or invalid.', errors[0])
-            self.assertEqual('invalid', errors[0].code)
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'Authentication credentials were not provided.',
+                        code='not_authenticated')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 

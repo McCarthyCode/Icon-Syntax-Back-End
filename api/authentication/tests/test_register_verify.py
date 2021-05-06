@@ -18,6 +18,10 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
     """
     client = APIClient()
 
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'alice', 'alice@example.com', 'Easypass123!')
+
     def check_urls(self, check):
         """
         Method to run each test under both URL and reverse-lookup name formats.
@@ -36,68 +40,42 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertDictTypes(response.data, self.options_types)
 
-        self.check_urls(check)
-
-    def test_blank_token(self):
-        """
-        Ensure that the proper error messages are sent when no value for 'access' is provided (i.e. '/api/{version}/auth/register/verify?access').
-        """
-        def check(url):
-            response = self.client.get(url, {'access': ''})
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            self.assertIn('access', response.data)
-            field_errors = response.data['access']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('invalid', field_errors[0].code)
-            self.assertEqual(
-                'The activation link was invalid.', field_errors[0])
-
-        self.check_urls(check)
-
     def test_missing_token(self):
         """
-        Ensure that the proper error messages are sent when no value for 'access' is provided (i.e. '/api/{version}/auth/register/verify').
+        Ensure that the proper error messages are sent when no Authorization header is provided.
         """
         def check(url):
-            response = self.client.get(url)
+            response = self.client.post(url)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('access', response.data)
-            field_errors = response.data['access']
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+            values = [
+                ErrorDetail('The activation link was invalid.', 'invalid')
+            ]
 
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('invalid', field_errors[0].code)
-            self.assertEqual(
-                'The activation link was invalid.', field_errors[0])
+            self.assertErrorsEqual(errors, values)
 
         self.check_urls(check)
 
     def test_invalid_token(self):
         """
-        Ensure that the proper error messages are sent when an incorrect for 'token' is provided (i.e. '/api/{version}/auth/register/verify?access=abc').
+        Ensure that the proper error messages are sent when an incorrect for 'token' is provided (i.e. 'abc123').
         """
         def check(url):
-            response = self.client.get(url, {'access': 'abc123'})
+            self.client.credentials(HTTP_AUTHORIZATION='Bearer abc123')
+            response = self.client.post(url)
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn('access', response.data)
-            field_errors = response.data['access']
+            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
+            errors = response.data[NON_FIELD_ERRORS_KEY]
+            values = [
+                ErrorDetail('The activation link was invalid.', 'invalid')
+            ]
 
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('invalid', field_errors[0].code)
-            self.assertEqual(
-                'The activation link was invalid.', field_errors[0])
+            self.assertErrorsEqual(errors, values)
 
         self.check_urls(check)
 
@@ -106,11 +84,11 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
         Ensure we can successfully verify a user.
         """
         def check(url):
-            user = User.objects.create_user(
-                'alice', 'alice@example.com', 'Easypass123!')
+            self.assertFalse(self.user.is_verified)
+            self.client.credentials(
+                HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+            response = self.client.post(url)
 
-            self.assertFalse(user.is_verified)
-            response = self.client.get(url, {'access': user.access})
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
             values = {

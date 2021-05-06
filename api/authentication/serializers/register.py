@@ -98,64 +98,30 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class RegisterVerifySerializer(serializers.Serializer):
     """
-    Serializes username, email, and tokens from an access token for logging in after verifying an email address.
+    Serializes username, email, and tokens from an access token for marking a user as verified and logging them in.
     """
     credentials = CredentialsSerializer(read_only=True)
 
     default_error_messages = {
-        'invalid': _('The activation link was invalid.'),
-        'expired': _('The activation link has expired.'),
-        'user_gone': _('The user associated with this token no longer exists.'),
+        'invalid': _('The activation link was invalid or has expired.'),
     }
-
-    _user = None
-
-    def _get_user(self):
-        """
-        Retrieve the user instance defined by the given access token. On failure, ValidationError or GoneError is raised.
-        """
-        if not self._user:
-            try:
-                payload = jwt.decode(
-                    self.context['request'].GET.get('access', None),
-                    settings.SECRET_KEY,
-                    algorithms=['HS256'],
-                )
-            except DecodeError:
-                raise ValidationError(
-                    {'access': self.error_messages['invalid']}, 'invalid')
-            except ExpiredSignatureError:
-                raise GoneError(
-                    {'access': self.error_messages['expired']}, 'expired')
-
-            try:
-                self._user = User.objects.get(id=payload['user_id'])
-            except User.NotFound:
-                raise ValidationError(
-                    self.error_messages['user_gone'],
-                    'user_gone',
-                    status_code=status.HTTP_410_GONE)
-
-            return self._user
-
-        return self._user
 
     def validate(self, data):
         """
         Retrieve the user, mark their email address as verified, and return serialized data.
         """
-        user = self._get_user()
+        user = self.context['request'].user
 
         if user.is_anonymous:
             self.fail('invalid')
 
-        return {**data, 'credentials': user.credentials}
+        return {'credentials': user.credentials}
 
     def save(self, **kwargs):
         """
         Retrieve the user, mark their email address as verified, and return the updated instance.
         """
-        user = self._get_user()
+        user = self.context['request'].user
         user.is_verified = True
 
         return user.save()

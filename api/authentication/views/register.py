@@ -4,8 +4,10 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
+from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -61,9 +63,10 @@ class RegisterVerifyView(APIView):
     """
     serializer_class = RegisterVerifySerializer
 
-    def get(self, request):
+    @permission_classes([IsAuthenticated])
+    def post(self, request):
         """
-        GET method for taking a token from a query string, checking if it is valid, and marking its associated user's email address as verified.
+        POST method for taking a token from a query string, checking if it is valid, and marking its associated user's email address as verified.
         """
         serializer = self.serializer_class(
             data={}, context={'request': request})
