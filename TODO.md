@@ -66,8 +66,7 @@
 
 ## Medium Priorities
 
-- Update how tests check error messages
-  - Register
+- Update tests to use assertDictValues
   - Register Verify
   - Login
   - Password Reset

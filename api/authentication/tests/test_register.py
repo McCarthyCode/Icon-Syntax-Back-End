@@ -83,16 +83,15 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+            values = {}
             for key in {'username', 'email', 'password'}:
-                self.assertIn(key, response.data)
-                field_errors = response.data[key]
-
-                self.assertIsInstance(field_errors, list)
-                self.assertEqual(len(field_errors), 1)
-                self.assertIsInstance(field_errors[0], ErrorDetail)
-                self.assertEqual('blank', field_errors[0].code)
-                self.assertEqual(
-                    'This field may not be blank.', field_errors[0])
+                values = {
+                    **values, key: [
+                        ErrorDetail(
+                            string='This field may not be blank.', code='blank')
+                    ]
+                }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -107,15 +106,15 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+            values = {}
             for key in {'username', 'email', 'password'}:
-                self.assertIn(key, response.data)
-                field_errors = response.data[key]
-
-                self.assertIsInstance(field_errors, list)
-                self.assertEqual(len(field_errors), 1)
-                self.assertIsInstance(field_errors[0], ErrorDetail)
-                self.assertEqual('required', field_errors[0].code)
-                self.assertEqual('This field is required.', field_errors[0])
+                values = {
+                    **values, key: [
+                        ErrorDetail(
+                            string='This field is required.', code='required')
+                    ]
+                }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -154,20 +153,18 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 self.assertEqual(
                     response.status_code, status.HTTP_400_BAD_REQUEST)
 
-                keys = {'username', 'email', 'password'}
-                for key, in_body in zip(keys, (key in body for key in keys)):
-                    self.assertIn(key, response.data)
-                    field_errors = response.data[key]
-
-                    self.assertIsInstance(field_errors, list)
-                    self.assertEqual(len(field_errors), 1)
-                    self.assertIsInstance(field_errors[0], ErrorDetail)
-                    self.assertEqual(
-                        'blank' if in_body else 'required',
-                        field_errors[0].code)
-                    self.assertEqual(
-                        'This field may not be blank.' if in_body else
-                        'This field is required.', field_errors[0])
+                keys, values = {'username', 'email', 'password'}, {}
+                for key in keys:
+                    in_body = key in body
+                    values = {
+                        **values, key: [
+                            ErrorDetail(
+                                string='This field may not be blank.'
+                                if in_body else 'This field is required.',
+                                code='blank' if in_body else 'required')
+                        ]
+                    }
+                self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -215,14 +212,13 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('email', response.data)
-            field_errors = response.data['email']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('invalid', field_errors[0].code)
-            self.assertEqual('Enter a valid email address.', field_errors[0])
+            values = {
+                'email': [
+                    ErrorDetail(
+                        string='Enter a valid email address.', code='invalid')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -230,28 +226,31 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that a user cannot create an account with an existing username.
         """
-        body = {
+        alice, bob = {
             'username': 'alice',
             'email': 'alice@example.com',
+            'password': 'Easypass123!',
+        }, {
+            'username': 'alice',
+            'email': 'bob@example.com',
             'password': 'Easypass123!',
         }
 
         def check(url):
-            self.client.post(url, body, format='json')
-            response = self.client.post(url, body, format='json')
+            self.client.post(url, alice, format='json')
+            response = self.client.post(url, bob, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
-            self.assertIn('username', response.data)
-            field_errors = response.data['username']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('username_exists', field_errors[0].code)
-            self.assertEqual(
-                'A user with this username already exists. Please try again.',
-                field_errors[0])
+            values = {
+                'username': [
+                    ErrorDetail(
+                        string=
+                        'A user with this username already exists. Please try again.',
+                        code='username_exists')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -259,28 +258,31 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that a user cannot create an account with an existing email address.
         """
-        body = {
+        alice, bob = {
             'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'Easypass123!',
+        }, {
+            'username': 'bob',
             'email': 'alice@example.com',
             'password': 'Easypass123!',
         }
 
         def check(url):
-            self.client.post(url, body, format='json')
-            response = self.client.post(url, body, format='json')
+            self.client.post(url, alice, format='json')
+            response = self.client.post(url, bob, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
-            self.assertIn('email', response.data)
-            field_errors = response.data['email']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('email_exists', field_errors[0].code)
-            self.assertEqual(
-                'A user with this email address already exists. Please try again.',
-                field_errors[0])
+            values = {
+                'email': [
+                    ErrorDetail(
+                        string=
+                        'A user with this email address already exists. Please try again.',
+                        code='email_exists')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -300,17 +302,17 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
+            values = {}
             for key in {'username', 'email'}:
-                self.assertIn(key, response.data)
-                field_errors = response.data[key]
-
-                self.assertIsInstance(field_errors, list)
-                self.assertEqual(len(field_errors), 1)
-                self.assertIsInstance(field_errors[0], ErrorDetail)
-                self.assertEqual(f'{key}_exists', field_errors[0].code)
-                self.assertEqual(
-                    f"A user with this {'email address' if key == 'email' else 'username'} already exists. Please try again.",
-                    field_errors[0])
+                values = {
+                    **values, key: [
+                        ErrorDetail(
+                            string=
+                            f"A user with this {'email address' if key == 'email' else 'username'} already exists. Please try again.",
+                            code=f'{key}_exists')
+                    ]
+                }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -329,14 +331,14 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual('password_too_common', errors[0].code)
-            self.assertEqual('This password is too common.', errors[0])
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        string='This password is too common.',
+                        code='password_too_common')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -355,15 +357,14 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            field_errors = response.data['password']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('min_length', field_errors[0].code)
-            self.assertEqual(
-                'Ensure this field has at least 8 characters.', field_errors[0])
+            values = {
+                'password': [
+                    ErrorDetail(
+                        string='Ensure this field has at least 8 characters.',
+                        code='min_length')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -379,17 +380,15 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            field_errors = response.data['password']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('password_missing_upper', field_errors[0].code)
-            self.assertEqual(
-                'Your password must contain at least 1 uppercase character.',
-                field_errors[0])
+            values = {
+                'password': [
+                    ErrorDetail(
+                        string=
+                        'Your password must contain at least 1 uppercase character.',
+                        code='password_missing_upper')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -405,17 +404,15 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            field_errors = response.data['password']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('password_missing_lower', field_errors[0].code)
-            self.assertEqual(
-                'Your password must contain at least 1 lowercase character.',
-                field_errors[0])
+            values = {
+                'password': [
+                    ErrorDetail(
+                        string=
+                        'Your password must contain at least 1 lowercase character.',
+                        code='password_missing_lower')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -431,17 +428,14 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            field_errors = response.data['password']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('password_missing_num', field_errors[0].code)
-            self.assertEqual(
-                'Your password must contain at least 1 number.',
-                field_errors[0])
+            values = {
+                'password': [
+                    ErrorDetail(
+                        string='Your password must contain at least 1 number.',
+                        code='password_missing_num')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -457,17 +451,15 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            field_errors = response.data['password']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual('password_missing_punc', field_errors[0].code)
-            self.assertEqual(
-                'Your password must contain at least 1 of the following punctuation characters: !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
-                field_errors[0])
+            values = {
+                'password': [
+                    ErrorDetail(
+                        string=
+                        'Your password must contain at least 1 of the following punctuation characters: !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
+                        code='password_missing_punc')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -480,15 +472,14 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
         response.data
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-        errors = response.data[NON_FIELD_ERRORS_KEY]
-
-        self.assertIsInstance(errors, list)
-        self.assertEqual(len(errors), 1)
-        self.assertIsInstance(errors[0], ErrorDetail)
-        self.assertEqual('password_too_similar', errors[0].code)
-        self.assertEqual(
-            f'The password is too similar to the {field_name}.', errors[0])
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    string=f'The password is too similar to the {field_name}.',
+                    code='password_too_similar')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_password_identical_to_username(self):
         """
