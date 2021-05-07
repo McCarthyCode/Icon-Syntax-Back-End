@@ -4,12 +4,14 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
-from rest_framework.decorators import permission_classes
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import (
+    AuthenticationFailed, ErrorDetail, NotAuthenticated, ValidationError)
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from ..exceptions import ConflictError
@@ -63,7 +65,23 @@ class RegisterVerifyView(APIView):
     """
     serializer_class = RegisterVerifySerializer
 
-    @permission_classes([IsAuthenticated])
+    def initial(self, request, *args, **kwargs):
+        """
+        This method overrides the default APIView method so exceptions can be handled.
+        """
+        try:
+            super().initial(request, *args, **kwargs)
+        except InvalidToken as exc:
+            detail = exc.detail['detail'] \
+                if 'detail' in exc.detail else exc.detail
+
+            # Append a period because punctuation errors are annoying.
+            if detail[-1] not in '.?!':
+                detail = ErrorDetail(str(detail) + '.', detail.code)
+
+            raise AuthenticationFailed(
+                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
+
     def post(self, request):
         """
         POST method for taking a token from a query string, checking if it is valid, and marking its associated user's email address as verified.

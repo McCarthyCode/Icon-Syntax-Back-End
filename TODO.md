@@ -66,8 +66,7 @@
 
 ## Medium Priorities
 
-- Update tests to use assertDictValues
-  - Register Verify
+- Update tests to use assertDictValues and split OPTIONS tests where appropriate
   - Login
   - Password Reset
   - Password Forgot
