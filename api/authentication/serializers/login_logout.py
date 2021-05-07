@@ -34,6 +34,10 @@ class LoginSerializer(serializers.Serializer):
         _('A username or email is required.'),
         'invalid':
         _('The credentials used to login were invalid.'),
+        'user_gone':
+        _(
+            'You have used valid credentials to log into an account that is no longer available. It may have been deleted. Please contact the site administrator at webmaster@iconopedia.org.'
+        ),
         'disabled':
         _(
             'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.'
@@ -79,6 +83,10 @@ class LoginSerializer(serializers.Serializer):
             except User.DoesNotExist:
                 raise AuthenticationFailed(
                     self.error_messages['invalid'], 'invalid')
+
+            if not unauthenticated_user:
+                raise AuthenticationFailed(
+                    self.error_messages['user_gone'], 'user_gone')
 
             if not unauthenticated_user.is_active:
                 raise AuthenticationFailed(

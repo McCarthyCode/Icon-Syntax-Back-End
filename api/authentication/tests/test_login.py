@@ -97,15 +97,13 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            password = response.data['password']
-
-            self.assertIsInstance(password, list)
-            self.assertEqual(len(password), 1)
-
-            self.assertIsInstance(password[0], ErrorDetail)
-            self.assertEqual('blank', password[0].code)
-            self.assertEqual('This field may not be blank.', password[0])
+            values = {
+                'username':
+                [ErrorDetail('This field may not be blank.', 'blank')],
+                'password':
+                [ErrorDetail('This field may not be blank.', 'blank')]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -123,15 +121,12 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            password = response.data['password']
-
-            self.assertIsInstance(password, list)
-            self.assertEqual(len(password), 1)
-
-            self.assertIsInstance(password[0], ErrorDetail)
-            self.assertEqual('blank', password[0].code)
-            self.assertEqual('This field may not be blank.', password[0])
+            values = {
+                'email': [ErrorDetail('This field may not be blank.', 'blank')],
+                'password':
+                [ErrorDetail('This field may not be blank.', 'blank')]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -146,15 +141,11 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('password', response.data)
-            password = response.data['password']
-
-            self.assertIsInstance(password, list)
-            self.assertEqual(len(password), 1)
-
-            self.assertIsInstance(password[0], ErrorDetail)
-            self.assertEqual('required', password[0].code)
-            self.assertEqual('This field is required.', password[0])
+            values = {
+                'password':
+                [ErrorDetail('This field is required.', 'required')]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -182,26 +173,20 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                     response.status_code, status.HTTP_400_BAD_REQUEST)
 
                 if 'password' in body:
-                    self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-                    errors = response.data[NON_FIELD_ERRORS_KEY]
-
-                    self.assertIsInstance(errors, list)
-                    self.assertEqual(len(errors), 1)
-
-                    self.assertIsInstance(errors[0], ErrorDetail)
-                    self.assertEqual('id_required', errors[0].code)
-                    self.assertEqual(
-                        'A username or email is required.', errors[0])
+                    values = {
+                        NON_FIELD_ERRORS_KEY: [
+                            ErrorDetail(
+                                'A username or email is required.',
+                                'id_required')
+                        ]
+                    }
+                    self.assertDictValues(response.data, values)
                 else:
-                    self.assertIn('password', response.data)
-                    password = response.data['password']
-
-                    self.assertIsInstance(password, list)
-                    self.assertEqual(len(password), 1)
-
-                    self.assertIsInstance(password[0], ErrorDetail)
-                    self.assertEqual('required', password[0].code)
-                    self.assertEqual('This field is required.', password[0])
+                    values = {
+                        'password':
+                        [ErrorDetail('This field is required.', 'required')]
+                    }
+                    self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -216,16 +201,20 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                 self.assertEqual(
                     response.status_code, status.HTTP_400_BAD_REQUEST)
 
-                self.assertIn(key, response.data)
-                field_errors = response.data[key]
-
-                self.assertIsInstance(field_errors, list)
-                self.assertEqual(len(field_errors), 1)
-
-                self.assertIsInstance(field_errors[0], ErrorDetail)
-                self.assertEqual('blank', field_errors[0].code)
-                self.assertEqual(
-                    'This field may not be blank.', field_errors[0])
+                if key == 'password':
+                    values = {
+                        'password':
+                        [ErrorDetail('This field may not be blank.', 'blank')]
+                    }
+                    self.assertDictValues(response.data, values)
+                else:
+                    values = {
+                        key:
+                        [ErrorDetail('This field may not be blank.', 'blank')],
+                        'password':
+                        [ErrorDetail('This field is required.', 'required')]
+                    }
+                    self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -297,16 +286,14 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], str)
-            self.assertEqual('invalid', errors[0].code)
-            self.assertEqual(
-                'The credentials used to login were invalid.', errors[0])
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'The credentials used to login were invalid.',
+                        'invalid')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -324,16 +311,14 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual('invalid', errors[0].code)
-            self.assertEqual(
-                'The credentials used to login were invalid.', errors[0])
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'The credentials used to login were invalid.',
+                        'invalid')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -351,17 +336,14 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual('unverified', errors[0].code)
-            self.assertEqual(
-                'Your account has not been verified. Please check your email for a confirmation link.',
-                errors[0])
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'Your account has not been verified. Please check your email for a confirmation link.',
+                        'unverified')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
     def test_inactive_user(self):
         """
@@ -381,17 +363,14 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual('inactive', errors[0].code)
-            self.assertEqual(
-                'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
-                errors[0])
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
+                        'inactive')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
     def test_user_not_found(self):
         """
@@ -410,14 +389,11 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual('not_found', errors[0].code)
-            self.assertEqual(
-                'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
-                errors[0])
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'You have used valid credentials to log into an account that is no longer available. It may have been deleted. Please contact the site administrator at webmaster@iconopedia.org.',
+                        'user_gone')
+                ]
+            }
+            self.assertDictValues(response.data, values)

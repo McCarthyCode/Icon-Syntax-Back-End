@@ -2,6 +2,10 @@
 
 ## High Priorities
 
+- Update tests to use assertDictValues and split OPTIONS tests where appropriate
+  - Password Reset
+  - Password Forgot
+  - Password Forgot Verify
 - Finish custom auth app
   - Add permissions
     - Register Verify
@@ -62,15 +66,10 @@
         - category
         - get_data_b64()
         - get_dictionary_entries()
-- Set throttle limits
 
 ## Medium Priorities
 
-- Update tests to use assertDictValues and split OPTIONS tests where appropriate
-  - Login
-  - Password Reset
-  - Password Forgot
-  - Password Forgot Verify
+- Set throttle limits
 
 ## Low Priorities
 
