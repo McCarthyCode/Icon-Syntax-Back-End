@@ -3,6 +3,8 @@
 ## High Priorities
 
 - Finish custom auth app
+  - Add permissions
+    - Register Verify
   - Forgot password
     - Reset with code and new password
   - Refresh token
@@ -64,7 +66,13 @@
 
 ## Medium Priorities
 
-_None at this time._
+- Update how tests check error messages
+  - Register
+  - Register Verify
+  - Login
+  - Password Reset
+  - Password Forgot
+  - Password Forgot Verify
 
 ## Low Priorities
 

@@ -36,9 +36,23 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
 
     def test_options(self):
         """
-        Ensure we can successfully get data from an OPTIONS request.
+        Ensure we can successfully get data from an OPTIONS request when the user is not authenticated.
         """
         def check(url):
+            response = self.client.options(url, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertDictTypes(response.data, self.options_types)
+
+        self.check_urls(check)
+
+    def test_options_authenticated(self):
+        """
+        Ensure we can successfully get data from an OPTIONS request when the user is authenticated.
+        """
+        def check(url):
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
             response = self.client.options(url, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -75,16 +89,14 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual(
-                'The authorization token is missing or invalid.', errors[0])
-            self.assertEqual('missing_invalid', errors[0].code)
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        string='Authentication credentials were not provided.',
+                        code='not_authenticated')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -101,16 +113,14 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual(
-                'The authorization token is missing or invalid.', errors[0])
-            self.assertEqual('missing_invalid', errors[0].code)
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        string='Authentication credentials were not provided.',
+                        code='not_authenticated')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -124,16 +134,14 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual(
-                'Given token not valid for any token type.', errors[0])
-            self.assertEqual('token_not_valid', errors[0].code)
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        string='Given token not valid for any token type.',
+                        code='token_not_valid')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -151,16 +159,13 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-
-            self.assertEqual('User not found.', errors[0])
-            self.assertEqual('authentication_failed', errors[0].code)
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        string='User not found.', code='authentication_failed')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
             self.user = User.objects.create_user(
                 'alice', 'alice@example.com', 'Easypass123!')

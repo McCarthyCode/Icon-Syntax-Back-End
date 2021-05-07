@@ -1,7 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
-from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import (
     AuthenticationFailed, ValidationError, NotAuthenticated, PermissionDenied)
 from rest_framework.generics import GenericAPIView
