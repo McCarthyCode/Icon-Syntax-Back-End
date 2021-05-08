@@ -86,10 +86,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {}
             for key in {'username', 'email', 'password'}:
                 values = {
-                    **values, key: [
-                        ErrorDetail(
-                            string='This field may not be blank.', code='blank')
-                    ]
+                    **values, key:
+                    [ErrorDetail('This field may not be blank.', 'blank')]
                 }
             self.assertDictValues(response.data, values)
 
@@ -109,10 +107,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {}
             for key in {'username', 'email', 'password'}:
                 values = {
-                    **values, key: [
-                        ErrorDetail(
-                            string='This field is required.', code='required')
-                    ]
+                    **values, key:
+                    [ErrorDetail('This field is required.', 'required')]
                 }
             self.assertDictValues(response.data, values)
 
@@ -159,9 +155,9 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                     values = {
                         **values, key: [
                             ErrorDetail(
-                                string='This field may not be blank.'
+                                'This field may not be blank.'
                                 if in_body else 'This field is required.',
-                                code='blank' if in_body else 'required')
+                                'blank' if in_body else 'required')
                         ]
                     }
                 self.assertDictValues(response.data, values)
@@ -213,10 +209,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             values = {
-                'email': [
-                    ErrorDetail(
-                        string='Enter a valid email address.', code='invalid')
-                ]
+                'email':
+                [ErrorDetail('Enter a valid email address.', 'invalid')]
             }
             self.assertDictValues(response.data, values)
 
@@ -245,9 +239,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 'username': [
                     ErrorDetail(
-                        string=
                         'A user with this username already exists. Please try again.',
-                        code='username_exists')
+                        'username_exists')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -277,9 +270,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 'email': [
                     ErrorDetail(
-                        string=
                         'A user with this email address already exists. Please try again.',
-                        code='email_exists')
+                        'email_exists')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -307,9 +299,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 values = {
                     **values, key: [
                         ErrorDetail(
-                            string=
                             f"A user with this {'email address' if key == 'email' else 'username'} already exists. Please try again.",
-                            code=f'{key}_exists')
+                            f'{key}_exists')
                     ]
                 }
             self.assertDictValues(response.data, values)
@@ -334,8 +325,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
-                        string='This password is too common.',
-                        code='password_too_common')
+                        'This password is too common.', 'password_too_common')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -360,8 +350,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 'password': [
                     ErrorDetail(
-                        string='Ensure this field has at least 8 characters.',
-                        code='min_length')
+                        'Ensure this field has at least 8 characters.',
+                        'min_length')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -383,9 +373,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 'password': [
                     ErrorDetail(
-                        string=
                         'Your password must contain at least 1 uppercase letter.',
-                        code='password_missing_upper')
+                        'password_missing_upper')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -407,9 +396,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 'password': [
                     ErrorDetail(
-                        string=
                         'Your password must contain at least 1 lowercase letter.',
-                        code='password_missing_lower')
+                        'password_missing_lower')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -431,8 +419,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 'password': [
                     ErrorDetail(
-                        string='Your password must contain at least 1 number.',
-                        code='password_missing_num')
+                        'Your password must contain at least 1 number.',
+                        'password_missing_num')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -454,9 +442,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 'password': [
                     ErrorDetail(
-                        string=
                         'Your password must contain at least 1 of the following punctuation characters: !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~',
-                        code='password_missing_punc')
+                        'password_missing_punc')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -475,8 +462,8 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
         values = {
             NON_FIELD_ERRORS_KEY: [
                 ErrorDetail(
-                    string=f'The password is too similar to the {field_name}.',
-                    code='password_too_similar')
+                    f'The password is too similar to the {field_name}.',
+                    'password_too_similar')
             ]
         }
         self.assertDictValues(response.data, values)

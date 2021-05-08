@@ -92,8 +92,8 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
-                        string='Authentication credentials were not provided.',
-                        code='not_authenticated')
+                        'Authentication credentials were not provided.',
+                        'not_authenticated')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -116,8 +116,8 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
-                        string='Authentication credentials were not provided.',
-                        code='not_authenticated')
+                        'Authentication credentials were not provided.',
+                        'not_authenticated')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -137,8 +137,8 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
             values = {
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
-                        string='Given token not valid for any token type.',
-                        code='token_not_valid')
+                        'Given token not valid for any token type.',
+                        'token_not_valid')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -160,10 +160,8 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
             values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        string='User not found.', code='authentication_failed')
-                ]
+                NON_FIELD_ERRORS_KEY:
+                [ErrorDetail('User not found.', 'authentication_failed')]
             }
             self.assertDictValues(response.data, values)
 

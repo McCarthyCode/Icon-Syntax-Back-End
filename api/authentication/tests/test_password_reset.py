@@ -163,7 +163,7 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                     (
                         key, [
                             ErrorDetail(
-                                'This field is required.', code='required')
+                                'This field is required.', 'required')
                         ] \
                     ) for key in {'oldPassword', 'newPassword'}
                 ])
@@ -191,10 +191,8 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
                 for key in keys.intersection(response.data):
                     values = {
-                        key: [
-                            ErrorDetail(
-                                'This field is required.', code='required')
-                        ]
+                        key:
+                        [ErrorDetail('This field is required.', 'required')]
                     }
                     self.assertDictValues(response.data, values)
 
@@ -285,7 +283,7 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
                         'Authentication credentials were not provided.',
-                        code='not_authenticated')
+                        'not_authenticated')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -316,7 +314,7 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
                         'The old password was not correct. If you have forgotten your password, please use the "forgot password" link.',
-                        code='mismatch')
+                        'mismatch')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -347,7 +345,7 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                 'newPassword': [
                     ErrorDetail(
                         'Your password must contain at least 1 uppercase letter.',
-                        code='password_missing_upper')
+                        'password_missing_upper')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -378,7 +376,7 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                 'newPassword': [
                     ErrorDetail(
                         'Your password must contain at least 1 lowercase letter.',
-                        code='password_missing_lower')
+                        'password_missing_lower')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -409,7 +407,7 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                 'newPassword': [
                     ErrorDetail(
                         'Your password must contain at least 1 number.',
-                        code='password_missing_num')
+                        'password_missing_num')
                 ]
             }
             self.assertDictValues(response.data, values)
@@ -440,8 +438,7 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                     ErrorDetail(
                         'Your password must contain at least 1 of the following punctuation characters: !"#$%&'
                         "'"
-                        r'()*+,-./:;<=>?@[\]^_`{|}~',
-                        code='password_missing_punc')
+                        r'()*+,-./:;<=>?@[\]^_`{|}~', 'password_missing_punc')
                 ]
             }
             self.assertDictValues(response.data, values)
