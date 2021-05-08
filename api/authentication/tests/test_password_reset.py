@@ -46,13 +46,27 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
         check(reverse('api:auth:password-reset'))
 
-    def test_options(self):
+    def test_options_unauthenticated(self):
         """
         Ensure we can successfully get data from an OPTIONS request when a user is not authenticated.
         """
         self.spoof_verification()
 
         def check(url):
+            response = self.client.options(url, format='json')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertDictTypes(response.data, self.options_types)
+
+        self.check_urls(check)
+
+    def test_options_authenticated_unverified(self):
+        """
+        Ensure we can successfully get data from an OPTIONS request when a user authenticated, but not verified.
+        """
+        def check(url):
+            access = self.user.access
+            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
             response = self.client.options(url, format='json')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -122,8 +136,9 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                     (
                         key, [
                             ErrorDetail(
-                                'This field may not be blank.', code='blank')
-                        ]) for key in body
+                                'This field may not be blank.', 'blank')
+                        ] \
+                    ) for key in body
                 ])
             self.assertDictValues(response.data, values)
 
@@ -149,7 +164,8 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
                         key, [
                             ErrorDetail(
                                 'This field is required.', code='required')
-                        ]) for key in {'oldPassword', 'newPassword'}
+                        ] \
+                    ) for key in {'oldPassword', 'newPassword'}
                 ])
             self.assertDictValues(response.data, values)
 
@@ -296,17 +312,14 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertIn(NON_FIELD_ERRORS_KEY, response.data)
-            errors = response.data[NON_FIELD_ERRORS_KEY]
-
-            self.assertIsInstance(errors, list)
-            self.assertEqual(len(errors), 1)
-
-            self.assertIsInstance(errors[0], ErrorDetail)
-            self.assertEqual(
-                'The old password was not correct. If you have forgotten your password, please use the "forgot password" link.',
-                errors[0])
-            self.assertEqual('mismatch', errors[0].code)
+            values = {
+                NON_FIELD_ERRORS_KEY: [
+                    ErrorDetail(
+                        'The old password was not correct. If you have forgotten your password, please use the "forgot password" link.',
+                        code='mismatch')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -330,17 +343,14 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('newPassword', response.data)
-            field_errors = response.data['newPassword']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual(
-                'Your password must contain at least 1 uppercase character.',
-                field_errors[0])
-            self.assertEqual('password_missing_upper', field_errors[0].code)
+            values = {
+                'newPassword': [
+                    ErrorDetail(
+                        'Your password must contain at least 1 uppercase letter.',
+                        code='password_missing_upper')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -364,17 +374,14 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('newPassword', response.data)
-            field_errors = response.data['newPassword']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual(
-                'Your password must contain at least 1 lowercase character.',
-                field_errors[0])
-            self.assertEqual('password_missing_lower', field_errors[0].code)
+            values = {
+                'newPassword': [
+                    ErrorDetail(
+                        'Your password must contain at least 1 lowercase letter.',
+                        code='password_missing_lower')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -398,17 +405,14 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIn('newPassword', response.data)
-            field_errors = response.data['newPassword']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual(
-                'Your password must contain at least 1 number.',
-                field_errors[0])
-            self.assertEqual('password_missing_num', field_errors[0].code)
+            values = {
+                'newPassword': [
+                    ErrorDetail(
+                        'Your password must contain at least 1 number.',
+                        code='password_missing_num')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)
 
@@ -431,18 +435,15 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
             response = self.client.post(url, body)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            self.assertIn('newPassword', response.data)
-            field_errors = response.data['newPassword']
-
-            self.assertIsInstance(field_errors, list)
-            self.assertEqual(len(field_errors), 1)
-
-            self.assertIsInstance(field_errors[0], ErrorDetail)
-            self.assertEqual(
-                r'Your password must contain at least 1 of the following punctuation characters: !"#$%&'
-                "'"
-                r'()*+,-./:;<=>?@[\]^_`{|}~', field_errors[0])
-            self.assertEqual('password_missing_punc', field_errors[0].code)
+            values = {
+                'newPassword': [
+                    ErrorDetail(
+                        'Your password must contain at least 1 of the following punctuation characters: !"#$%&'
+                        "'"
+                        r'()*+,-./:;<=>?@[\]^_`{|}~',
+                        code='password_missing_punc')
+                ]
+            }
+            self.assertDictValues(response.data, values)
 
         self.check_urls(check)

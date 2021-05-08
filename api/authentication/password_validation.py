@@ -25,8 +25,8 @@ class ContainsUppercaseValidator:
 
     def get_help_text(self):
         return _n(
-            'Your password must contain at least %(min_chars)d uppercase character.',
-            'Your password must contain at least %(min_chars)d uppercase characters.',
+            'Your password must contain at least %(min_chars)d uppercase letter.',
+            'Your password must contain at least %(min_chars)d uppercase letters.',
             self.min_chars) % {
                 'min_chars': self.min_chars
             }
@@ -51,8 +51,8 @@ class ContainsLowercaseValidator:
 
     def get_help_text(self):
         return _n(
-            'Your password must contain at least %(min_chars)d lowercase character.',
-            'Your password must contain at least %(min_chars)d lowercase characters.',
+            'Your password must contain at least %(min_chars)d lowercase letter.',
+            'Your password must contain at least %(min_chars)d lowercase letters.',
             self.min_chars) % {
                 'min_chars': self.min_chars
             }

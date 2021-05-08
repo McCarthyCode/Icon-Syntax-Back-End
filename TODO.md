@@ -3,7 +3,6 @@
 ## High Priorities
 
 - Update tests to use assertDictValues and split OPTIONS tests where appropriate
-  - Password Reset
   - Password Forgot
   - Password Forgot Verify
 - Finish custom auth app

@@ -384,7 +384,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 'password': [
                     ErrorDetail(
                         string=
-                        'Your password must contain at least 1 uppercase character.',
+                        'Your password must contain at least 1 uppercase letter.',
                         code='password_missing_upper')
                 ]
             }
@@ -408,7 +408,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                 'password': [
                     ErrorDetail(
                         string=
-                        'Your password must contain at least 1 lowercase character.',
+                        'Your password must contain at least 1 lowercase letter.',
                         code='password_missing_lower')
                 ]
             }
