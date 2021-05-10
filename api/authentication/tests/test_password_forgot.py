@@ -19,7 +19,7 @@ class PasswordForgotTests(TestCaseShortcutsMixin, APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            'alice', settings.TEST_EMAIL_ADDRESS, 'Easypass123!')
+            'alice', 'alice@example.com', 'Easypass123!')
         self.user.is_verified = True
         self.user.save()
 
@@ -70,7 +70,7 @@ class PasswordForgotTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure we can successfully handle a POST request.
         """
-        body = {'email': settings.TEST_EMAIL_ADDRESS}
+        body = {'email': 'alice@example.com'}
 
         def check(url):
             self.check_success_message(url, body)

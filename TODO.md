@@ -2,18 +2,15 @@
 
 ## High Priorities
 
-- Update tests to use assertDictValues and split OPTIONS tests where appropriate
-  - Password Forgot
-  - Password Forgot Verify
 - Finish custom auth app
-  - Add permissions
-    - Register Verify
-  - Forgot password
-    - Reset with code and new password
+  - Security changes to database structure
+    - Encrypt username and email fields
+    - Split database into auth and default
   - Refresh token
   - Set token timeouts and update email messages to say when links expire.
   - Test and confirm RegisterVerify and PasswordForgotVerify cases where
     activation link has already been clicked.
+  - Set throttle limits
 - Create dictionary app
   - Define class structure
     - Abstract models
@@ -68,7 +65,7 @@
 
 ## Medium Priorities
 
-- Set throttle limits
+_None at this time._
 
 ## Low Priorities
 

@@ -15,4 +15,8 @@ urlpatterns = [
         '^password/forgot$',
         PasswordForgotView.as_view(),
         name='password-forgot'),
+    re_path(
+        '^password/forgot/verify$',
+        PasswordForgotVerifyView.as_view(),
+        name='password-forgot-verify'),
 ]
