@@ -77,16 +77,27 @@ class TestCaseShortcutsMixin():
         for item in _list:
             self.assertIsInstance(item, _type)
 
-    def assertDictValues(self, obj, values_dict):
+    def assertDictValues(self, obj, values):
         """
         Method to check fields within a given dictionary, based a dictionary of values. First, the field is compared to the type of the value, then the value itself. If value is None, the value check is skipped.
         """
         self.assertIsInstance(obj, dict)
-        self.assertIsInstance(values_dict, dict)
-        self.assertEqual(len(obj), len(values_dict))
+        self.assertIsInstance(values, dict)
 
-        for key, value in values_dict.items():
-            self.assertIn(key, obj)
+        try:
+            self.assertEqual(len(obj), len(values))
+        except AssertionError as exc:
+            print('obj.keys()', obj.keys())
+            print('values.keys()', values.keys())
+            raise exc
+
+        for key, value in values.items():
+            try:
+                self.assertIn(key, obj)
+            except AssertionError as exc:
+                print(f"key '{key}' is not in obj.")
+                print('obj.keys()', obj.keys())
+                raise exc
 
             if value == None:
                 continue
@@ -108,15 +119,30 @@ class TestCaseShortcutsMixin():
         """
         self.assertIsInstance(obj, dict)
         self.assertIsInstance(types, dict)
-        self.assertEqual(len(obj), len(types))
 
-        for key, value in obj.items():
+        try:
+            self.assertEqual(len(obj), len(types))
+        except AssertionError as exc:
+            print('obj.keys()', obj.keys())
+            print('types.keys()', types.keys())
+            raise exc
+
+        for key, _type in types.items():
+            try:
+                self.assertIn(key, obj)
+            except AssertionError as exc:
+                print(f"key '{key}' is not in obj.")
+                print('obj.keys()', obj.keys())
+                raise exc
+
+            value = obj[key]
+
             if isinstance(value, dict):
-                self.assertDictTypes(value, types[key])
+                self.assertDictTypes(value, _type)
             elif isinstance(value, list):
-                self.assertListType(value, types[key][0])
+                self.assertListType(value, _type[0])
             else:
-                self.assertIsInstance(value, types[key])
+                self.assertIsInstance(value, _type)
 
     def assertCredentialsValid(
             self, obj, username='alice', email='alice@example.com'):
@@ -131,15 +157,3 @@ class TestCaseShortcutsMixin():
         for key, value in tokens.items():
             self.assertIsInstance(value, str)
             self.assertRegexpMatches(value, settings.TOKEN_REGEX)
-
-    def assertErrorsEqual(self, errors, values):
-        """
-        Method to compare a list of ErrorDetail objects to a list of accepted values.
-        """
-        self.assertIsInstance(errors, list)
-        self.assertIsInstance(values, list)
-        self.assertEqual(len(errors), len(values))
-
-        for index in range(len(errors)):
-            self.assertIsInstance(error, ErrorDetail)
-            self.assertEqual(errors[index], values[index])
