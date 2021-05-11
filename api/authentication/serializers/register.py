@@ -22,7 +22,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     """
     Serializes username, email, and password and creates users for use in registration.
     """
-    class Meta():
+    class Meta:
         model = User
         fields = ['username', 'email', 'password']
 
@@ -110,7 +110,7 @@ class RegisterVerifySerializer(serializers.Serializer):
         """
         Retrieve the user, mark their email address as verified, and return serialized data.
         """
-        user = self.context['request'].user
+        user = self.context['user']
 
         if user.is_anonymous:
             self.fail('invalid')
@@ -121,7 +121,7 @@ class RegisterVerifySerializer(serializers.Serializer):
         """
         Retrieve the user, mark their email address as verified, and return the updated instance.
         """
-        user = self.context['request'].user
+        user = self.context['user']
         user.is_verified = True
 
         return user.save()

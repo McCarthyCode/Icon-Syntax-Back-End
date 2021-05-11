@@ -87,7 +87,7 @@ class RegisterVerifyView(APIView):
         POST method for taking a token from a query string, checking if it is valid, and marking its associated user's email address as verified.
         """
         serializer = self.serializer_class(
-            data={}, context={'request': request})
+            data={}, context={'user': request.user})
 
         try:
             serializer.is_valid(raise_exception=True)

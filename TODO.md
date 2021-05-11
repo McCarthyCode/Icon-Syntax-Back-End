@@ -3,14 +3,16 @@
 ## High Priorities
 
 - Finish custom auth app
+  - Refresh token
+  - Change Response to JsonResponse
+  - Use user object in context rather than whole request
   - Security changes to database structure
     - Encrypt username and email fields
     - Split database into auth and default
-  - Refresh token
-  - Set token timeouts and update email messages to say when links expire.
-  - Test and confirm RegisterVerify and PasswordForgotVerify cases where
-    activation link has already been clicked.
-  - Set throttle limits
+  - Settings updates
+    - Set token timeouts and update email messages to say when links expire
+    - Test and confirm RegisterVerify and PasswordForgotVerify cases where
+  - Set throttle limits activation link has already been clicked
 - Create dictionary app
   - Define class structure
     - Abstract models

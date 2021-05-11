@@ -93,7 +93,7 @@ class PasswordForgotVerifyView(GenericAPIView):
         POST method for last step of forgot password process.
         """
         serializer = self.serializer_class(
-            data=request.data, context={'request': request})
+            data=request.data, context={'user': request.user})
 
         try:
             serializer.is_valid(raise_exception=True)

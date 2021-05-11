@@ -52,7 +52,7 @@ class PasswordResetView(GenericAPIView):
         POST method responsible for collecting new and existing passwords (in addition to an Authorization header) and generating a response.
         """
         serializer = self.serializer_class(
-            data=request.data, context={'request': request})
+            data=request.data, context={'user': request.user})
 
         try:
             serializer.is_valid(raise_exception=True)

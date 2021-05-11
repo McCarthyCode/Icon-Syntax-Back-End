@@ -9,7 +9,7 @@ class PasswordForgotSerializer(serializers.ModelSerializer):
     """
     Serializer that validates an email address and returns its corresponding user if one exists.
     """
-    class Meta():
+    class Meta:
         model = User
         fields = ['email']
 

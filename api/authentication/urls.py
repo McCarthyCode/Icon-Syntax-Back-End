@@ -19,4 +19,5 @@ urlpatterns = [
         '^password/forgot/verify$',
         PasswordForgotVerifyView.as_view(),
         name='password-forgot-verify'),
+    re_path('^refresh$', RefreshView.as_view(), name='refresh'),
 ]

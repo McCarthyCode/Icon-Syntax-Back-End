@@ -16,7 +16,7 @@ from .credentials import CredentialsSerializer
 
 class LoginSerializer(serializers.Serializer):
     """
-    Serializes username, email, password, and tokens to allow for logging in.
+    Serializes username, email, password, and tokens to allow for logging in. Currently uses the same level of security as RefreshSerializer, but can be made stricter by adding 2FA.
     """
     username = serializers.CharField(
         max_length=64, required=False, write_only=True)
@@ -113,7 +113,7 @@ class LogoutSerializer(serializers.Serializer):
         """
         Blacklist the refresh token. On failure, raise ValidationError.
         """
-        user = self.context['request'].user
+        user = self.context['user']
         if user.is_anonymous:
             raise AuthenticationFailed(
                 self.default_error_messages['missing_invalid'],

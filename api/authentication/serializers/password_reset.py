@@ -40,7 +40,7 @@ class PasswordResetSerializer(serializers.Serializer):
         """
         Check if user is anonymous and to see if the password provided matches the one in the database. On success, return the raw password value. On failure, raise a validation error.
         """
-        user = self.context['request'].user
+        user = self.context['user']
 
         if user.is_anonymous:
             raise AuthenticationFailed(
@@ -58,14 +58,14 @@ class PasswordResetSerializer(serializers.Serializer):
         """
         Check if user is anonymous and to see if the password provided passes validation checks. On success, return the raw password value. On failure, raise a validation error.
         """
-        user = self.context['request'].user
+        user = self.context['user']
 
         if user.is_anonymous:
             raise AuthenticationFailed(
                 {NON_FIELD_ERRORS_KEY: [self.error_messages['invalid']]},
                 'invalid')
 
-        validate_password(password=value, user=self.context['request'].user)
+        validate_password(password=value, user=self.context['user'])
 
         return value
 
@@ -73,7 +73,7 @@ class PasswordResetSerializer(serializers.Serializer):
         """
         Check if user is anonymous. If not, save the new password value in the database.
         """
-        user = self.context['request'].user
+        user = self.context['user']
 
         if user.is_anonymous:
             AuthenticationFailed(
