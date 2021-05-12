@@ -26,16 +26,13 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
 
-    def tearDown(self):
-        self.user.delete()
-
     def check_urls(self, check):
         """
-        Method to run test under both URL and reverse-lookup name formats.
+        Method to first check if URL and reverse-lookup name formats match, then make the API call.
         """
-        check(f'/api/{settings.VERSION}/auth/password/forgot/verify')
-        self.tearDown()
-        self.setUp()
+        self.assertEqual(
+            f'/api/{settings.VERSION}/auth/password/forgot/verify', reverse('api:auth:password-forgot-verify'))
+
         check(reverse('api:auth:password-forgot-verify'))
 
     def test_options_unauthenticated(self):

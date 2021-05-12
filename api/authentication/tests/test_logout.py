@@ -29,9 +29,11 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
 
     def check_urls(self, check):
         """
-        Method to run test under both URL and URL and reverse-lookup name formats.
+        Method to first check if URL and reverse-lookup name formats match, then make the API call.
         """
-        check(f'/api/{settings.VERSION}/auth/logout')
+        self.assertEqual(
+            f'/api/{settings.VERSION}/auth/logout', reverse('api:auth:logout'))
+
         check(reverse('api:auth:logout'))
 
     def test_options(self):

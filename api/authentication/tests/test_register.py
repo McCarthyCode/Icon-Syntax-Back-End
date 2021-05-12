@@ -21,10 +21,12 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
 
     def check_urls(self, check):
         """
-        Helper method to run each test under both URL and reverse-lookup name formats.
+        Method to first check if URL and reverse-lookup name formats match, then make the API call.
         """
-        check(f'/api/{settings.VERSION}/auth/register')
-        User.objects.all().delete()
+        self.assertEqual(
+            f'/api/{settings.VERSION}/auth/register',
+            reverse('api:auth:register'))
+
         check(reverse('api:auth:register'))
 
     def test_options(self):

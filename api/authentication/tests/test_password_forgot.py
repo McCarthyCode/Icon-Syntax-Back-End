@@ -25,9 +25,11 @@ class PasswordForgotTests(TestCaseShortcutsMixin, APITestCase):
 
     def check_urls(self, check):
         """
-        Method to run test under both URL and reverse-lookup name formats.
+        Method to first check if URL and reverse-lookup name formats match, then make the API call.
         """
-        check(f'/api/{settings.VERSION}/auth/password/forgot')
+        self.assertEqual(
+            f'/api/{settings.VERSION}/auth/password/forgot', reverse('api:auth:password-forgot'))
+
         check(reverse('api:auth:password-forgot'))
 
     def test_options(self):

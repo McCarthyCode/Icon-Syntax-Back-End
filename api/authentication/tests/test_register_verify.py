@@ -22,17 +22,15 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
 
-    def tearDown(self):
-        User.objects.all().delete()
-
     def check_urls(self, check):
         """
-        Method to run each test under both URL and reverse-lookup name formats.
+        Method to first check if URL and reverse-lookup name formats match, then make the API call.
         """
-        check(f'/api/{settings.VERSION}/auth/register/verify')
-        self.tearDown()
-        self.setUp()
-        check(reverse('api:auth:verify'))
+        self.assertEqual(
+            f'/api/{settings.VERSION}/auth/register/verify',
+            reverse('api:auth:register-verify'))
+
+        check(reverse('api:auth:register-verify'))
 
     def test_options_unauthenticated(self):
         """

@@ -37,12 +37,11 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
 
     def check_urls(self, check):
         """
-        Method to run test under both URL and URL and reverse-lookup name formats. This sets the password back to its original value in case the value has changed.
+        Method to first check if URL and reverse-lookup name formats match, then make the API call.
         """
-        check(f'/api/{settings.VERSION}/auth/password/reset')
-
-        self.user.set_password('Easypass123!')
-        self.user.save()
+        self.assertEqual(
+            f'/api/{settings.VERSION}/auth/password/reset',
+            reverse('api:auth:password-reset'))
 
         check(reverse('api:auth:password-reset'))
 

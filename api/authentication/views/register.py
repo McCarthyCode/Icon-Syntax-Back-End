@@ -46,7 +46,7 @@ class RegisterView(GenericAPIView):
                 'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
             ),
             serializer.save(),
-            reverse('api:auth:verify'),
+            reverse('api:auth:register-verify'),
         )
 
         return Response(
