@@ -1,11 +1,12 @@
 from django.conf import settings
+from django.urls import reverse
 
 from rest_framework.exceptions import ErrorDetail
 
 
-class TestCaseShortcutsMixin():
+class TypeDictsMixin():
     """
-    Class containing parameters and methods to help with testing response data.
+    Class containing objects for comparison with types of other dicts
     """
     options_types = {
         'name': str,
@@ -68,6 +69,11 @@ class TestCaseShortcutsMixin():
         }
     }
 
+
+class AssertMethodsMixin():
+    """
+    Class containing methods to help with comparing types, keys, and values.
+    """
     def assertListType(self, _list, _type):
         """
         Method to check the type of members of a given list, based on a given type.
@@ -157,3 +163,38 @@ class TestCaseShortcutsMixin():
         for key, value in tokens.items():
             self.assertIsInstance(value, str)
             self.assertRegexpMatches(value, settings.TOKEN_REGEX)
+
+
+class TestCasesMixin:
+    """
+    Tests that can be applied to every endpoint.
+    """
+    def test_urls(self):
+        """
+        Method to check if URL and reverse-lookup name formats match.
+        """
+        self.assertEqual(self.url_path, reverse(self.url_name))
+
+
+class TestCaseUtilsMixin:
+    """
+    Tests that can be applied to every endpoint.
+    """
+    def spoof_verification(self):
+        """
+        Method to set self.user.is_verified field to True, simulating the user receiving a verification email and clicking the link.
+        """
+        self.user.is_verified = True
+        self.user.save()
+
+
+class TestCaseShortcutsMixin(
+        TypeDictsMixin,
+        AssertMethodsMixin,
+        TestCasesMixin,
+        TestCaseUtilsMixin,
+):
+    """
+    Class containing parameters and methods to help with testing response data.
+    """
+    pass

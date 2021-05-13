@@ -1,7 +1,6 @@
 import json
 
 from django.conf import settings
-from django.urls import reverse
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
@@ -26,64 +25,47 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         """
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
-
-    def spoof_verification(self):
-        """
-        Method to set is_verified field to True, simulating the user receiving a verification email and clicking the link.
-        """
-        self.user.is_verified = True
-        self.user.save()
-
-    def check_urls(self, check):
-        """
-        Method to first check if URL and reverse-lookup name formats match, then make the API call.
-        """
-        self.assertEqual(
-            f'/api/{settings.VERSION}/auth/login', reverse('api:auth:login'))
-
-        check(reverse('api:auth:login'))
+        self.url_path = f'/api/{settings.VERSION}/auth/login'
+        self.url_name = 'api:auth:login'
 
     def test_options(self):
         """
         Ensure we can successfully get data from an OPTIONS request.
         """
-        def check(url):
-            response = self.client.options(url, format='json')
+        response = self.client.options(self.url_path, format='json')
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            types = {
-                'actions': {
-                    'POST': {
-                        'username': {
-                            'type': str,
-                            'required': bool,
-                            'read_only': bool,
-                            'label': str,
-                            'max_length': int
-                        },
-                        'email': {
-                            'type': str,
-                            'required': bool,
-                            'read_only': bool,
-                            'label': str,
-                            'max_length': int
-                        },
-                        'password': {
-                            'type': str,
-                            'required': bool,
-                            'read_only': bool,
-                            'label': str,
-                            'min_length': int,
-                            'max_length': int
-                        },
-                        **self.credentials_types
-                    }
-                },
-                **self.options_types
-            }
-            self.assertDictTypes(response.data, types)
-
-        self.check_urls(check)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        types = {
+            'actions': {
+                'POST': {
+                    'username': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                        'max_length': int
+                    },
+                    'email': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                        'max_length': int
+                    },
+                    'password': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                        'min_length': int,
+                        'max_length': int
+                    },
+                    **self.credentials_types
+                }
+            },
+            **self.options_types
+        }
+        self.assertDictTypes(response.data, types)
 
     def test_blank_input_with_username(self):
         """
@@ -94,20 +76,14 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': '',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = {
-                'username':
-                [ErrorDetail('This field may not be blank.', 'blank')],
-                'password':
-                [ErrorDetail('This field may not be blank.', 'blank')]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'username': [ErrorDetail('This field may not be blank.', 'blank')],
+            'password': [ErrorDetail('This field may not be blank.', 'blank')]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_blank_input_with_email(self):
         """
@@ -118,38 +94,26 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': '',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = {
-                'email': [ErrorDetail('This field may not be blank.', 'blank')],
-                'password':
-                [ErrorDetail('This field may not be blank.', 'blank')]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'email': [ErrorDetail('This field may not be blank.', 'blank')],
+            'password': [ErrorDetail('This field may not be blank.', 'blank')]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_missing_input(self):
         """
         Ensure that a the proper error messages are sent on missing input.
         """
-        body = {}
+        response = self.client.post(self.url_path, {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = {
-                'password':
-                [ErrorDetail('This field is required.', 'required')]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'password': [ErrorDetail('This field is required.', 'required')]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_partial_input(self):
         """
@@ -167,58 +131,46 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             },
         ]
 
-        def check(url):
-            for body in bodies:
-                response = self.client.post(url, body, format='json')
+        for body in bodies:
+            response = self.client.post(self.url_path, body, format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-                self.assertEqual(
-                    response.status_code, status.HTTP_400_BAD_REQUEST)
-
-                if 'password' in body:
-                    values = {
-                        NON_FIELD_ERRORS_KEY: [
-                            ErrorDetail(
-                                'A username or email is required.',
-                                'id_required')
-                        ]
-                    }
-                    self.assertDictValues(response.data, values)
-                else:
-                    values = {
-                        'password':
-                        [ErrorDetail('This field is required.', 'required')]
-                    }
-                    self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+            if 'password' in body:
+                values = {
+                    NON_FIELD_ERRORS_KEY: [
+                        ErrorDetail(
+                            'A username or email is required.', 'id_required')
+                    ]
+                }
+                self.assertDictValues(response.data, values)
+            else:
+                values = {
+                    'password':
+                    [ErrorDetail('This field is required.', 'required')]
+                }
+                self.assertDictValues(response.data, values)
 
     def test_partial_blank_input(self):
         """
         Ensure that a the proper error messages are sent on partial, but blank, input.
         """
-        def check(url):
-            for key in {'username', 'email', 'password'}:
-                response = self.client.post(url, {key: ''}, format='json')
+        for key in {'username', 'email', 'password'}:
+            response = self.client.post(self.url_path, {key: ''}, format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-                self.assertEqual(
-                    response.status_code, status.HTTP_400_BAD_REQUEST)
-
-                if key == 'password':
-                    values = {
-                        'password':
-                        [ErrorDetail('This field may not be blank.', 'blank')]
-                    }
-                    self.assertDictValues(response.data, values)
-                else:
-                    values = {
-                        key:
-                        [ErrorDetail('This field may not be blank.', 'blank')],
-                        'password':
-                        [ErrorDetail('This field is required.', 'required')]
-                    }
-                    self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+            if key == 'password':
+                values = {
+                    'password':
+                    [ErrorDetail('This field may not be blank.', 'blank')]
+                }
+                self.assertDictValues(response.data, values)
+            else:
+                values = {
+                    key: [ErrorDetail('This field may not be blank.', 'blank')],
+                    'password':
+                    [ErrorDetail('This field is required.', 'required')]
+                }
+                self.assertDictValues(response.data, values)
 
     def test_success_username(self):
         """
@@ -231,21 +183,17 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': 'Easypass123!',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-            self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        values = {
+            'success': 'You have successfully logged in.',
+            'redirect': '/',
+            'credentials': None,
+        }
 
-            values = {
-                'success': 'You have successfully logged in.',
-                'redirect': '/',
-                'credentials': None,
-            }
-
-            self.assertDictValues(response.data, values)
-            self.assertCredentialsValid(response.data['credentials'])
-
-        self.check_urls(check)
+        self.assertDictValues(response.data, values)
+        self.assertCredentialsValid(response.data['credentials'])
 
     def test_success_email(self):
         """
@@ -258,21 +206,17 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': 'Easypass123!',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-            self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        values = {
+            'success': 'You have successfully logged in.',
+            'redirect': '/',
+            'credentials': None,
+        }
 
-            values = {
-                'success': 'You have successfully logged in.',
-                'redirect': '/',
-                'credentials': None,
-            }
-
-            self.assertDictValues(response.data, values)
-            self.assertCredentialsValid(response.data['credentials'])
-
-        self.check_urls(check)
+        self.assertDictValues(response.data, values)
+        self.assertCredentialsValid(response.data['credentials'])
 
     def test_invalid_username(self):
         """
@@ -283,21 +227,16 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': 'Easypass123!',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'The credentials used to login were invalid.',
-                        'invalid')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'The credentials used to login were invalid.', 'invalid')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_invalid_password(self):
         """
@@ -308,21 +247,16 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': 'whatwasmypasswordagain???',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'The credentials used to login were invalid.',
-                        'invalid')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'The credentials used to login were invalid.', 'invalid')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_unverified_email(self):
         """
@@ -333,19 +267,17 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': 'Easypass123!',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'Your account has not been verified. Please check your email for a confirmation link.',
-                        'unverified')
-                ]
-            }
-            self.assertDictValues(response.data, values)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Your account has not been verified. Please check your email for a confirmation link.',
+                    'unverified')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_inactive_user(self):
         """
@@ -360,42 +292,34 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
             'password': 'Easypass123!',
         }
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
-                        'inactive')
-                ]
-            }
-            self.assertDictValues(response.data, values)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
+                    'disabled')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_user_not_found(self):
         """
         Ensure that if a valid token is generated, but the user gets destroyed in the process, the appropriate error message is displayed.
         """
-        self.spoof_verification()
-
         body = {
-            'username': 'alice',
+            'username': 'bob',
             'password': 'Easypass123!',
         }
 
-        def check(url):
-            self.user.delete()
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'You have used valid credentials to log into an account that is no longer available. It may have been deleted. Please contact the site administrator at webmaster@iconopedia.org.',
-                        'user_gone')
-                ]
-            }
-            self.assertDictValues(response.data, values)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'The credentials used to login were invalid.', 'invalid')
+            ]
+        }
+        self.assertDictValues(response.data, values)

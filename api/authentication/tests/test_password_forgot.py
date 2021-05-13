@@ -23,9 +23,9 @@ class PasswordForgotTests(TestCaseShortcutsMixin, APITestCase):
         self.user.is_verified = True
         self.user.save()
 
-    def check_urls(self, check):
+    def test_urls(self, check):
         """
-        Method to first check if URL and reverse-lookup name formats match, then make the API call.
+        Method to check if URL and reverse-lookup name formats match.
         """
         self.assertEqual(
             f'/api/{settings.VERSION}/auth/password/forgot', reverse('api:auth:password-forgot'))
