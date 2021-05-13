@@ -3,12 +3,6 @@
 ## High Priorities
 
 - Finish custom auth app
-  - Refactor tests
-    - Implement mixins
-    - Integrate check methods
-    - Condense auth header definition to one line
-    - Group auth header, request, and status code assertion together to
-      communicate the action of sending a request and receiving a response
   - Refresh token tests
   - Security changes to database structure
     - Encrypt username and email fields

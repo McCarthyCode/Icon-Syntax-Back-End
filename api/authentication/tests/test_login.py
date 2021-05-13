@@ -21,20 +21,21 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
     def setUp(self):
         """
-        Set-up method for constructing the test class. Creates a new user.
+        Set-up method for constructing the test class. Creates a new User instance and defines the endpoint URL name and path.
         """
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
-        self.url_path = f'/api/{settings.VERSION}/auth/login'
+
         self.url_name = 'api:auth:login'
+        self.url_path = f'/api/{settings.VERSION}/auth/login'
 
     def test_options(self):
         """
         Ensure we can successfully get data from an OPTIONS request.
         """
         response = self.client.options(self.url_path, format='json')
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         types = {
             'actions': {
                 'POST': {

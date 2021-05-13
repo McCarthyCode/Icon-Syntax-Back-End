@@ -18,75 +18,60 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
     """
     client = APIClient
 
-    def spoof_verification(self):
-        self.user.is_verified = True
-        self.user.save()
-
     def setUp(self):
+        """
+        Set-up method for constructing the test class. Creates a new User instance and defines the endpoint URL name and path.
+        """
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
 
-    def test_urls(self, check):
-        """
-        Method to check if URL and reverse-lookup name formats match.
-        """
-        self.assertEqual(
-            f'/api/{settings.VERSION}/auth/password/forgot/verify', reverse('api:auth:password-forgot-verify'))
-
-        check(reverse('api:auth:password-forgot-verify'))
+        self.url_name = 'api:auth:password-forgot-verify'
+        self.url_path = f'/api/{settings.VERSION}/auth/password/forgot/verify'
 
     def test_options_unauthenticated(self):
         """
         Ensure we can successfully get data from an unauthenticated OPTIONS request.
         """
-        def check(url):
-            response = self.client.options(url, format='json')
+        response = self.client.options(self.url_path, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertDictTypes(response.data, self.options_types)
-
-        self.check_urls(check)
+        self.assertDictTypes(response.data, self.options_types)
 
     def test_options_authenticated(self):
         """
         Ensure we can successfully get data from an authenticated OPTIONS request.
         """
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.options(url, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.options(self.url_path, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-            types = {
-                'actions': {
-                    'POST': {
-                        'oldPassword': {
-                            'type': str,
-                            'required': bool,
-                            'read_only': bool,
-                            'label': str,
-                            'min_length': int,
-                            'max_length': int
-                        },
-                        'newPassword': {
-                            'type': str,
-                            'required': bool,
-                            'read_only': bool,
-                            'label': str,
-                            'min_length': int,
-                            'max_length': int
-                        },
-                        **self.credentials_types
-                    }
-                },
-                **self.options_types
-            }
-            self.assertDictTypes(response.data, types)
-
-        self.check_urls(check)
+        types = {
+            'actions': {
+                'POST': {
+                    'oldPassword': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                        'min_length': int,
+                        'max_length': int
+                    },
+                    'newPassword': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                        'min_length': int,
+                        'max_length': int
+                    },
+                    **self.credentials_types
+                }
+            },
+            **self.options_types
+        }
+        self.assertDictTypes(response.data, types)
 
     def test_blank_input(self):
         """
@@ -97,27 +82,22 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'newPassword': '',
         }
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = dict(
-                [
-                    (
-                        key, [
-                            ErrorDetail(
-                                'This field may not be blank.', 'blank')
-                        ] \
-                    ) for key in body
-                ])
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = dict(
+            [
+                (
+                    key, [
+                        ErrorDetail(
+                            'This field may not be blank.', 'blank')
+                    ] \
+                ) for key in body
+            ])
+        self.assertDictValues(response.data, values)
 
     def test_missing_input(self):
         """
@@ -125,27 +105,22 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         """
         body = {}
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = dict(
-                [
-                    (
-                        key, [
-                            ErrorDetail(
-                                'This field is required.', 'required')
-                        ] \
-                    ) for key in {'oldPassword', 'newPassword'}
-                ])
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = dict(
+            [
+                (
+                    key, [
+                        ErrorDetail(
+                            'This field is required.', 'required')
+                    ] \
+                ) for key in {'oldPassword', 'newPassword'}
+            ])
+        self.assertDictValues(response.data, values)
 
     def test_partial_input(self):
         """
@@ -154,25 +129,19 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         keys = {'oldPassword', 'newPassword'}
         bodies = [{key: 'Easypass123!'} for key in keys]
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            for body in bodies:
-                access = self.user.access
-                self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-                response = self.client.post(url, body, format='json')
+        for body in bodies:
+            self.client.credentials(
+                HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+            response = self.client.post(self.url_path, body, format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-                self.assertEqual(
-                    response.status_code, status.HTTP_400_BAD_REQUEST)
-
-                for key in keys.intersection(response.data):
-                    values = {
-                        key:
-                        [ErrorDetail('This field is required.', 'required')]
-                    }
-                    self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+            for key in keys.intersection(response.data):
+                values = {
+                    key: [ErrorDetail('This field is required.', 'required')]
+                }
+                self.assertDictValues(response.data, values)
 
     def test_success(self):
         """
@@ -182,29 +151,23 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'oldPassword': 'Easypass123!',
             'newPassword': 'Newerpass123!',
         }
+        self.assertTrue(self.user.check_password(body['oldPassword']))
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            self.assertTrue(self.user.check_password(body['oldPassword']))
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body)
+        values = {
+            'success': _('Your password has been reset successfully.'),
+            'credentials': None,
+        }
+        self.assertDictValues(response.data, values)
+        self.assertCredentialsValid(response.data['credentials'])
 
-            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
-            values = {
-                'success': _('Your password has been reset successfully.'),
-                'credentials': None,
-            }
-            self.assertDictValues(response.data, values)
-            self.assertCredentialsValid(response.data['credentials'])
-
-            self.user = User.objects.get(pk=self.user.pk)
-            self.assertTrue(self.user.check_password(body['newPassword']))
-
-        self.check_urls(check)
+        self.user = User.objects.get(pk=self.user.pk)
+        self.assertTrue(self.user.check_password(body['newPassword']))
 
     def test_unverified(self):
         """
@@ -215,29 +178,24 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'newPassword': 'Newerpass123!',
         }
 
-        def check(url):
-            self.assertTrue(self.user.check_password(body['oldPassword']))
-            self.assertFalse(self.user.is_verified)
+        self.assertTrue(self.user.check_password(body['oldPassword']))
+        self.assertFalse(self.user.is_verified)
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'You do not have permission to perform this action.',
+                    'permission_denied')
+            ],
+        }
+        self.assertDictValues(response.data, values)
 
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'You do not have permission to perform this action.',
-                        'permission_denied')
-                ],
-            }
-            self.assertDictValues(response.data, values)
-
-            self.user = User.objects.get(pk=self.user.pk)
-            self.assertTrue(self.user.check_password(body['oldPassword']))
-
-        self.check_urls(check)
+        self.user = User.objects.get(pk=self.user.pk)
+        self.assertTrue(self.user.check_password(body['oldPassword']))
 
     def test_no_header(self):
         """
@@ -248,23 +206,19 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'newPassword': 'Newerpass123!',
         }
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            response = self.client.post(url, body)
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'Authentication credentials were not provided.',
-                        'not_authenticated')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Authentication credentials were not provided.',
+                    'not_authenticated')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_old_password_mismatch(self):
         """
@@ -274,28 +228,22 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'oldPassword': 'wrongpass123',
             'newPassword': 'Newerpass123!',
         }
+        self.assertFalse(self.user.check_password(body['oldPassword']))
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            self.assertFalse(self.user.check_password(body['oldPassword']))
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body)
-
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'The old password was not correct. If you have forgotten your password, please use the "forgot password" link.',
-                        'mismatch')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'The old password was not correct. If you have forgotten your password, please use the "forgot password" link.',
+                    'mismatch')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_new_password_missing_uppercase(self):
         """
@@ -305,28 +253,22 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'oldPassword': 'Easypass123!',
             'newPassword': 'easypass123!',
         }
+        self.assertTrue(self.user.check_password(body['oldPassword']))
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            self.assertTrue(self.user.check_password(body['oldPassword']))
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body)
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = {
-                'newPassword': [
-                    ErrorDetail(
-                        'Your password must contain at least 1 uppercase letter.',
-                        'password_missing_upper')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'newPassword': [
+                ErrorDetail(
+                    'Your password must contain at least 1 uppercase letter.',
+                    'password_missing_upper')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_new_password_missing_lowercase(self):
         """
@@ -336,28 +278,22 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'oldPassword': 'Easypass123!',
             'newPassword': 'EASYPASS123!',
         }
+        self.assertTrue(self.user.check_password(body['oldPassword']))
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            self.assertTrue(self.user.check_password(body['oldPassword']))
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body)
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = {
-                'newPassword': [
-                    ErrorDetail(
-                        'Your password must contain at least 1 lowercase letter.',
-                        'password_missing_lower')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'newPassword': [
+                ErrorDetail(
+                    'Your password must contain at least 1 lowercase letter.',
+                    'password_missing_lower')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_new_password_missing_number(self):
         """
@@ -367,28 +303,22 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'oldPassword': 'Easypass123!',
             'newPassword': 'Easypass!',
         }
+        self.assertTrue(self.user.check_password(body['oldPassword']))
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            self.assertTrue(self.user.check_password(body['oldPassword']))
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body)
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = {
-                'newPassword': [
-                    ErrorDetail(
-                        'Your password must contain at least 1 number.',
-                        'password_missing_num')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'newPassword': [
+                ErrorDetail(
+                    'Your password must contain at least 1 number.',
+                    'password_missing_num')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_new_password_missing_punctuation(self):
         """
@@ -398,25 +328,20 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
             'oldPassword': 'Easypass123!',
             'newPassword': 'Easypass123',
         }
+        self.assertTrue(self.user.check_password(body['oldPassword']))
 
-        def check(url):
-            self.spoof_verification()
+        self.spoof_verification()
 
-            self.assertTrue(self.user.check_password(body['oldPassword']))
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path, body)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url, body)
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            values = {
-                'newPassword': [
-                    ErrorDetail(
-                        'Your password must contain at least 1 of the following punctuation characters: !"#$%&'
-                        "'"
-                        r'()*+,-./:;<=>?@[\]^_`{|}~', 'password_missing_punc')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'newPassword': [
+                ErrorDetail(
+                    'Your password must contain at least 1 of the following punctuation characters: !"#$%&'
+                    "'"
+                    r'()*+,-./:;<=>?@[\]^_`{|}~', 'password_missing_punc')
+            ]
+        }
+        self.assertDictValues(response.data, values)

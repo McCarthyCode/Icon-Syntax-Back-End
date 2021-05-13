@@ -19,106 +19,91 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
     client = APIClient()
 
     def setUp(self):
+        """
+        Set-up method for constructing the test class. Creates a new User instance, marks it as verified, and defines the endpoint URL name and path.
+        """
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
 
-    def test_urls(self, check):
-        """
-        Method to check if URL and reverse-lookup name formats match.
-        """
-        self.assertEqual(
-            f'/api/{settings.VERSION}/auth/register/verify',
-            reverse('api:auth:register-verify'))
-
-        check(reverse('api:auth:register-verify'))
+        self.url_name = 'api:auth:register-verify'
+        self.url_path = f'/api/{settings.VERSION}/auth/register/verify'
 
     def test_options_unauthenticated(self):
         """
         Ensure we can successfully get data from an unauthenticated OPTIONS request.
-        """
-        def check(url):
-            response = self.client.options(url, format='json')
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertDictTypes(response.data, self.options_types)
+        TODO - Accept a HTTP 403 FORBIDDEN status code
+        """
+        response = self.client.options(self.url_path, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictTypes(response.data, self.options_types)
 
     def test_options_authenticated(self):
         """
         Ensure we can successfully get data from an authenticated OPTIONS request.
-        """
-        def check(url):
-            self.client.credentials(
-                HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
-            response = self.client.options(url, format='json')
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            values = {'actions': {'POST': {}}, **self.options_types}
-            self.assertDictTypes(response.data, )
+        TODO - Accept body as defined in 'types'
+        """
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.options(self.url_path, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # types = {'actions': {'POST': {}}, **self.options_types}
+        self.assertDictTypes(response.data, self.options_types)
 
     def test_missing_token(self):
         """
         Ensure that the proper error messages are sent when no Authorization header is provided.
         """
-        def check(url):
-            response = self.client.post(url)
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'The activation link was invalid or has expired.',
-                        'invalid')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'The activation link was invalid or has expired.',
+                    'invalid')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_invalid_token(self):
         """
         Ensure that the proper error messages are sent when an incorrect for token is provided (i.e. 'abc123').
         """
-        def check(url):
-            self.client.credentials(HTTP_AUTHORIZATION='Bearer abc123')
-            response = self.client.post(url)
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer abc123')
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'Given token not valid for any token type.',
-                        'token_not_valid')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Given token not valid for any token type.',
+                    'token_not_valid')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_success(self):
         """
         Ensure we can successfully verify a user.
         """
-        def check(url):
-            self.assertFalse(self.user.is_verified)
-            self.client.credentials(
-                HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
-            response = self.client.post(url)
+        self.assertFalse(self.user.is_verified)
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-            values = {
-                'success':
-                _(
-                    'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.'
-                ),
-                'credentials':
-                None,
-            }
-            self.assertDictValues(response.data, values)
-            self.assertCredentialsValid(response.data['credentials'])
+        values = {
+            'success':
+            _(
+                'You have successfully verified your email address and completed the registration process! You may now access the site\'s full features.'
+            ),
+            'credentials':
+            None,
+        }
+        self.assertDictValues(response.data, values)
+        self.assertCredentialsValid(response.data['credentials'])
 
-            self.assertTrue(User.objects.get(username='alice').is_verified)
-
-        self.check_urls(check)
+        self.assertTrue(User.objects.get(username='alice').is_verified)

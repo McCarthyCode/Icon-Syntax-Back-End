@@ -20,154 +20,112 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
 
     def setUp(self):
         """
-        Set-up method for constructing the test class. Creates a new (verified) user.
+        Set-up method for constructing the test class. Creates a new User instance, marks it as verified, and defines the endpoint URL name and path.
         """
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
-        self.user.is_verified = True
-        self.user.save()
+        self.spoof_verification()
 
-    def test_urls(self, check):
-        """
-        Method to check if URL and reverse-lookup name formats match.
-        """
-        self.assertEqual(
-            f'/api/{settings.VERSION}/auth/logout', reverse('api:auth:logout'))
-
-        check(reverse('api:auth:logout'))
+        self.url_name = 'api:auth:logout'
+        self.url_path = f'/api/{settings.VERSION}/auth/logout'
 
     def test_options(self):
         """
         Ensure we can successfully get data from an OPTIONS request when the user is not authenticated.
         """
-        def check(url):
-            response = self.client.options(url, format='json')
+        response = self.client.options(self.url_path, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertDictTypes(response.data, self.options_types)
-
-        self.check_urls(check)
+        self.assertDictTypes(response.data, self.options_types)
 
     def test_options_authenticated(self):
         """
         Ensure we can successfully get data from an OPTIONS request when the user is authenticated.
         """
-        def check(url):
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.options(url, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.options(self.url_path, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            types = {'actions': {'POST': {}}, **self.options_types}
-            self.assertDictTypes(response.data, types)
-
-        self.check_urls(check)
+        types = {'actions': {'POST': {}}, **self.options_types}
+        self.assertDictTypes(response.data, types)
 
     def test_success(self):
         """
         Ensure that a user can logout successfully.
         """
-        body = {'username': 'alice', 'password': 'Easypass123!'}
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
 
-        def check(url):
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url)
-
-            self.assertEqual(
-                response.status_code, status.HTTP_205_RESET_CONTENT)
-
-            values = {'success': 'You have successfully logged out.'}
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {'success': 'You have successfully logged out.'}
+        self.assertDictValues(response.data, values)
 
     def test_missing_header(self):
         """
         Ensure that a user cannot logout with a missing header.
         """
-        def check(url):
-            response = self.client.post(url)
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'Authentication credentials were not provided.',
-                        'not_authenticated')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Authentication credentials were not provided.',
+                    'not_authenticated')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_malformed_header(self):
         """
         Ensure that a user cannot logout with a malformed header. This test uses the keyword 'Token' rather than 'Bearer' with a valid access token.
         """
-        body = {'username': 'alice', 'password': 'Easypass123!'}
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.access}')
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        def check(url):
-            access = self.user.access
-            self.client.credentials(HTTP_AUTHORIZATION=f'Token {access}')
-            response = self.client.post(url)
-
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'Authentication credentials were not provided.',
-                        'not_authenticated')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Authentication credentials were not provided.',
+                    'not_authenticated')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_invalid_token(self):
         """
         Ensure that a user cannot logout with an invalid token.
         """
-        def check(url):
-            self.client.credentials(HTTP_AUTHORIZATION='Bearer abc123')
-            response = self.client.post(url)
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer abc123')
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            values = {
-                NON_FIELD_ERRORS_KEY: [
-                    ErrorDetail(
-                        'Given token not valid for any token type.',
-                        'token_not_valid')
-                ]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Given token not valid for any token type.',
+                    'token_not_valid')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_user_gone(self):
         """
         Ensure that a user cannot logout with a token belonging to a user that has been destroyed.
         """
-        body = {'username': 'alice', 'password': 'Easypass123!'}
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
 
-        def check(url):
-            access = self.user.access
-            self.user.delete()
-            self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-            response = self.client.post(url)
+        self.user.delete()
 
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response = self.client.post(self.url_path)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-            values = {
-                NON_FIELD_ERRORS_KEY:
-                [ErrorDetail('User not found.', 'authentication_failed')]
-            }
-            self.assertDictValues(response.data, values)
+        values = {
+            NON_FIELD_ERRORS_KEY:
+            [ErrorDetail('User not found.', 'authentication_failed')]
+        }
+        self.assertDictValues(response.data, values)
 
-            self.user = User.objects.create_user(
-                'alice', 'alice@example.com', 'Easypass123!')
-
-        self.check_urls(check)
+        self.user = User.objects.create_user(
+            'alice', 'alice@example.com', 'Easypass123!')

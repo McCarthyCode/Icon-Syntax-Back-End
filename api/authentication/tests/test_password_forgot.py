@@ -18,50 +18,43 @@ class PasswordForgotTests(TestCaseShortcutsMixin, APITestCase):
     client = APIClient
 
     def setUp(self):
+        """
+        Set-up method for constructing the test class. Creates a new User instance, marks it as verified, and defines the endpoint URL name and path.
+        """
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
-        self.user.is_verified = True
-        self.user.save()
+        self.spoof_verification()
 
-    def test_urls(self, check):
-        """
-        Method to check if URL and reverse-lookup name formats match.
-        """
-        self.assertEqual(
-            f'/api/{settings.VERSION}/auth/password/forgot', reverse('api:auth:password-forgot'))
-
-        check(reverse('api:auth:password-forgot'))
+        self.url_name = 'api:auth:password-forgot'
+        self.url_path = f'/api/{settings.VERSION}/auth/password/forgot'
 
     def test_options(self):
         """
         Ensure we can successfully get data from an OPTIONS request.
         """
-        def check(url):
-            response = self.client.options(url, format='json')
-
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            types = {
-                'actions': {
-                    'POST': {
-                        'email': {
-                            'type': str,
-                            'required': bool,
-                            'read_only': bool,
-                            'label': str,
-                            'max_length': int
-                        }
-                    }
-                },
-                **self.options_types
-            }
-            self.assertDictTypes(response.data, types)
-
-        self.check_urls(check)
-
-    def check_success_message(self, url, body):
-        response = self.client.post(url, body, format='json')
-
+        response = self.client.options(self.url_path, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        types = {
+            'actions': {
+                'POST': {
+                    'email': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                        'max_length': int
+                    }
+                }
+            },
+            **self.options_types
+        }
+        self.assertDictTypes(response.data, types)
+
+    def check_success_message(self, body):
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         values = {
             'success':
             'If the email provided is valid, a password reset link should appear in your inbox within a few minutes. Please be sure to check your spam folder.'
@@ -73,22 +66,14 @@ class PasswordForgotTests(TestCaseShortcutsMixin, APITestCase):
         Ensure we can successfully handle a POST request.
         """
         body = {'email': 'alice@example.com'}
-
-        def check(url):
-            self.check_success_message(url, body)
-
-        self.check_urls(check)
+        self.check_success_message(body)
 
     def test_quiet_failure(self):
         """
         Ensure that a properly formatted email string not in the database gets a success message. This helps prevent user enumeration attacks.
         """
         body = {'email': 'bob@example.com'}
-
-        def check(url):
-            self.check_success_message(url, body)
-
-        self.check_urls(check)
+        self.check_success_message(body)
 
     def test_invalid_email(self):
         """
@@ -96,14 +81,10 @@ class PasswordForgotTests(TestCaseShortcutsMixin, APITestCase):
         """
         body = {'email': 'Email? What\'s an email?'}
 
-        def check(url):
-            response = self.client.post(url, body, format='json')
+        response = self.client.post(self.url_path, body, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            values = {
-                'email':
-                [ErrorDetail('Enter a valid email address.', 'invalid')]
-            }
-            self.assertDictValues(response.data, values)
-
-        self.check_urls(check)
+        values = {
+            'email': [ErrorDetail('Enter a valid email address.', 'invalid')]
+        }
+        self.assertDictValues(response.data, values)
