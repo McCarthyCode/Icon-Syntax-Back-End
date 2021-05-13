@@ -17,7 +17,7 @@ class RefreshSerializer(LoginSerializer):
 
     def validate_refresh(self, value):
         """
-        Field-level validation method for checking a refresh token. The method attempts to blacklist the token, returning the original value on success, or raising AuthenticationFailed on failure.
+        Field-level validation method for checking a refresh token. The method attempts to blacklist the token, returning the original value on success or raising AuthenticationFailed on failure.
         """
         try:
             token = RefreshToken(value)
@@ -29,4 +29,3 @@ class RefreshSerializer(LoginSerializer):
             raise AuthenticationFailed(ErrorDetail(msg, 'invalid'))
 
         return value
-

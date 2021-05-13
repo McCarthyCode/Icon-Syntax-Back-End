@@ -3,7 +3,6 @@
 ## High Priorities
 
 - Finish custom auth app
-  - Refresh token tests
   - Security changes to database structure
     - Encrypt username and email fields
     - Split database into auth and default

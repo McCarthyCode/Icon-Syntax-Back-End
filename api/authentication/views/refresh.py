@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
@@ -38,7 +38,7 @@ class RefreshView(GenericAPIView):
         POST method for refreshing an access token
         """
         redirect_uri = request.query_params.get('redirect', '/')
-        serializer = self.serializer_class(data=request.POST)
+        serializer = self.serializer_class(data=request.data)
 
         try:
             serializer.is_valid(raise_exception=True)
