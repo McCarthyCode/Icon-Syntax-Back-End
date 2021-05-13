@@ -14,7 +14,6 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from ..exceptions import ConflictError
 from ..models import User
 from ..serializers.register import *
 from ..utils import Util
