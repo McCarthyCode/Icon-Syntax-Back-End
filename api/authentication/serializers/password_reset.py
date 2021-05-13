@@ -11,6 +11,9 @@ from .credentials import CredentialsSerializer
 
 
 class PasswordResetSerializer(serializers.Serializer):
+    """
+    Serializer for resetting a password while logged in. Takes in the old password, a new password, and outputs user credentials.
+    """
     oldPassword = serializers.CharField(
         write_only=True,
         label='Old Password',

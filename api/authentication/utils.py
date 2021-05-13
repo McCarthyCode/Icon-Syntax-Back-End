@@ -5,6 +5,9 @@ from django.utils.translation import gettext_lazy as _
 
 
 class Util:
+    """
+    Class defining utility methods.
+    """
     @staticmethod
     def send_email(subject, body, to):
         """

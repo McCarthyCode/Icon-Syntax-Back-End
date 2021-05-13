@@ -23,6 +23,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     Serializes username, email, and password and creates users for use in registration.
     """
     class Meta:
+        """
+        The serializer's metaclass defining the type of model being serialized and any fields used for serialization I/O.
+        """
         model = User
         fields = ['username', 'email', 'password']
 

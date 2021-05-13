@@ -33,12 +33,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Retrieve production stage environment variable
 class MissingEnvironmentVariable(Exception):
+    """
+    Exception to be raised when an environment variable is not defined.
+    """
     def __init__(self, variable):
+        """
+        Initialization method called at exception creation. Here, the error message is defined.
+        """
         super().__init__(f'Environment variable {variable} is not defined.')
 
 
 class InvalidEnvironmentVariable(Exception):
+    """
+    Exception to be raised when the value of an environment variable is invalid.
+    """
     def __init__(self, variable):
+        """
+        Initialization method called at exception creation. Here, the error message is defined.
+        """
         super().__init__(
             f'The value of environment variable {variable} is not valid.')
 

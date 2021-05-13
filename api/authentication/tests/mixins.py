@@ -178,7 +178,7 @@ class TestCasesMixin:
 
 class TestCaseUtilsMixin:
     """
-    Tests that can be applied to every endpoint.
+    Utility methods that are useful across tests.
     """
     def spoof_verification(self):
         """

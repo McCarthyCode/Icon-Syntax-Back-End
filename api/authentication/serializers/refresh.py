@@ -16,6 +16,9 @@ class RefreshSerializer(LoginSerializer):
     refresh = serializers.CharField(max_length=4096)
 
     def validate_refresh(self, value):
+        """
+        Field-level validation method for checking a refresh token. The method attempts to blacklist the token, returning the original value on success, or raising AuthenticationFailed on failure.
+        """
         try:
             token = RefreshToken(value)
             token.blacklist()
