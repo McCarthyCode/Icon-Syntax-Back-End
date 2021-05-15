@@ -14,24 +14,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
-DATABASE_NAME = os.environ['DATABASE_NAME']
-DATABASE_USER = os.environ['DATABASE_USER']
-DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 
-VERSION = 'v0-alpha'
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
-
-
-# Retrieve production stage environment variable
+# Define exceptions for handling environment variable errors
 class MissingEnvironmentVariable(Exception):
     """
     Exception to be raised when an environment variable is not defined.
@@ -55,15 +39,39 @@ class InvalidEnvironmentVariable(Exception):
             f'The value of environment variable {variable} is not valid.')
 
 
+# SECURITY WARNING: keep the secret key used in production secret!
 try:
+    SECRET_KEY = os.environ['SECRET_KEY']
     STAGE = os.environ['STAGE']
-except KeyError:
-    raise MissingEnvironmentVariable('STAGE')
+
+    AUTH_DATABASE_NAME = os.environ['AUTH_DATABASE_NAME']
+    AUTH_DATABASE_USER = os.environ['AUTH_DATABASE_USER']
+    AUTH_DATABASE_PASSWORD = os.environ['AUTH_DATABASE_PASSWORD']
+
+    DEFAULT_DATABASE_NAME = os.environ['DEFAULT_DATABASE_NAME']
+    DEFAULT_DATABASE_USER = os.environ['DEFAULT_DATABASE_USER']
+    DEFAULT_DATABASE_PASSWORD = os.environ['DEFAULT_DATABASE_PASSWORD']
+
+    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+    EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+except KeyError as exc:
+    raise MissingEnvironmentVariable(exc)
+
+VERSION = 'v0-alpha'
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
+
+# Validate production stage environment variable
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if STAGE == 'development' or STAGE == 'staging':
     DEBUG = True
-elif STAGE == 'production':
+elif STAGE == 'beta' or STAGE == 'production':
     DEBUG = False
 else:
     raise InvalidEnvironmentVariable('STAGE')
