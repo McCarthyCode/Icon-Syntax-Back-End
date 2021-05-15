@@ -133,13 +133,22 @@ WSGI_APPLICATION = 'iconopedia.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': DATABASE_NAME,
-        'USER': DATABASE_USER,
-        'PASSWORD': DATABASE_PASSWORD,
+        'NAME': DEFAULT_DATABASE_NAME,
+        'USER': DEFAULT_DATABASE_USER,
+        'PASSWORD': DEFAULT_DATABASE_PASSWORD,
         'HOST': '',
         'PORT': '',
-    }
+    },
+    'auth_db': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': AUTH_DATABASE_NAME,
+        'USER': AUTH_DATABASE_USER,
+        'PASSWORD': AUTH_DATABASE_PASSWORD,
+        'HOST': '',
+        'PORT': '',
+    },
 }
+DATABASE_ROUTERS = ['api.authentication.routers.AuthenticationRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
