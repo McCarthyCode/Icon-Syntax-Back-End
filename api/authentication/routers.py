@@ -1,4 +1,4 @@
-class AuthenticationRouter:
+class AdminDBRouter:
     """
     A router to control all database operations on models in the authentication application, all and any dependent applications, and Django administrative applications.
     """
@@ -14,18 +14,18 @@ class AuthenticationRouter:
 
     def db_for_read(self, model, **hints):
         """
-        Attempts to read models defined in any app in 'self.route_app_labels' go to 'auth_db'.
+        Attempts to read models defined in any app in 'self.route_app_labels' go to 'admin_db'.
         """
         if model._meta.app_label in self.route_app_labels:
-            return 'auth_db'
+            return 'admin_db'
         return None
 
     def db_for_write(self, model, **hints):
         """
-        Attempts to write models defined in any app in 'self.route_app_labels' go to 'auth_db'.
+        Attempts to write models defined in any app in 'self.route_app_labels' go to 'admin_db'.
         """
         if model._meta.app_label in self.route_app_labels:
-            return 'auth_db'
+            return 'admin_db'
         return None
 
     def allow_relation(self, obj1, obj2, **hints):
@@ -39,8 +39,8 @@ class AuthenticationRouter:
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         """
-        Make sure any app in 'self.route_app_labels' only appears in the 'auth_db' database.
+        Make sure any app in 'self.route_app_labels' only appears in the 'admin_db' database.
         """
         if app_label in self.route_app_labels:
-            return db == 'auth_db'
+            return db == 'admin_db'
         return None

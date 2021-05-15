@@ -5,12 +5,11 @@
 - Finish custom auth app
   - Security changes to database structure
     - Encrypt username and email fields
-    - Split database into auth and default
   - Settings updates
-    - Set token timeouts and update email messages to say when links expire
+    - Update email messages to say when links expire
     - Test and confirm RegisterVerify and PasswordForgotVerify cases where
       activation link has already been clicked
-  - Set throttle limits
+    - Set throttle limits
 - Create dictionary app
   - Define class structure
     - Abstract models

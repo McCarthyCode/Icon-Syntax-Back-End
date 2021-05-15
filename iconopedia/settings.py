@@ -44,9 +44,9 @@ try:
     SECRET_KEY = os.environ['SECRET_KEY']
     STAGE = os.environ['STAGE']
 
-    AUTH_DATABASE_NAME = os.environ['AUTH_DATABASE_NAME']
-    AUTH_DATABASE_USER = os.environ['AUTH_DATABASE_USER']
-    AUTH_DATABASE_PASSWORD = os.environ['AUTH_DATABASE_PASSWORD']
+    ADMIN_DATABASE_NAME = os.environ['ADMIN_DATABASE_NAME']
+    ADMIN_DATABASE_USER = os.environ['ADMIN_DATABASE_USER']
+    ADMIN_DATABASE_PASSWORD = os.environ['ADMIN_DATABASE_PASSWORD']
 
     DEFAULT_DATABASE_NAME = os.environ['DEFAULT_DATABASE_NAME']
     DEFAULT_DATABASE_USER = os.environ['DEFAULT_DATABASE_USER']
@@ -139,14 +139,14 @@ DATABASES = {
         'HOST': '',
         'PORT': '',
         'TEST': {
-            'DEPENDENCIES': ['auth_db'],
+            'DEPENDENCIES': ['admin_db'],
         },
     },
-    'auth_db': {
+    'admin_db': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': AUTH_DATABASE_NAME,
-        'USER': AUTH_DATABASE_USER,
-        'PASSWORD': AUTH_DATABASE_PASSWORD,
+        'NAME': ADMIN_DATABASE_NAME,
+        'USER': ADMIN_DATABASE_USER,
+        'PASSWORD': ADMIN_DATABASE_PASSWORD,
         'HOST': '',
         'PORT': '',
         'TEST': {
@@ -154,7 +154,7 @@ DATABASES = {
         },
     },
 }
-DATABASE_ROUTERS = ['api.authentication.routers.AuthenticationRouter']
+DATABASE_ROUTERS = ['api.authentication.routers.AdminDBRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
