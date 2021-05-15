@@ -18,6 +18,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
     Tests to check registration endpoints. Checks against a hard-coded URL and a reverse-lookup name in fifteen tests, which check for an OPTIONS request and POST requests that validate user input.
     """
     client = APIClient()
+    databases = {'auth_db'}
 
     def setUp(self):
         """

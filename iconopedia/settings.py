@@ -138,6 +138,9 @@ DATABASES = {
         'PASSWORD': DEFAULT_DATABASE_PASSWORD,
         'HOST': '',
         'PORT': '',
+        'TEST': {
+            'DEPENDENCIES': ['auth_db'],
+        },
     },
     'auth_db': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -146,6 +149,9 @@ DATABASES = {
         'PASSWORD': AUTH_DATABASE_PASSWORD,
         'HOST': '',
         'PORT': '',
+        'TEST': {
+            'DEPENDENCIES': [],
+        },
     },
 }
 DATABASE_ROUTERS = ['api.authentication.routers.AuthenticationRouter']

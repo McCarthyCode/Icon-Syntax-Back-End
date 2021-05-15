@@ -17,6 +17,7 @@ class LogoutTests(TestCaseShortcutsMixin, APITestCase):
     """
     client = APIClient()
     user = None
+    databases = {'auth_db'}
 
     def setUp(self):
         """
