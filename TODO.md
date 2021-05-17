@@ -2,11 +2,6 @@
 
 ## High Priorities
 
-- Finish custom auth app
-  - Test and confirm cases where activation link has already been clicked
-    - RegisterVerify
-    - PasswordForgotVerify
-  - Set throttle limits
 - Create dictionary app
   - Define class structure
     - Abstract models
@@ -61,8 +56,7 @@
 
 ## Medium Priorities
 
-- Security changes to database structure
-  - Encrypt database on OS level
+- Encrypt database on OS level
 
 ## Low Priorities
 
