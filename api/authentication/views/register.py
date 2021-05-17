@@ -29,6 +29,8 @@ class RegisterView(GenericAPIView):
         """
         POST method that performs validation, creates a user instance, and sends a verification email.
         """
+        verify = request.query_params.get(
+            'verify', settings.FRONT_END_VERIFY_PATHS['REGISTER'])
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -45,7 +47,7 @@ class RegisterView(GenericAPIView):
                 'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
             ),
             serializer.save(),
-            reverse('api:auth:register-verify'),
+            verify,
         )
 
         return Response(

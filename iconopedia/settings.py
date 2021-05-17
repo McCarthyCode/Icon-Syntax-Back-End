@@ -265,3 +265,9 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=30),  # Changed from default
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+# Default, front end paths for verification pages sent by email
+FRONT_END_VERIFY_PATHS = {
+    'REGISTER': '/register/verify',
+    'PASSWORD_FORGOT': '/password/forgot/verify',
+}

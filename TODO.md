@@ -3,9 +3,6 @@
 ## High Priorities
 
 - Finish custom auth app
-  - Update email links
-    - Fix paths in links to point to front end
-    - Update messages to say when links expire
   - Test and confirm cases where activation link has already been clicked
     - RegisterVerify
     - PasswordForgotVerify

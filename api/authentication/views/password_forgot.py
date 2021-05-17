@@ -26,6 +26,8 @@ class PasswordForgotView(GenericAPIView):
         """
         POST method for first step of forgot password process.
         """
+        verify = request.query_params.get(
+            'verify', settings.FRONT_END_VERIFY_PATHS['PASSWORD_FORGOT'])
         serializer = self.serializer_class(data=request.data)
 
         try:
@@ -41,7 +43,7 @@ class PasswordForgotView(GenericAPIView):
                     'We have received a request to reset a forgotten password. Please follow the link below to complete the password reset process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
                 ),
                 user,
-                reverse('api:auth:password-forgot'),
+                verify,
             )
 
         return Response(
