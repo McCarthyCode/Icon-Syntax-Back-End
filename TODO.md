@@ -3,13 +3,13 @@
 ## High Priorities
 
 - Finish custom auth app
-  - Security changes to database structure
-    - Encrypt username and email fields
-  - Settings updates
-    - Update email messages to say when links expire
-    - Test and confirm RegisterVerify and PasswordForgotVerify cases where
-      activation link has already been clicked
-    - Set throttle limits
+  - Update email links
+    - Fix paths in links to point to front end
+    - Update messages to say when links expire
+  - Test and confirm cases where activation link has already been clicked
+    - RegisterVerify
+    - PasswordForgotVerify
+  - Set throttle limits
 - Create dictionary app
   - Define class structure
     - Abstract models
@@ -64,7 +64,8 @@
 
 ## Medium Priorities
 
-_None at this time._
+- Security changes to database structure
+  - Encrypt database on OS level
 
 ## Low Priorities
 
