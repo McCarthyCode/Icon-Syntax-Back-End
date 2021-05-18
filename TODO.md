@@ -4,10 +4,6 @@
 
 - Create dictionary app
   - Define class structure
-    - Abstract models
-      - TimestampedModel
-        - date_created
-        - date_updated
     - Interfaces
       - Word
         - get_entries()

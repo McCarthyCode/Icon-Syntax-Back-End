@@ -83,6 +83,7 @@ ALLOWED_HOSTS = ['localhost']
 INSTALLED_APPS = [
     'api',
     'api.authentication',
+    'api.dictionary',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',

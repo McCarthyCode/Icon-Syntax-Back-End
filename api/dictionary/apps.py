@@ -1,9 +1,9 @@
 from django.apps import AppConfig
 
 
-class AuthenticationConfig(AppConfig):
+class DictionaryConfig(AppConfig):
     """
     Class defining app configurations.
     """
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'api.authentication'
+    name = 'api.dictionary'
