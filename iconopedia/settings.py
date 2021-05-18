@@ -9,51 +9,72 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
 import os
 
+from datetime import timedelta
 from pathlib import Path
 
+
+# Define exceptions for handling environment variable errors
+class MissingEnvironmentVariable(Exception):
+    """
+    Exception to be raised when an environment variable is not defined.
+    """
+    def __init__(self, variable):
+        """
+        Initialization method called at exception creation. Here, the error message is defined.
+        """
+        super().__init__(f'Environment variable {variable} is not defined.')
+
+
+class InvalidEnvironmentVariable(Exception):
+    """
+    Exception to be raised when the value of an environment variable is invalid.
+    """
+    def __init__(self, variable):
+        """
+        Initialization method called at exception creation. Here, the error message is defined.
+        """
+        super().__init__(
+            f'The value of environment variable {variable} is not valid.')
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
-DATABASE_NAME = os.environ['DATABASE_NAME']
-DATABASE_USER = os.environ['DATABASE_USER']
-DATABASE_PASSWORD = os.environ['DATABASE_PASSWORD']
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+try:
+    SECRET_KEY = os.environ['SECRET_KEY']
+    STAGE = os.environ['STAGE']
+
+    ADMIN_DATABASE_NAME = os.environ['ADMIN_DATABASE_NAME']
+    ADMIN_DATABASE_USER = os.environ['ADMIN_DATABASE_USER']
+    ADMIN_DATABASE_PASSWORD = os.environ['ADMIN_DATABASE_PASSWORD']
+
+    DEFAULT_DATABASE_NAME = os.environ['DEFAULT_DATABASE_NAME']
+    DEFAULT_DATABASE_USER = os.environ['DEFAULT_DATABASE_USER']
+    DEFAULT_DATABASE_PASSWORD = os.environ['DEFAULT_DATABASE_PASSWORD']
+
+    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+    EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+except KeyError as exc:
+    raise MissingEnvironmentVariable(exc)
 
 VERSION = 'v0-alpha'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
-
-# Retrieve production stage environment variable
-class MissingEnvironmentVariable(Exception):
-    pass
-
-
-class InvalidEnvironmentVariable(Exception):
-    pass
-
-
-try:
-    STAGE = os.environ['STAGE']
-except KeyError:
-    raise MissingEnvironmentVariable(
-        'Environment variable STAGE is not defined.')
+# Validate production stage environment variable
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if STAGE == 'development' or STAGE == 'staging':
     DEBUG = True
-elif STAGE == 'production':
+elif STAGE == 'beta' or STAGE == 'production':
     DEBUG = False
 else:
-    raise InvalidEnvironmentVariable(
-        'The value of environment variable STAGE is not valid.')
+    raise InvalidEnvironmentVariable('STAGE')
 
 ALLOWED_HOSTS = ['localhost']
 
@@ -70,9 +91,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'rest_framework',
-    'rest_framework.authtoken',
     'django_smtp_ssl',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -111,13 +133,28 @@ WSGI_APPLICATION = 'iconopedia.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': DATABASE_NAME,
-        'USER': DATABASE_USER,
-        'PASSWORD': DATABASE_PASSWORD,
+        'NAME': DEFAULT_DATABASE_NAME,
+        'USER': DEFAULT_DATABASE_USER,
+        'PASSWORD': DEFAULT_DATABASE_PASSWORD,
         'HOST': '',
         'PORT': '',
-    }
+        'TEST': {
+            'DEPENDENCIES': ['admin_db'],
+        },
+    },
+    'admin_db': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': ADMIN_DATABASE_NAME,
+        'USER': ADMIN_DATABASE_USER,
+        'PASSWORD': ADMIN_DATABASE_PASSWORD,
+        'HOST': '',
+        'PORT': '',
+        'TEST': {
+            'DEPENDENCIES': [],
+        },
+    },
 }
+DATABASE_ROUTERS = ['api.authentication.routers.AdminDBRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -138,6 +175,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME':
         'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsUppercaseValidator',
+    },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsLowercaseValidator',
+    },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsNumberValidator',
+    },
+    {
+        'NAME':
+        'api.authentication.password_validation.ContainsPunctuationValidator',
     },
 ]
 
@@ -161,8 +214,18 @@ STATIC_URL = '/static/'
 
 # Django REST Framework
 REST_FRAMEWORK = {
+    'NON_FIELD_ERRORS_KEY':
+    'errors',
     'DEFAULT_AUTHENTICATION_CLASSES':
-    ('rest_framework_simplejwt.authentication.JWTAuthentication', ),
+    ['rest_framework_simplejwt.authentication.JWTAuthentication'],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+    }
 }
 
 # Custom user model
@@ -178,3 +241,41 @@ EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 
 # Site ID
 SITE_ID = 1
+
+# Regular expression defining access and refresh tokens
+TOKEN_REGEX = r'^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
+
+# Define default auto field to account for BigAutoField support added in 3.2
+# Here we use the old standard, but we may need to change this to scale up in
+# the future.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# DRF Simple JWT
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Changed from default
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,  # Changed from default
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'AUTH_HEADER_TYPES': ('Bearer', ),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken', ),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=30),  # Changed from default
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+
+# Default, front end paths for verification pages sent by email
+FRONT_END_VERIFY_PATHS = {
+    'REGISTER': '/register/verify',
+    'PASSWORD_FORGOT': '/password/forgot/verify',
+}
