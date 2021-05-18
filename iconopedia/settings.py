@@ -57,7 +57,7 @@ try:
 except KeyError as exc:
     raise MissingEnvironmentVariable(exc)
 
-VERSION = 'v0-alpha'
+VERSION = 'v0-beta'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
