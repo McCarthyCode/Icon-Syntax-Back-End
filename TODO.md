@@ -2,53 +2,7 @@
 
 ## High Priorities
 
-- Create dictionary app
-  - Define class structure
-    - Interfaces
-      - Word
-        - get_entries()
-        - is_homograph()
-        - get_word()
-    - Enumerations
-      - IconCategory
-        - adjective
-        - adverb
-        - connective
-        - noun
-        - preposition
-        - punctuation
-        - verbIrregular
-        - verbModal
-        - verbRegular
-        - verbTwoPart
-    - Models
-      - DictionaryEntry
-        - id
-        - icon
-        - mp3
-        - data
-        - get_data()
-        - set_data(str)
-      - SingleEntry
-      - Homograph
-        - dictionary_entries
-      - SearchTerm
-        - id
-        - get_words()
-      - SearchResult
-        - id
-        - term
-        - word
-      - MP3
-        - id
-        - data
-        - get_data_b64()
-      - Icon
-        - id
-        - data
-        - category
-        - get_data_b64()
-        - get_dictionary_entries()
+_None at this time_
 
 ## Medium Priorities
 
