@@ -17,7 +17,7 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
 
     search_word = 'hammer'
     url_name = 'api:dict:search'
-    url_path = f'/api/{settings.VERSION}/dict/search/{search_word}'
+    url_path = f'/api/{settings.VERSION}/search/{search_word}'
 
     reverse_kwargs = {'word': search_word}
 
@@ -30,15 +30,44 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
 
         self.assertDictTypes(response.data, self.options_types)
 
+    def __test_success(self, response):
+        """
+        Ensure that we can query the Merriam-Webster dictionary API and populate our database.
+        """
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        types = {
+            'results': [dict],
+            'pagination': {
+                'totalResults': int,
+                'maxResultsPerPage': int,
+                'numResultsThisPage': int,
+                'thisPageNumber': int,
+                'totalPages': int,
+                'prevPageExists': int,
+                'nextPageExists': int,
+            }
+        }
+
+        self.assertDictTypes(response.data, types)
+
+        types = {'id': str, 'sort': str, 'stems': [str], 'offensive': bool}
+
+        for result in response.data['results']:
+            self.assertDictTypes(result, types)
+
     def test_success_miss(self):
         """
         Ensure that we can query the Merriam-Webster dictionary API and populate our database when the entry is not in store.
         """
+        # self.assertIsNone(Word)
         response = self.client.get(self.url_path, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.__test_success(response)
 
     def test_success_hit(self):
         """
         Ensure that we can use the entry in store if one exists.
         """
-        pass
+        for _ in range(2):
+            response = self.client.get(self.url_path, format='json')
+        self.__test_success(response)
