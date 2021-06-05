@@ -6,15 +6,43 @@ from django.conf import settings
 from .models import Word, DictionaryEntry
 
 
-class Util:
+class ExternalAPIManager:
     """
-    Class defining utility methods for the dictionary app.
+    Class defining utility methods for sending requests to external APIs.
     """
+    __mw_dict_calls = 0
+
+    @staticmethod
+    def mw_dict_calls():
+        """
+        Static method returning the number of calls to the Merriam-Webster Collegiate Dictionary API since the value was last set or reset.
+        """
+        if settings.COUNT_API_CALLS:
+            return ExternalAPIManager.__mw_dict_calls
+        raise AttributeError(
+            "type object 'ExternalAPIManager' has no attribute 'mw_dict_calls'")
+
+    @staticmethod
+    def reset_mw_dict_calls():
+        """
+        Static method resetting the number of calls to the Merriam-Webster Collegiate Dictionary API.
+        """
+        if settings.COUNT_API_CALLS:
+            ExternalAPIManager.__mw_dict_calls = 0
+        else:
+            raise AttributeError(
+                "type object 'ExternalAPIManager' has no attribute 'reset_mw_dict_calls'"
+            )
+
     @staticmethod
     def get_mw_dict(word):
         """
         Method to query the Merriam-Webster collegiate dictionary API.
         """
+        # breakpoint()
+        if settings.COUNT_API_CALLS:
+            ExternalAPIManager.__mw_dict_calls += 1
+
         return requests.get(
             f'https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={settings.MW_DICTIONARY_API_KEY}'
         )
@@ -45,9 +73,7 @@ class Util:
         except Word.DoesNotExist:
             _word = Word.objects.create(id=word)
 
-            response = requests.get(
-                f'https://www.dictionaryapi.com/api/v3/references/collegiate/json/{word}?key={settings.MW_DICTIONARY_API_KEY}'
-            )
+            response = ExternalAPIManager.get_mw_dict(word)
 
             mw_dict_entries = filter(
                 lambda x: word == x['meta']['id'].split(':')[0],

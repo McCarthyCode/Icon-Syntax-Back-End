@@ -4,18 +4,22 @@ from django.utils.translation import gettext_lazy as _
 from api.models import TimestampedModel
 
 
-class Word(models.Model):
+class Word(TimestampedModel):
     id = models.CharField(primary_key=True, max_length=64)
 
 
-class WordEntry(models.Model):
+class WordEntry(TimestampedModel):
     class Meta:
         abstract = True
 
     id = models.CharField(primary_key=True, max_length=64)
     word = models.ForeignKey('dictionary.Word', on_delete=models.CASCADE)
     icon = models.ForeignKey(
-        'dictionary.Icon', default=None, on_delete=models.CASCADE)
+        'dictionary.Icon',
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.CASCADE)
 
 
 class DictionaryEntry(WordEntry):
