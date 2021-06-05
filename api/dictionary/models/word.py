@@ -1,99 +1,36 @@
-import inspect
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from .dict_entry import DictionaryEntry
-
-NOT_IMPLEMENTED_ERROR = NotImplementedError(
-    _(
-        'Object is an instance of Word, which must be implemented by Homograph or SingleEntry.'
-    ))
+from api.models import TimestampedModel
 
 
-class Word:
-    """
-    Informal interface to be realized by Homograph or SingleEntry.
-    """
-    @property
-    def entries(self):
-        raise NOT_IMPLEMENTED_ERROR
-
-    @property
-    def is_homograph(self):
-        raise NOT_IMPLEMENTED_ERROR
-
-    @property
-    def words(self):
-        raise NOT_IMPLEMENTED_ERROR
+class Word(TimestampedModel):
+    id = models.CharField(primary_key=True, max_length=64)
 
 
-class Homograph(Word):
-    """
-    A Word containing multiple entries.
-    """
-    class EntriesNotDefined(Exception):
-        """
-        Exception to be raised when self.__entries is not defined.
-        """
-        def __init__(self):
-            """
-            Initialization method called at exception creation. Here, the error message is defined.
-            """
-            super().__init__(
-                _('self.__entries must be defined to use this method.'))
+class WordEntry(TimestampedModel):
+    class Meta:
+        abstract = True
 
-    __entries = None
-
-    def __init__(self, entries):
-        """
-        Initialization method called at object creation. Here, self.__entries is populated after verifying that the parameter 'entries' contains a list of multiple DictionaryEntry objects.
-        """
-        assert isinstance(entries, list), \
-            "Parameter 'entries' must be a list of DictionaryEntry instances."
-        assert len(entries) > 1, \
-            'Homograph instances must contain more than one DictionaryEntry.'
-        for entry in entries:
-            assert isinstance(entry, DictionaryEntry), \
-                "Parameter 'entries' must only contain DictionaryEntry instances."
-
-        self.__entries = entries
-
-    @property
-    def entries(self):
-        return self.__entries
-
-    @property
-    def is_homograph(self):
-        return True
-
-    @property
-    def word(self):
-        return self.__entries[0].id.split(':')[0]
+    id = models.CharField(primary_key=True, max_length=64)
+    word = models.ForeignKey('dictionary.Word', on_delete=models.CASCADE)
+    icon = models.ForeignKey(
+        'dictionary.Icon',
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.CASCADE)
+    mp3 = models.ForeignKey(
+        'dictionary.MP3',
+        blank=True,
+        null=True,
+        default=None,
+        on_delete=models.CASCADE)
 
 
-class SingleEntry(Word):
-    """
-    A Word containing a single entry.
-    """
-    __entry = None
+class DictionaryEntry(WordEntry):
+    json = models.TextField(_('Merriam-Webster dictionary entry'), default='')
 
-    def __init__(self, entry):
-        """
-        Initialization method called at object creation. Here, self.__entry is populated after verifying that the parameter 'entry' contains a DictionaryEntry object.
-        """
-        assert isinstance(entry, DictionaryEntry), \
-            "Parameter 'entry' must be a DictionaryEntry instance."
-        self.__entry = entry
 
-    @property
-    def entries(self):
-        return [self.__entry]
-
-    @property
-    def is_homograph(self):
-        return False
-
-    @property
-    def word(self):
-        return self.__entry.id
+class ThesaurusEntry(WordEntry):
+    json = models.TextField(_('Merriam-Webster thesaurus entry'), default='')

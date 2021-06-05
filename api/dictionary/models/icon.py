@@ -1,15 +1,9 @@
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-
 from api.models import TimestampedModel
-
-from .category import CATEGORY_CHOICES
-from .char_id import CharID
 from .image import Image
 
 
-class Icon(TimestampedModel, Image, CharID):
+class Icon(TimestampedModel, Image):
     """
-    TimestampedModel containing an ID for the word (and definition if a homograph), an Image, and the category for the Icon
+    Image file associated with zero or more WordEntries.
     """
-    category = models.SmallIntegerField(choices=CATEGORY_CHOICES)
+    pass

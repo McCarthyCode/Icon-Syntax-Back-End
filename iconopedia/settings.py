@@ -54,6 +54,8 @@ try:
 
     EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
     EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+
+    MW_DICTIONARY_API_KEY = os.environ['MW_DICTIONARY_API_KEY']
 except KeyError as exc:
     raise MissingEnvironmentVariable(exc)
 
@@ -291,3 +293,10 @@ FRONT_END_VERIFY_PATHS = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+# Pagination
+
+DEFAULT_RESULTS_PER_PAGE = 20
+MAX_RESULTS_PER_PAGE = 100
+
+# Count API calls (used in testing)
+COUNT_API_CALLS = False

@@ -2,7 +2,12 @@
 
 ## High Priorities
 
-_None at this time_
+- Search endpoint
+  - Check timestamps in get_word
+  - Error testing
+- Word endpoint
+  - Define Word ViewSet
+  - Testing
 
 ## Medium Priorities
 
