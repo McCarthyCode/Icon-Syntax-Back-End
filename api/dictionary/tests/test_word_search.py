@@ -75,8 +75,8 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
                 'numResultsThisPage': int,
                 'thisPageNumber': int,
                 'totalPages': int,
-                'prevPageExists': int,
-                'nextPageExists': int,
+                'prevPageExists': bool,
+                'nextPageExists': bool,
             }
         }
 
@@ -97,9 +97,6 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
         response = self.client.get(self.url_path, format='json')
 
         # test
-        self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
-        self.assertIsNotNone(self.__get_word())
-        self.assertGreater(len(self.__get_dict_entries()), 0)
         self.__test_success(response)
 
     def test_success_hit(self):
@@ -117,3 +114,75 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
 
         # test
         self.__test_success(response)
+
+    def test_empty_result(self):
+        """
+        Ensure that we can get a successful, empty result for an invalid word without suggestions.
+        """
+        # test-specific setup
+        # defining a different search word than the default
+        self.search_word = 'qwertyuiop'
+        self.search_word_entries = 0
+
+        # execution
+        response = self.client.get(self.url_path, format='json')
+
+        # test
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
+        self.assertIsNone(self.__get_word())
+        self.assertEquals(
+            len(self.__get_dict_entries()), self.search_word_entries)
+
+        types = {
+            'results': [dict],
+            'pagination': {
+                'totalResults': int,
+                'maxResultsPerPage': int,
+                'numResultsThisPage': int,
+                'thisPageNumber': int,
+                'totalPages': int,
+                'prevPageExists': bool,
+                'nextPageExists': bool,
+            }
+        }
+
+        self.assertDictTypes(response.data, types)
+        self.__check_dict_entries()
+
+    def test_suggestions(self):
+        """
+        Ensure that we can get a successful, empty result for an invalid word with suggestions.
+        """
+        # test-specific setup
+        # defining a different search word than the default
+        self.search_word = 'qwert'
+        self.search_word_entries = 0
+
+        # execution
+        response = self.client.get(self.url_path, format='json')
+
+        # test
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
+        self.assertIsNone(self.__get_word())
+        self.assertEquals(
+            len(self.__get_dict_entries()), self.search_word_entries)
+
+        types = {
+            'results': [str],
+            'pagination': {
+                'totalResults': int,
+                'maxResultsPerPage': int,
+                'numResultsThisPage': int,
+                'thisPageNumber': int,
+                'totalPages': int,
+                'prevPageExists': bool,
+                'nextPageExists': bool,
+            }
+        }
+
+        self.assertDictTypes(response.data, types)
+        self.__check_dict_entries()
