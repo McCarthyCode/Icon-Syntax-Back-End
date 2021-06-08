@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-from base64 import b16encode
+from base64 import b16encode, b64encode
 from functools import partial
 from io import BytesIO
 from PIL import Image
@@ -21,7 +21,7 @@ class Image(models.Model):
         abstract = True
 
     image = models.ImageField(
-        blank=True, null=True, default=None, upload_to='icons')
+        blank=True, null=True, default=None, upload_to='img')
     _hash = models.BinaryField(
         editable=False, null=True, default=None, max_length=16)
 
@@ -41,11 +41,18 @@ class Image(models.Model):
         """
         return self.image.name
 
-    def image_ops(self, relative_path=''):
+    def image_ops(self, relative_path='img'):
         """
         Image operations to be run when an image is added or updated.
         """
         self.__hash_image(relative_path)
+
+    def base64(self, relative_path='img'):
+        """
+        Convert file to a base-64 string.
+        """
+        with open(settings.MEDIA_ROOT / relative_path / self.image.name) as f:
+            return b64encode(f.readlines())
 
     def __hash_image(self, relative_path, block_size=65536):
         """

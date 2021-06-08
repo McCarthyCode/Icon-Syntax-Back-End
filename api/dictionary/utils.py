@@ -84,7 +84,7 @@ class ExternalAPIManager:
                 DictionaryEntry.objects.create(
                     id=entry['meta']['id'], word=_word, json=json.dumps(entry))
 
-        return {
-            'word': _word.id,
-            'dictionaryEntries': DictionaryEntry.objects.filter(word=_word)
-        }
+        if len(DictionaryEntry.objects.filter(word=_word)) == 0:
+            return None
+
+        return _word

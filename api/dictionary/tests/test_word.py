@@ -2,17 +2,19 @@ from django.conf import settings
 from django.urls import reverse
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient, APITestCase
 
+from api import NON_FIELD_ERRORS_KEY
 from api.test_mixins import TestCaseShortcutsMixin
 
 from ..models import Word, DictionaryEntry
 from ..utils import ExternalAPIManager
 
 
-class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
+class WordTests(TestCaseShortcutsMixin, APITestCase):
     """
-    Tests to check search endpoints. Checks against a hard-coded URL and a reverse-lookup name in nine tests, which check for an OPTIONS request and POST requests that validate user input.
+    Tests to check word endpoints. Checks against a hard-coded URL and a reverse-lookup name in nine tests, which check for an OPTIONS request and POST requests that validate user input.
     """
     client = APIClient()
     databases = {'default', 'admin_db'}
@@ -20,8 +22,8 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
     search_word = 'hammer'
     search_word_entries = 2
 
-    url_name = 'api:dict:search'
-    url_path = f'/api/{settings.VERSION}/search/{search_word}'
+    url_name = 'api:dict:word'
+    url_path = f'/api/{settings.VERSION}/{search_word}'
 
     reverse_kwargs = {'word': search_word}
 
@@ -66,33 +68,16 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
         self.assertEquals(
             len(self.__get_dict_entries()), self.search_word_entries)
 
-        types = {
-            'results': [dict],
-            'pagination': {
-                'totalResults': int,
-                'maxResultsPerPage': int,
-                'numResultsThisPage': int,
-                'thisPageNumber': int,
-                'totalPages': int,
-                'prevPageExists': bool,
-                'nextPageExists': bool,
-            }
-        }
+        types = {'word': str, 'dictionary': [dict]}
 
         self.assertDictTypes(response.data, types)
-
-        types = {'id': str, 'sort': str, 'stems': [str], 'offensive': bool}
-
-        for result in response.data['results']:
-            self.assertDictTypes(result, types)
-
-        self.__check_dict_entries()
 
     def test_success_miss(self):
         """
         Ensure that we can query the Merriam-Webster dictionary API and populate our database when the entry is not in store.
         """
         # execution
+        # reverse_kwargs = {}
         response = self.client.get(self.url_path, format='json')
 
         # test
@@ -114,74 +99,30 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
         # test
         self.__test_success(response)
 
-    def test_empty_result(self):
+    def test_invalid_word(self):
         """
-        Ensure that we can get a successful, empty result for an invalid word without suggestions.
+        Ensure that we can get a 404 response for an invalid word.
         """
         # test-specific setup
         # defining a different search word than the default
         self.search_word = 'qwertyuiop'
+        self.url_path = f'/api/{settings.VERSION}/{self.search_word}'
         self.search_word_entries = 0
 
         # execution
         response = self.client.get(self.url_path, format='json')
 
         # test
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
-        self.assertIsNone(self.__get_word())
+        self.assertIsNotNone(self.__get_word())
+        self.assertIsNone(ExternalAPIManager.get_word(self.search_word))
         self.assertEquals(
             len(self.__get_dict_entries()), self.search_word_entries)
 
-        types = {
-            'results': [dict],
-            'pagination': {
-                'totalResults': int,
-                'maxResultsPerPage': int,
-                'numResultsThisPage': int,
-                'thisPageNumber': int,
-                'totalPages': int,
-                'prevPageExists': bool,
-                'nextPageExists': bool,
-            }
+        values = {
+            NON_FIELD_ERRORS_KEY:
+            [ErrorDetail("Word 'qwertyuiop' not found.", code='not_found')]
         }
-
-        self.assertDictTypes(response.data, types)
-        self.__check_dict_entries()
-
-    def test_suggestions(self):
-        """
-        Ensure that we can get a successful, empty result for an invalid word with suggestions.
-        """
-        # test-specific setup
-        # defining a different search word than the default
-        self.search_word = 'qwert'
-        self.search_word_entries = 0
-
-        # execution
-        response = self.client.get(self.url_path, format='json')
-
-        # test
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
-        self.assertIsNone(self.__get_word())
-        self.assertEquals(
-            len(self.__get_dict_entries()), self.search_word_entries)
-
-        types = {
-            'results': [str],
-            'pagination': {
-                'totalResults': int,
-                'maxResultsPerPage': int,
-                'numResultsThisPage': int,
-                'thisPageNumber': int,
-                'totalPages': int,
-                'prevPageExists': bool,
-                'nextPageExists': bool,
-            }
-        }
-
-        self.assertDictTypes(response.data, types)
-        self.__check_dict_entries()
+        self.assertDictValues(response.data, values)

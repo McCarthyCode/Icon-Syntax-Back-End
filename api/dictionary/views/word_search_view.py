@@ -8,12 +8,13 @@ from django.core.paginator import (
 from requests.exceptions import RequestException
 
 from rest_framework import generics, status
+from rest_framework.exceptions import ErrorDetail
 from rest_framework.response import Response
 
 from api import NON_FIELD_ERRORS_KEY
 
-from ..utils import ExternalAPIManager
 from ..models import Word, DictionaryEntry
+from ..utils import ExternalAPIManager
 
 
 class WordSearchView(generics.GenericAPIView):
@@ -72,12 +73,15 @@ class WordSearchView(generics.GenericAPIView):
             page = paginator.get_page(page_num)
         except PageNotAnInteger:
             return self.__error_response(
-                'Query parameter "page" must be an integer.',
+                ErrorDetail(
+                    'Query parameter "page" must be an integer.',
+                    'invalid_type'),
                 status.HTTP_400_BAD_REQUEST,
             )
         except InvalidPage:
             return self.__error_response(
-                'Query parameter "page" is invalid.',
+                ErrorDetail(
+                    'Query parameter "page" is invalid.', 'invalid_page_num'),
                 status.HTTP_404_NOT_FOUND,
             )
 

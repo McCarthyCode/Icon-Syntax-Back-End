@@ -179,7 +179,11 @@ class TestCasesMixin:
         self.assertEqual(
             self.url_path,
             reverse(
-                self.url_name, args=self.reverse_args, kwargs=self.reverse_kwargs))
+                self.url_name,
+                args=self.reverse_args,
+                kwargs=self.reverse_kwargs,
+            ),
+        )
 
 
 class TestCaseUtilsMixin:
