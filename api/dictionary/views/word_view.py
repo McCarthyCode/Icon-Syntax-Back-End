@@ -25,9 +25,9 @@ class WordView(generics.GenericAPIView):
         """
         GET method to obtain a word and its associated data.
         """
-        _word = ExternalAPIManager.get_word(word)
+        _word, entries = ExternalAPIManager.get_word_and_entries(word)
 
-        if not _word:
+        if not _word or not entries:
             return Response(
                 {
                     NON_FIELD_ERRORS_KEY:

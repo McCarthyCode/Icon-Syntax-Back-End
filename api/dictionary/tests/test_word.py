@@ -105,7 +105,7 @@ class WordTests(TestCaseShortcutsMixin, APITestCase):
         """
         # test-specific setup
         # defining a different search word than the default
-        self.search_word = 'qwertyuiop'
+        self.search_word = 'qwert'
         self.url_path = f'/api/{settings.VERSION}/{self.search_word}'
         self.search_word_entries = 0
 
@@ -116,13 +116,16 @@ class WordTests(TestCaseShortcutsMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
-        self.assertIsNotNone(self.__get_word())
-        self.assertIsNone(ExternalAPIManager.get_word(self.search_word))
+        self.assertIsNone(self.__get_word())
+        word, entries = ExternalAPIManager.get_word_and_entries(
+            self.search_word)
+
+        self.assertIsNone(word)
         self.assertEquals(
             len(self.__get_dict_entries()), self.search_word_entries)
 
         values = {
             NON_FIELD_ERRORS_KEY:
-            [ErrorDetail("Word 'qwertyuiop' not found.", code='not_found')]
+            [ErrorDetail("Word 'qwert' not found.", code='not_found')]
         }
         self.assertDictValues(response.data, values)

@@ -62,9 +62,11 @@ class ExternalAPIManager:
         pass
 
     @staticmethod
-    def get_word(word):
+    def get_word_and_entries(word):
         """
-        Method to obtain a word from the local database, creating one if it doesn't exist.
+        Method to obtain a word and its corresponding dictionary entries from the local database, creating them if they don't exist.
+
+        Returns a two-tuple containing (a) the Word object on a hit or a near miss, and None for any other input, and (b) the list of dictionary entries, None, or a list of suggestions.
         """
         _word = None
 
@@ -74,17 +76,22 @@ class ExternalAPIManager:
             _word = Word.objects.create(id=word)
 
             response = ExternalAPIManager.get_mw_dict(word)
+            data = json.loads(response.text)
 
-            mw_dict_entries = filter(
-                lambda x: word == x['meta']['id'].split(':')[0],
-                json.loads(response.text),
-            )
+            if type(data) != list or len(data) == 0:
+                return None, []
+            elif type(data[0]) == str:
+                _word.delete()
+                return None, data
+            else:
+                mw_dict_entries = filter(
+                    lambda x: word == x['meta']['id'].split(':')[0], data)
 
-            for entry in mw_dict_entries:
-                DictionaryEntry.objects.create(
-                    id=entry['meta']['id'], word=_word, json=json.dumps(entry))
+                for entry in mw_dict_entries:
+                    DictionaryEntry.objects.create(
+                        id=entry['meta']['id'],
+                        word=_word,
+                        json=json.dumps(entry),
+                    )
 
-        if len(DictionaryEntry.objects.filter(word=_word)) == 0:
-            return None
-
-        return _word
+        return _word, DictionaryEntry.objects.filter(word=_word)

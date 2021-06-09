@@ -152,12 +152,13 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
 
     def test_suggestions(self):
         """
-        Ensure that we can get a successful, empty result for an invalid word with suggestions.
+        Ensure that we can get a list of suggestions for an invalid word that has similar words.
         """
         # test-specific setup
         # defining a different search word than the default
         self.search_word = 'qwert'
         self.search_word_entries = 0
+        self.url_path = f'/api/{settings.VERSION}/search/{self.search_word}'
 
         # execution
         response = self.client.get(self.url_path, format='json')
@@ -167,6 +168,9 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
 
         self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
         self.assertIsNone(self.__get_word())
+        word, entries = ExternalAPIManager.get_word_and_entries(
+            self.search_word)
+        self.assertIsNone(word)
         self.assertEquals(
             len(self.__get_dict_entries()), self.search_word_entries)
 
@@ -184,4 +188,5 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
         }
 
         self.assertDictTypes(response.data, types)
+        self.assertEqual(len(response.data['results']), 20)
         self.__check_dict_entries()

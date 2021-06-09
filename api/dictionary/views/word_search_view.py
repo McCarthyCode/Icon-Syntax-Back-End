@@ -54,21 +54,24 @@ class WordSearchView(generics.GenericAPIView):
             settings.MAX_RESULTS_PER_PAGE,
         )
 
-        _word = ExternalAPIManager.get_word(word)
-        # The following variable names a list, and is not the dict type.
-        # Here, dict refers to a literal dictionary.
+        _word, entries = ExternalAPIManager.get_word_and_entries(word)
+        if type(entries) == list:
+            paginator = Paginator(entries, results_per_page)
+        else:
+            # The following variable names a list, and is not the dict type.
+            # Here, dict refers to a literal dictionary.
 
-        # Create results array for use in generating response
-        dict_entries = DictionaryEntry.objects.filter(word=_word)
-        meta_fields = {'id', 'sort', 'stems', 'offensive'}
-        results = sorted(
-                [
-                    {key: x['meta'][key] for key in meta_fields} \
-                    for x in dict_entries
-                ],
-                key=lambda y: y['sort'])
+            # Create results array for use in generating response
+            dict_entries = entries
+            meta_fields = {'id', 'sort', 'stems', 'offensive'}
+            results = sorted(
+                    [
+                        {key: json.loads(x.json)['meta'][key] for key in meta_fields} \
+                        for x in dict_entries
+                    ],
+                    key=lambda y: y['sort'])
 
-        paginator = Paginator(results, results_per_page)
+            paginator = Paginator(results, results_per_page)
         try:
             page = paginator.get_page(page_num)
         except PageNotAnInteger:

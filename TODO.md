@@ -2,15 +2,21 @@
 
 ## High Priorities
 
-- Search endpoint
-  - Check timestamps in get_word
-  - Error testing
-- Word endpoint
-  - Define Word ViewSet
-  - Testing
+- Icons
+  - Upload
+  - Approve
+  - Serialize
+- MP3
+  - Retrieve
+  - Save
+  - Serialize
 
 ## Medium Priorities
 
+- ExternalAPIManager.get_word_and_entries()
+  - Cache near-misses with suggestions
+- Search endpoint
+  - Check timestamps in get_word_and_entries
 - Encrypt database on OS level
 
 ## Low Priorities
