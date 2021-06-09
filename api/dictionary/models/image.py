@@ -25,16 +25,6 @@ class Image(models.Model):
     _hash = models.BinaryField(
         editable=False, null=True, default=None, max_length=16)
 
-    @classmethod
-    def create(cls, relative_path='', *args, **kwargs):
-        """
-        Method to upload an image and to perform preliminary operations.
-        """
-        image = cls(**kwargs)
-        self.image_ops(relative_path)
-
-        return image
-
     def __str__(self):
         """
         The value of the class instance when typecast as a string.
@@ -51,7 +41,8 @@ class Image(models.Model):
         """
         Convert file to a base-64 string.
         """
-        with open(settings.MEDIA_ROOT / relative_path / self.image.name) as f:
+        path = os.path.join(settings.MEDIA_ROOT, self.image.name)
+        with open(path) as f:
             return b64encode(f.readlines())
 
     def __hash_image(self, relative_path, block_size=65536):
@@ -59,7 +50,7 @@ class Image(models.Model):
         Create a MD5 cryptographic hash of the image, store it in the database, and rename the file.
         """
         hasher = hashlib.md5()
-        filename = settings.MEDIA_ROOT / relative_path / self.image.name
+        filename = os.path.join(settings.MEDIA_ROOT, self.image.name)
 
         with open(filename, 'rb') as image:
             for buffer in iter(partial(image.read, block_size), b''):
@@ -68,16 +59,16 @@ class Image(models.Model):
             if not self._hash or \
             self._hash != hasher.hexdigest().lower():
                 self._hash = hasher.digest()
-                self.image.name = relative_path + hasher.hexdigest().lower()
-                new_filename = \
-                    settings.MEDIA_ROOT / relative_path / self.image.name
+                self.image.name = hasher.hexdigest().lower()
+
+                new_filename = os.path.join(
+                    settings.MEDIA_ROOT, relative_path, self.image.name)
                 os.rename(filename, new_filename)
 
     @property
-    def image_hash(self):
+    def hash(self):
         """
         Get the image hash as a base-16 string.
         """
         return str(
-            b16encode(self._hash).lower(),
-            'utf-8') if self._hash else None
+            b16encode(self._hash).lower(), 'utf-8') if self._hash else None

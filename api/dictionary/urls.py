@@ -13,4 +13,12 @@ urlpatterns = [
         r'^search/(?P<word>[a-zA-Z0-9@:%._+~#]{1,256})$',
         WordSearchView.as_view(),
         name='search'),
+    re_path(
+        r'^icon/upload$',
+        IconViewSet.as_view({'post': 'upload'}),
+        name='search'),
+    re_path(
+        r'^icon/(?P<id>[1-9]\d*)/approve$',
+        IconViewSet.as_view({'post': 'upload'}),
+        name='search'),
 ]
