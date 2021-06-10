@@ -16,9 +16,9 @@ urlpatterns = [
     re_path(
         r'^icon/upload$',
         IconViewSet.as_view({'post': 'upload'}),
-        name='search'),
+        name='icon-upload'),
     re_path(
         r'^icon/(?P<id>[1-9]\d*)/approve$',
         IconViewSet.as_view({'post': 'upload'}),
-        name='search'),
+        name='icon-approve'),
 ]
