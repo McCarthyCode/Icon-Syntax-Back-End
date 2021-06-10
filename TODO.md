@@ -3,10 +3,11 @@
 ## High Priorities
 
 - Icons
+  - Upload
+    - If admin, set is_approved to True
   - Approve
     - Unit tests
-    - Permissions
-  - Get
+  - Retrieve
     - View set action
     - Unit tests
 - MP3

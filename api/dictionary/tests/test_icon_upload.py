@@ -35,9 +35,17 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         Ensure we can successfully get data from an OPTIONS request.
         """
         response = self.client.options(self.url_path, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertDictTypes(response.data, self.options_types)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Authentication credentials were not provided.',
+                    'not_authenticated')
+            ]
+        }
+        self.assertEqual(values, response.data)
 
     def test_options_authenticated(self):
         """
@@ -49,7 +57,19 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         response = self.client.options(self.url_path, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertDictTypes(response.data, self.options_types)
+        types = {
+            **self.options_types, 'actions': {
+                'POST': {
+                    'icon': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                    }
+                }
+            }
+        }
+        self.assertDictTypes(response.data, types)
 
     def test_unauthenticated(self):
         """
@@ -87,7 +107,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         values = {
             NON_FIELD_ERRORS_KEY: [
                 ErrorDetail(
-                    'You do not have permission to perform this action.', 'permission_denied')
+                    'You do not have permission to perform this action.',
+                    'permission_denied')
             ]
         }
         self.assertEqual(values, response.data)

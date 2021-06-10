@@ -1,20 +1,24 @@
 from django.shortcuts import get_object_or_404
 
-from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework import status, serializers, generics
 from rest_framework.exceptions import ErrorDetail, NotAuthenticated, PermissionDenied
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 
 from api import NON_FIELD_ERRORS_KEY
 from api.authentication.permissions import IsVerified
 
 from ..models import Icon
+from ..serializers import IconUploadSerializer
 
 
-class IconViewSet(viewsets.ViewSet):
+class IconUploadView(generics.GenericAPIView):
     """
-    A simple ViewSet for uploading or approving icons.
+    A GenericAPIView for uploading an icon.
     """
+    serializer_class = IconUploadSerializer
+    permission_classes = [IsAuthenticated, IsVerified]
+
     def initial(self, request, *args, **kwargs):
         """
         This method overrides the default ViewSet method so exceptions can be handled.
@@ -42,20 +46,6 @@ class IconViewSet(viewsets.ViewSet):
             raise PermissionDenied(
                 {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
 
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.request.method.lower() == 'options':
-            return [AllowAny()]
-
-        permission_classes = {
-            'upload': [IsAuthenticated, IsVerified],
-            'approve': [IsAdminUser],
-        }
-
-        return [permission() for permission in permission_classes[self.action]]
-
     def __bad_request(self):
         """
         Returns a token HTTP 400 response.
@@ -70,7 +60,7 @@ class IconViewSet(viewsets.ViewSet):
             },
             status=status.HTTP_400_BAD_REQUEST)
 
-    def upload(self, request):
+    def post(self, request):
         """
         Action to upload an icon.
         """
@@ -86,7 +76,42 @@ class IconViewSet(viewsets.ViewSet):
         return Response(
             {'success': 'File upload successful.'}, status=status.HTTP_200_OK)
 
-    def approve(self, request, id):
+
+class IconApproveView(generics.GenericAPIView):
+    """
+    A GenericAPIView for approving a user-submitted icon.
+    """
+    serializer_class = serializers.Serializer
+    permission_classes = [IsAdminUser]
+
+    def initial(self, request, *args, **kwargs):
+        """
+        This method overrides the default ViewSet method so exceptions can be handled.
+        """
+        try:
+            super().initial(request, *args, **kwargs)
+        except NotAuthenticated as exc:
+            detail = exc.detail['detail'] \
+                if 'detail' in exc.detail else exc.detail
+
+            # Append a period because punctuation errors are annoying.
+            if detail[-1] not in '.?!':
+                detail = ErrorDetail(str(detail) + '.', detail.code)
+
+            raise NotAuthenticated(
+                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
+        except PermissionDenied as exc:
+            detail = exc.detail['detail'] \
+                if 'detail' in exc.detail else exc.detail
+
+            # Append a period because punctuation errors are annoying.
+            if detail[-1] not in '.?!':
+                detail = ErrorDetail(str(detail) + '.', detail.code)
+
+            raise PermissionDenied(
+                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
+
+    def post(self, request, id):
         """
         Action to approve an icon.
         """

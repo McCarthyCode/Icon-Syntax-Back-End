@@ -1,3 +1,3 @@
-from .icon_view_set import *
+from .icon_views import *
 from .word_view import *
 from .word_search_view import *

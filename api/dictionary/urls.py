@@ -15,10 +15,10 @@ urlpatterns = [
         name='search'),
     re_path(
         r'^icon/upload$',
-        IconViewSet.as_view({'post': 'upload'}),
+        IconUploadView.as_view(),
         name='icon-upload'),
     re_path(
         r'^icon/(?P<id>[1-9]\d*)/approve$',
-        IconViewSet.as_view({'post': 'upload'}),
+        IconApproveView.as_view(),
         name='icon-approve'),
 ]
