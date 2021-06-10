@@ -59,10 +59,12 @@ class Image(models.Model):
             if not self._hash or \
             self._hash != hasher.hexdigest().lower():
                 self._hash = hasher.digest()
-                self.image.name = hasher.hexdigest().lower()
+                self.image.name = os.path.join(
+                    relative_path,
+                    hasher.hexdigest().lower())
 
                 new_filename = os.path.join(
-                    settings.MEDIA_ROOT, relative_path, self.image.name)
+                    settings.MEDIA_ROOT, self.image.name)
                 os.rename(filename, new_filename)
 
     @property

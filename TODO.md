@@ -3,8 +3,6 @@
 ## High Priorities
 
 - Icons
-  - Upload
-    - If admin, set is_approved to True
   - Approve
     - Unit tests
   - Retrieve

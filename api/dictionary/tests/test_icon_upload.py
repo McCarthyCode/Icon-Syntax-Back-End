@@ -10,6 +10,7 @@ from api import NON_FIELD_ERRORS_KEY
 from api.test_mixins import TestCaseShortcutsMixin
 from api.authentication.models import User
 
+from ..models import Icon
 from ..utils import ExternalAPIManager
 
 
@@ -29,6 +30,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         """
         self.user = User.objects.create_user(
             'alice', 'alice@example.com', 'Easypass123!')
+        self.admin = User.objects.create_superuser(
+            'bob', 'bob@example.com', 'Easypass123!')
 
     def test_options_unauthenticated(self):
         """
@@ -132,9 +135,9 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
             ]
         }
 
-    def test_success(self):
+    def test_success_user(self):
         """
-        Ensure we can successfully upload an image and get a success response.
+        Ensure we can successfully upload an image and get a success response as a regular user.
         """
         self.spoof_verification()
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
@@ -148,6 +151,28 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
 
         values = {'success': 'File upload successful.'}
         self.assertDictEqual(values, response.data)
+
+        self.assertFalse(Icon.objects.all().first().is_approved)
+
+    def test_success_admin(self):
+        """
+        Ensure we can successfully upload an image and get a success response as an administrator.
+        """
+        self.spoof_verification()
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {self.admin.access}')
+
+        filepath = os.path.join(
+            settings.BASE_DIR, 'api/dictionary/tests/media/img/can.GIF')
+        with open(filepath, 'rb') as f:
+            response = self.client.post(self.url_path, {'icon': f})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        values = {'success': 'File upload successful.'}
+        self.assertDictEqual(values, response.data)
+
+        self.assertTrue(Icon.objects.all().first().is_approved)
 
     def test_oversized(self):
         """

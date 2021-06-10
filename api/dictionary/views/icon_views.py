@@ -73,6 +73,10 @@ class IconUploadView(generics.GenericAPIView):
         except Icon.InvalidImageError as exc:
             return self.__bad_request()
 
+        if request.user.is_superuser:
+            icon.is_approved = True
+            icon.save()
+
         return Response(
             {'success': 'File upload successful.'}, status=status.HTTP_200_OK)
 

@@ -39,7 +39,6 @@ class ExternalAPIManager:
         """
         Method to query the Merriam-Webster collegiate dictionary API.
         """
-        # breakpoint()
         if settings.COUNT_API_CALLS:
             ExternalAPIManager.__mw_dict_calls += 1
 
