@@ -3,16 +3,21 @@
 ## High Priorities
 
 - Icons
-  - Upload
   - Approve
-  - Serialize
+    - Unit tests
+    - Permissions
+  - Get
+    - View set action
+    - Unit tests
 - MP3
   - Retrieve
   - Save
   - Serialize
+  - Unit tests
 
 ## Medium Priorities
 
+- rm api/authentication/tests/mixins.py
 - ExternalAPIManager.get_word_and_entries()
   - Cache near-misses with suggestions
 - Search endpoint
