@@ -9,7 +9,7 @@ from api import NON_FIELD_ERRORS_KEY
 from api.authentication.permissions import IsVerified
 
 from ..models import Icon
-from ..serializers import IconUploadSerializer
+from ..serializers import IconUploadSerializer, IconApproveSerializer
 
 
 class IconUploadView(generics.GenericAPIView):
@@ -85,7 +85,7 @@ class IconApproveView(generics.GenericAPIView):
     """
     A GenericAPIView for approving a user-submitted icon.
     """
-    serializer_class = serializers.Serializer
+    serializer_class = IconApproveSerializer
     permission_classes = [IsAdminUser]
 
     def initial(self, request, *args, **kwargs):

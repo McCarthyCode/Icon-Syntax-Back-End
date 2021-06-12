@@ -1,1 +1,1 @@
-from .icon_upload_serializer import *
+from .icon_serializers import *
