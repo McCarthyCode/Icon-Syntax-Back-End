@@ -3,7 +3,7 @@ from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from api.test_mixins import TestCaseShortcutsMixin
+from api.tests.mixins import TestCaseShortcutsMixin
 
 from ..models import Word, DictionaryEntry
 from ..utils import ExternalAPIManager

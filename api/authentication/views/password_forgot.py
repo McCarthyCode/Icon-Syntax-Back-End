@@ -73,23 +73,6 @@ class PasswordForgotVerifyView(GenericAPIView):
 
         return [permission() for permission in permission_classes]
 
-    def initial(self, request, *args, **kwargs):
-        """
-        This method overrides the default APIView method so exceptions can be handled.
-        """
-        try:
-            super().initial(request, *args, **kwargs)
-        except PermissionDenied as exc:
-            detail = exc.detail
-
-            raise PermissionDenied(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
-        except NotAuthenticated as exc:
-            detail = exc.detail
-
-            raise NotAuthenticated(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
-
     def post(self, request):
         """
         POST method for last step of forgot password process.

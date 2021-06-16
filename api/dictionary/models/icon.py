@@ -1,15 +1,18 @@
 from django.db import models
 from django.db.models.signals import post_save
 
-from api.models import TimestampedModel
 from .image import Image
 
 
-class Icon(TimestampedModel, Image):
+class Icon(Image):
     """
     Image file associated with zero or more WordEntries.
     """
+    # Attributes
     is_approved = models.BooleanField(default=False)
+
+    # Static variables
+    block_size = 2 ** 12
 
     class InvalidImageError(Exception):
         """
@@ -28,14 +31,6 @@ class Icon(TimestampedModel, Image):
             instance.delete()
             raise Icon.InvalidImageError()
 
-        # try:
-        #     relative_path = kwargs['relative_path']
-        # except KeyError:
-        #     relative_path = 'img'
 
-        # instance.image_ops(relative_path)
-
-        instance.image_ops('img')
-
-
-post_save.connect(Icon.post_save, sender=Icon, weak=False, dispatch_uid='0')
+post_save.connect(Image.post_save, sender=Icon, dispatch_uid='0')
+post_save.connect(Icon.post_save, sender=Icon, weak=False, dispatch_uid='1')

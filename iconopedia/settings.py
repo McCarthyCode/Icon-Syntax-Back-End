@@ -229,7 +229,9 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
         'user': '1000/day',
-    }
+    },
+    'EXCEPTION_HANDLER':
+    'api.authentication.exceptions.exception_handler'
 }
 
 # Custom user model

@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 
 from rest_framework import status, serializers, generics
-from rest_framework.exceptions import ErrorDetail, NotAuthenticated, PermissionDenied
+from rest_framework.exceptions import (
+    ErrorDetail, NotAuthenticated, PermissionDenied, NotFound)
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 
@@ -9,42 +11,16 @@ from api import NON_FIELD_ERRORS_KEY
 from api.authentication.permissions import IsVerified
 
 from ..models import Icon
-from ..serializers import IconUploadSerializer, IconApproveSerializer
+from ..serializers import (
+    IconUploadSerializer, IconApproveSerializer, IconRetrieveSerializer)
 
 
 class IconUploadView(generics.GenericAPIView):
     """
-    A GenericAPIView for uploading an icon.
+    An API View for uploading an icon.
     """
     serializer_class = IconUploadSerializer
     permission_classes = [IsAuthenticated, IsVerified]
-
-    def initial(self, request, *args, **kwargs):
-        """
-        This method overrides the default ViewSet method so exceptions can be handled.
-        """
-        try:
-            super().initial(request, *args, **kwargs)
-        except NotAuthenticated as exc:
-            detail = exc.detail['detail'] \
-                if 'detail' in exc.detail else exc.detail
-
-            # Append a period because punctuation errors are annoying.
-            if detail[-1] not in '.?!':
-                detail = ErrorDetail(str(detail) + '.', detail.code)
-
-            raise NotAuthenticated(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
-        except PermissionDenied as exc:
-            detail = exc.detail['detail'] \
-                if 'detail' in exc.detail else exc.detail
-
-            # Append a period because punctuation errors are annoying.
-            if detail[-1] not in '.?!':
-                detail = ErrorDetail(str(detail) + '.', detail.code)
-
-            raise PermissionDenied(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
 
     def __bad_request(self):
         """
@@ -83,37 +59,10 @@ class IconUploadView(generics.GenericAPIView):
 
 class IconApproveView(generics.GenericAPIView):
     """
-    A GenericAPIView for approving a user-submitted icon.
+    An API View for approving a user-submitted icon.
     """
     serializer_class = IconApproveSerializer
     permission_classes = [IsAdminUser]
-
-    def initial(self, request, *args, **kwargs):
-        """
-        This method overrides the default ViewSet method so exceptions can be handled.
-        """
-        try:
-            super().initial(request, *args, **kwargs)
-        except NotAuthenticated as exc:
-            detail = exc.detail['detail'] \
-                if 'detail' in exc.detail else exc.detail
-
-            # Append a period because punctuation errors are annoying.
-            if detail[-1] not in '.?!':
-                detail = ErrorDetail(str(detail) + '.', detail.code)
-
-            raise NotAuthenticated(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
-        except PermissionDenied as exc:
-            detail = exc.detail['detail'] \
-                if 'detail' in exc.detail else exc.detail
-
-            # Append a period because punctuation errors are annoying.
-            if detail[-1] not in '.?!':
-                detail = ErrorDetail(str(detail) + '.', detail.code)
-
-            raise PermissionDenied(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
 
     def post(self, request, id):
         """
@@ -126,3 +75,23 @@ class IconApproveView(generics.GenericAPIView):
 
         return Response(
             {'success': 'Icon approved.'}, status=status.HTTP_200_OK)
+
+
+class IconRetrieveView(generics.GenericAPIView):
+    """
+    An API View for retrieving icon data.
+    """
+    serializer_class = IconRetrieveSerializer
+
+    def get(self, request, id):
+        """
+        Action to retrieve data pertaining to an icon, including ID, image data, and a MD5 hashsum.
+        """
+        icon = get_object_or_404(Icon, id=id)
+        icon_data = {
+            'id': icon.id,
+            'icon': icon.b64,
+            'md5': icon.hash,
+        }
+
+        return Response(icon_data, status=status.HTTP_200_OK)

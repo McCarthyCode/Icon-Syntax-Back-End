@@ -8,7 +8,7 @@ class MP3(TimestampedModel):
     # id = models.CharField(primary_key=True, max_length=64)
     data = models.FileField(_('MP3'), upload_to='mp3')
 
-    def base64(self, relative_path='mp3'):
+    def b64(self, relative_path='mp3'):
         """
         Convert file to a base-64 string.
         """

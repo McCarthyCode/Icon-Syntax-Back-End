@@ -8,7 +8,7 @@ from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient, APITestCase
 
 from api import NON_FIELD_ERRORS_KEY
-from api.test_mixins import TestCaseShortcutsMixin
+from api.tests.mixins import TestCaseShortcutsMixin
 from api.authentication.models import User
 
 from ..models import Icon

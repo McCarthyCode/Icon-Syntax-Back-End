@@ -44,8 +44,8 @@ class WordEntry(TimestampedModel):
         return OrderedDict(
             {
                 'id': self.id,
-                'icon': self.icon.base64() if self.icon else None,
-                'mp3': self.mp3.base64() if self.mp3 else None,
+                'icon': self.icon.b64 if self.icon else None,
+                'mp3': self.mp3.b64 if self.mp3 else None,
                 'data': json.loads(self.json),
             })
 

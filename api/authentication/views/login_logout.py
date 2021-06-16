@@ -61,23 +61,6 @@ class LogoutView(GenericAPIView):
 
         return [permission() for permission in permission_classes]
 
-    def initial(self, request, *args, **kwargs):
-        """
-        This method overrides the default APIView method so exceptions can be handled.
-        """
-        try:
-            super().initial(request, *args, **kwargs)
-        except (InvalidToken, AuthenticationFailed, NotAuthenticated) as exc:
-            detail = exc.detail['detail'] \
-                if 'detail' in exc.detail else exc.detail
-
-            # Append a period because punctuation errors are annoying.
-            if detail[-1] not in '.?!':
-                detail = ErrorDetail(str(detail) + '.', detail.code)
-
-            raise AuthenticationFailed(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
-
     def post(self, request):
         """
         POST method for taking a token from a request body, checking if it is valid, and logging out the user if valid, or returning an error response if invalid.

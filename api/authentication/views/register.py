@@ -66,23 +66,6 @@ class RegisterVerifyView(APIView):
     """
     serializer_class = RegisterVerifySerializer
 
-    def initial(self, request, *args, **kwargs):
-        """
-        This method overrides the default APIView method so exceptions can be handled.
-        """
-        try:
-            super().initial(request, *args, **kwargs)
-        except InvalidToken as exc:
-            detail = exc.detail['detail'] \
-                if 'detail' in exc.detail else exc.detail
-
-            # Append a period because punctuation errors are annoying.
-            if detail[-1] not in '.?!':
-                detail = ErrorDetail(str(detail) + '.', detail.code)
-
-            raise AuthenticationFailed(
-                {NON_FIELD_ERRORS_KEY: [detail]}, detail.code)
-
     def post(self, request):
         """
         POST method for taking a token from a query string, checking if it is valid, and marking its associated user's email address as verified.

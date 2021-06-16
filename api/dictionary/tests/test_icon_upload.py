@@ -7,7 +7,7 @@ from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient, APITestCase
 
 from api import NON_FIELD_ERRORS_KEY
-from api.test_mixins import TestCaseShortcutsMixin
+from api.tests.mixins import TestCaseShortcutsMixin
 from api.authentication.models import User
 
 from ..models import Icon
@@ -23,6 +23,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
 
     url_name = 'api:dict:icon-upload'
     url_path = f'/api/{settings.VERSION}/icon/upload'
+
+    relative_filepath = 'api/dictionary/tests/media/img/can.GIF'
 
     def setUp(self):
         """
@@ -78,8 +80,7 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure we get an error response when no authorization header is supplied.
         """
-        filepath = os.path.join(
-            settings.BASE_DIR, 'api/dictionary/tests/media/img/can.GIF')
+        filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
             response = self.client.post(self.url_path, {'icon': f})
 
@@ -100,8 +101,7 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         """
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
 
-        filepath = os.path.join(
-            settings.BASE_DIR, 'api/dictionary/tests/media/img/can.GIF')
+        filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
             response = self.client.post(self.url_path, {'icon': f})
 
@@ -142,8 +142,7 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         self.spoof_verification()
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
 
-        filepath = os.path.join(
-            settings.BASE_DIR, 'api/dictionary/tests/media/img/can.GIF')
+        filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
             response = self.client.post(self.url_path, {'icon': f})
 
@@ -162,8 +161,7 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         self.client.credentials(
             HTTP_AUTHORIZATION=f'Bearer {self.admin.access}')
 
-        filepath = os.path.join(
-            settings.BASE_DIR, 'api/dictionary/tests/media/img/can.GIF')
+        filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
             response = self.client.post(self.url_path, {'icon': f})
 

@@ -2,12 +2,6 @@
 
 ## High Priorities
 
-- Icons
-  - Approve
-    - Unit tests
-  - Retrieve
-    - View set action
-    - Unit tests
 - MP3
   - Retrieve
   - Save
@@ -16,6 +10,8 @@
 
 ## Medium Priorities
 
+- Icon
+  - Change relative path parameters to static variables
 - rm api/authentication/tests/mixins.py
 - ExternalAPIManager.get_word_and_entries()
   - Cache near-misses with suggestions
