@@ -9,7 +9,6 @@
 
 ## Medium Priorities
 
-- TODOs in `api.authentication`
 - Icon
   - Change relative path parameters to static variables
 - `ExternalAPIManager.get_word_and_entries()`

@@ -60,11 +60,12 @@ class RegisterView(GenericAPIView):
             }, status.HTTP_201_CREATED)
 
 
-class RegisterVerifyView(APIView):
+class RegisterVerifyView(GenericAPIView):
     """
     View for accepting a generated token from a new user to complete the registration process.
     """
     serializer_class = RegisterVerifySerializer
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
