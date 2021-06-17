@@ -1,5 +1,5 @@
+import string
 from django.urls import re_path, include
-
 from .views import *
 
 app_name = 'api.dictionary'
@@ -25,4 +25,8 @@ urlpatterns = [
         r'^icon/(?P<id>[1-9]\d*)/approve$',
         IconApproveView.as_view(),
         name='icon-approve'),
+    re_path(
+        r'^audio/(?P<id>[a-z0-9\W]+)\.mp3$',
+        MP3RetrieveView.as_view(),
+        name='audio'),
 ]

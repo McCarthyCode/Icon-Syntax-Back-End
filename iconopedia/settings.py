@@ -231,7 +231,7 @@ REST_FRAMEWORK = {
         'user': '1000/day',
     },
     'EXCEPTION_HANDLER':
-    'api.authentication.exceptions.exception_handler'
+    'api.exceptions.exception_handler'
 }
 
 # Custom user model
