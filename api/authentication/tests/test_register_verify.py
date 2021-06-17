@@ -48,15 +48,18 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
     def test_options_authenticated(self):
         """
         Ensure we can successfully get data from an authenticated OPTIONS request.
-
-        TODO - Accept body as defined in 'types'
         """
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
         response = self.client.options(self.url_path, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # types = {'actions': {'POST': {}}, **self.options_types}
-        self.assertDictTypes(response.data, self.options_types)
+        types = {
+            'actions': {
+                'POST': self.credentials_types
+            },
+            **self.options_types
+        }
+        self.assertDictTypes(response.data, types)
 
     def test_missing_token(self):
         """

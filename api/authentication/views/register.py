@@ -60,7 +60,7 @@ class RegisterView(GenericAPIView):
             }, status.HTTP_201_CREATED)
 
 
-class RegisterVerifyView(APIView):
+class RegisterVerifyView(GenericAPIView):
     """
     View for accepting a generated token from a new user to complete the registration process.
     """
@@ -69,7 +69,7 @@ class RegisterVerifyView(APIView):
 
     def initial(self, request, *args, **kwargs):
         """
-        This method overrides the default APIView method so exceptions can be handled.
+        This method overrides the default GenericAPIView method so exceptions can be handled.
         """
         try:
             super().initial(request, *args, **kwargs)
