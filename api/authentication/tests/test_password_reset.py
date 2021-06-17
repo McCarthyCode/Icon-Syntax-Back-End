@@ -10,8 +10,7 @@ from rest_framework.test import APIClient, APITestCase
 
 from api.authentication import NON_FIELD_ERRORS_KEY
 from api.authentication.models import User
-
-from .mixins import TestCaseShortcutsMixin
+from api.tests.mixins import TestCaseShortcutsMixin
 
 
 class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):

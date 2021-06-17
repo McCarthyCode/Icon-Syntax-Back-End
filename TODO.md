@@ -2,18 +2,17 @@
 
 ## High Priorities
 
-- MP3
-  - Retrieve
+- `MP3RetrieveView`
   - Save
   - Serialize
-  - Unit tests
+- Unit tests
 
 ## Medium Priorities
 
+- TODOs in `api.authentication`
 - Icon
   - Change relative path parameters to static variables
-- rm api/authentication/tests/mixins.py
-- ExternalAPIManager.get_word_and_entries()
+- `ExternalAPIManager.get_word_and_entries()`
   - Cache near-misses with suggestions
 - Search endpoint
   - Check timestamps in get_word_and_entries
