@@ -12,7 +12,7 @@ class Icon(Image):
     is_approved = models.BooleanField(default=False)
 
     # Static variables
-    block_size = 2 ** 12
+    __block_size = 2 ** 12
 
     class InvalidImageError(Exception):
         """

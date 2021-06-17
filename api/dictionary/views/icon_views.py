@@ -88,10 +88,5 @@ class IconRetrieveView(generics.GenericAPIView):
         Action to retrieve data pertaining to an icon, including ID, image data, and a MD5 hashsum.
         """
         icon = get_object_or_404(Icon, id=id)
-        icon_data = {
-            'id': icon.id,
-            'icon': icon.b64,
-            'md5': icon.hash,
-        }
 
-        return Response(icon_data, status=status.HTTP_200_OK)
+        return Response(icon.obj, status=status.HTTP_200_OK)

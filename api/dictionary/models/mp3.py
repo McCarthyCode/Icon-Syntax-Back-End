@@ -5,12 +5,18 @@ from api.models import TimestampedModel
 
 
 class MP3(TimestampedModel):
-    # id = models.CharField(primary_key=True, max_length=64)
-    data = models.FileField(_('MP3'), upload_to='mp3')
+    # Static Variables
+    __relative_path = 'mp3'
+    __block_size = 2 ** 16
 
-    def b64(self, relative_path='mp3'):
+    # Attributes
+    id = models.CharField(primary_key=True, max_length=64)
+    data = models.FileField(_('MP3'), upload_to=__relative_path)
+
+    @property
+    def b64(self):
         """
-        Convert file to a base-64 string.
+        Convert the MP3 to a base-64 string.
         """
-        with open(settings.MEDIA_ROOT / relative_path / self.data.name) as f:
-            return b64encode(f.readlines())
+        return Base64Converter.encode(
+            self.image.name, block_size=self.__block_size)

@@ -3,7 +3,7 @@ import requests
 
 from django.conf import settings
 
-from .models import Word, DictionaryEntry
+from ..models.word import Word, DictionaryEntry
 
 
 class ExternalAPIManager:

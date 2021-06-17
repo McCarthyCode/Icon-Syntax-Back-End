@@ -2,6 +2,7 @@ import hashlib
 import os
 
 from base64 import b16encode, b64encode
+from collections import OrderedDict
 from functools import partial
 from io import BytesIO
 from PIL import Image
@@ -11,6 +12,7 @@ from django.db import models
 from django.db.models.signals import post_save
 
 from api.models import TimestampedModel
+from ..utils import Base64Converter
 
 
 class Image(TimestampedModel):
@@ -23,14 +25,15 @@ class Image(TimestampedModel):
         """
         abstract = True
 
+    # Static variables
+    __relative_path = 'img'
+    __block_size = 2**16
+
     # Attributes
     image = models.ImageField(
-        blank=True, null=True, default=None, upload_to='img')
+        blank=True, null=True, default=None, upload_to=__relative_path)
     _hash = models.BinaryField(
         editable=False, null=True, default=None, max_length=16)
-
-    # Static variables
-    block_size = 2 ** 16
 
     def __str__(self):
         """
@@ -38,13 +41,7 @@ class Image(TimestampedModel):
         """
         return self.image.name
 
-    def image_ops(self, relative_path='img'):
-        """
-        Image operations to be run when an image is added or updated.
-        """
-        self.__hash_image(relative_path)
-
-    def __hash_image(self, relative_path, block_size=65536):
+    def __hash_image(self):
         """
         Create a MD5 cryptographic hash of the image, store it in the database, and rename the file.
         """
@@ -52,7 +49,7 @@ class Image(TimestampedModel):
         filename = os.path.join(settings.MEDIA_ROOT, self.image.name)
 
         with open(filename, 'rb') as image:
-            for buffer in iter(partial(image.read, block_size), b''):
+            for buffer in iter(partial(image.read, self.__block_size), b''):
                 hasher.update(buffer)
 
             # Make changes if stored hash does not exist
@@ -60,7 +57,7 @@ class Image(TimestampedModel):
                 # Update hash and image name attributes
                 self._hash = hasher.digest()
                 self.image.name = os.path.join(
-                    relative_path,
+                    self.__relative_path,
                     hasher.hexdigest().lower())
 
                 # Save
@@ -79,24 +76,27 @@ class Image(TimestampedModel):
     @property
     def b64(self):
         """
-        Convert file to a base-64 string.
+        Convert the image to a base-64 string.
         """
-        path = os.path.join(settings.MEDIA_ROOT, self.image.name)
-        with open(path, 'rb') as image:
-            byte_stream = b''
-            for buffer in iter(partial(image.read, self.block_size), b''):
-                byte_stream += buffer
-            return str(b64encode(byte_stream), 'utf-8')
-
-        return None
+        return Base64Converter.encode(
+            self.image.name, block_size=self.__block_size)
 
     @property
-    def hash(self):
+    def md5(self):
         """
         Get the MD5 image hash as a base-16 string.
         """
         return str(
             b16encode(self._hash).lower(), 'utf-8') if self._hash else None
+
+    @property
+    def obj(self):
+        return OrderedDict(
+            {
+                'id': self.id,
+                'icon': self.b64,
+                'md5': self.md5,
+            })
 
     @classmethod
     def post_save(
@@ -105,4 +105,4 @@ class Image(TimestampedModel):
         """
         Method to perform preliminary operations just after instance creation.
         """
-        instance.image_ops()
+        instance.__hash_image()
