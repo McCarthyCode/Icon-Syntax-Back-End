@@ -54,6 +54,8 @@ try:
 
     EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
     EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
+
+    MW_DICTIONARY_API_KEY = os.environ['MW_DICTIONARY_API_KEY']
 except KeyError as exc:
     raise MissingEnvironmentVariable(exc)
 
@@ -83,6 +85,7 @@ ALLOWED_HOSTS = ['localhost']
 INSTALLED_APPS = [
     'api',
     'api.authentication',
+    'api.dictionary',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -213,6 +216,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Django REST Framework
+
 REST_FRAMEWORK = {
     'NON_FIELD_ERRORS_KEY':
     'errors',
@@ -229,9 +233,11 @@ REST_FRAMEWORK = {
 }
 
 # Custom user model
+
 AUTH_USER_MODEL = 'authentication.User'
 
 # Email
+
 DEFAULT_FROM_EMAIL = SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
@@ -240,17 +246,19 @@ EMAIL_PORT = 465
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 
 # Site ID
+
 SITE_ID = 1
 
 # Regular expression defining access and refresh tokens
+
 TOKEN_REGEX = r'^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
 
 # Define default auto field to account for BigAutoField support added in 3.2
-# Here we use the old standard, but we may need to change this to scale up in
-# the future.
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # DRF Simple JWT
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Changed from default
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -275,7 +283,20 @@ SIMPLE_JWT = {
 }
 
 # Default, front end paths for verification pages sent by email
+
 FRONT_END_VERIFY_PATHS = {
     'REGISTER': '/register/verify',
     'PASSWORD_FORGOT': '/password/forgot/verify',
 }
+
+# Media definitions
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+# Pagination
+
+DEFAULT_RESULTS_PER_PAGE = 20
+MAX_RESULTS_PER_PAGE = 100
+
+# Count API calls (used in testing)
+COUNT_API_CALLS = False
