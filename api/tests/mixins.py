@@ -169,11 +169,21 @@ class TestCasesMixin:
     """
     Tests that can be applied to every endpoint.
     """
+    reverse_args = []
+    reverse_kwargs = {}
+
     def test_urls(self):
         """
         Method to check if URL and reverse-lookup name formats match.
         """
-        self.assertEqual(self.url_path, reverse(self.url_name))
+        self.assertEqual(
+            self.url_path,
+            reverse(
+                self.url_name,
+                args=self.reverse_args,
+                kwargs=self.reverse_kwargs,
+            ),
+        )
 
 
 class TestCaseUtilsMixin:

@@ -1,4 +1,6 @@
-/.env/
-__pycache__/
-/.venv/
+/api/tests/media
+/.env
+/media
+__pycache__
+/.venv
 /.vscode

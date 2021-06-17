@@ -2,60 +2,20 @@
 
 ## High Priorities
 
-- Create dictionary app
-  - Define class structure
-    - Abstract models
-      - TimestampedModel
-        - date_created
-        - date_updated
-    - Interfaces
-      - Word
-        - get_entries()
-        - is_homograph()
-        - get_word()
-    - Enumerations
-      - IconCategory
-        - adjective
-        - adverb
-        - connective
-        - noun
-        - preposition
-        - punctuation
-        - verbIrregular
-        - verbModal
-        - verbRegular
-        - verbTwoPart
-    - Models
-      - DictionaryEntry
-        - id
-        - icon
-        - mp3
-        - data
-        - get_data()
-        - set_data(str)
-      - SingleEntry
-      - Homograph
-        - dictionary_entries
-      - SearchTerm
-        - id
-        - get_words()
-      - SearchResult
-        - id
-        - term
-        - word
-      - MP3
-        - id
-        - data
-        - get_data_b64()
-      - Icon
-        - id
-        - data
-        - category
-        - get_data_b64()
-        - get_dictionary_entries()
+- `MP3RetrieveView`
+  - Save
+  - Serialize
+- Unit tests
 
 ## Medium Priorities
 
+- TODOs in `api.authentication`
+- Icon
+  - Change relative path parameters to static variables
+- `ExternalAPIManager.get_word_and_entries()`
+  - Cache near-misses with suggestions
+- Search endpoint
+  - Check timestamps in get_word_and_entries
 - Encrypt database on OS level
 
 ## Low Priorities
