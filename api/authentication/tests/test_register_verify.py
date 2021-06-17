@@ -31,13 +31,19 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
     def test_options_unauthenticated(self):
         """
         Ensure we can successfully get data from an unauthenticated OPTIONS request.
-
-        TODO - Accept a HTTP 403 FORBIDDEN status code
         """
         response = self.client.options(self.url_path, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictTypes(response.data, self.options_types)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        values = {
+            NON_FIELD_ERRORS_KEY: [
+                ErrorDetail(
+                    'Authentication credentials were not provided.',
+                    'not_authenticated')
+            ]
+        }
+        self.assertDictValues(response.data, values)
 
     def test_options_authenticated(self):
         """
@@ -57,13 +63,13 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
         Ensure that the proper error messages are sent when no Authorization header is provided.
         """
         response = self.client.post(self.url_path)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         values = {
             NON_FIELD_ERRORS_KEY: [
                 ErrorDetail(
-                    'The activation link was invalid or has expired.',
-                    'invalid')
+                    'Authentication credentials were not provided.',
+                    'not_authenticated')
             ]
         }
         self.assertDictValues(response.data, values)

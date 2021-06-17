@@ -65,6 +65,7 @@ class RegisterVerifyView(APIView):
     View for accepting a generated token from a new user to complete the registration process.
     """
     serializer_class = RegisterVerifySerializer
+    permission_classes = [IsAuthenticated]
 
     def initial(self, request, *args, **kwargs):
         """
@@ -72,7 +73,7 @@ class RegisterVerifyView(APIView):
         """
         try:
             super().initial(request, *args, **kwargs)
-        except InvalidToken as exc:
+        except (InvalidToken, NotAuthenticated) as exc:
             detail = exc.detail['detail'] \
                 if 'detail' in exc.detail else exc.detail
 
