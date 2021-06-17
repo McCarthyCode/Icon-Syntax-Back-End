@@ -54,7 +54,7 @@ class WordSearchView(generics.GenericAPIView):
             settings.MAX_RESULTS_PER_PAGE,
         )
 
-        _word, entries = ExternalAPIManager.get_word_and_entries(word)
+        _word, entries = Word.objects.get_word_and_entries(word)
         if type(entries) == list:
             paginator = Paginator(entries, results_per_page)
         else:

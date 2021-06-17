@@ -22,11 +22,11 @@ class IconRetrieveSerializer(serializers.ModelSerializer):
     """
     class Meta:
         """
-        Metaclass
+        Metaclass defining the model as Icon and fields used as read-only field 'id'.
         """
         model = Icon
         fields = ['id']
         read_only_fields = ['id']
 
     icon = serializers.CharField(max_length=16384, read_only=True)
-    md5 = serializers.CharField(max_length=32, read_only=True)
+    md5 = serializers.CharField(min_length=32, max_length=32, read_only=True)

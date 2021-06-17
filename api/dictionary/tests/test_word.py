@@ -9,7 +9,7 @@ from api import NON_FIELD_ERRORS_KEY
 from api.tests.mixins import TestCaseShortcutsMixin
 
 from ..models import Word, DictionaryEntry
-from ..utils import ExternalAPIManager
+from ..utils import DictionaryAPIManager
 
 
 class WordTests(TestCaseShortcutsMixin, APITestCase):
@@ -29,7 +29,7 @@ class WordTests(TestCaseShortcutsMixin, APITestCase):
 
     def setUp(self):
         # reset the counter
-        ExternalAPIManager.reset_mw_dict_calls()
+        DictionaryAPIManager.reset_num_api_calls()
 
     def test_options(self):
         """
@@ -63,13 +63,17 @@ class WordTests(TestCaseShortcutsMixin, APITestCase):
         """
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
+        self.assertEqual(DictionaryAPIManager.num_api_calls(), 1)
         self.assertIsNotNone(self.__get_word())
         self.assertEquals(
             len(self.__get_dict_entries()), self.search_word_entries)
 
-        types = {'word': str, 'dictionary': [dict]}
-
+        types = {
+            'word': str,
+            'dictionary': [dict],
+            'thesaurus': None,
+            'word-net': None
+        }
         self.assertDictTypes(response.data, types)
 
     def test_success_miss(self):
@@ -115,10 +119,9 @@ class WordTests(TestCaseShortcutsMixin, APITestCase):
         # test
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        self.assertEqual(ExternalAPIManager.mw_dict_calls(), 1)
+        self.assertEqual(DictionaryAPIManager.num_api_calls(), 1)
         self.assertIsNone(self.__get_word())
-        word, entries = ExternalAPIManager.get_word_and_entries(
-            self.search_word)
+        word, entries = Word.objects.get_word_and_entries(self.search_word)
 
         self.assertIsNone(word)
         self.assertEquals(

@@ -18,5 +18,7 @@ class MP3(TimestampedModel):
         """
         Convert the MP3 to a base-64 string.
         """
+        from api.dictionary.utils import Base64Converter
+
         return Base64Converter.encode(
             self.image.name, block_size=self.__block_size)

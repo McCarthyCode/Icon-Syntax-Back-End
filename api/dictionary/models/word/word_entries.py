@@ -7,21 +7,14 @@ from django.utils.translation import gettext_lazy as _
 from api.models import TimestampedModel
 
 
-class Word(TimestampedModel):
-    id = models.CharField(primary_key=True, max_length=64)
-
-    @property
-    def obj(self):
-        dictionary = [x.obj for x in DictionaryEntry.objects.filter(word=self)]
-
-        return OrderedDict({
-            'word': self.id,
-            'dictionary': dictionary,
-        })
-
-
 class WordEntry(TimestampedModel):
+    """
+    Timestamed, abstract model defining the data associated with a word. Has a string ID and foreign keys to Word, Icon, and MP3 models.
+    """
     class Meta:
+        """
+        Metaclass defining the model as abstract.
+        """
         abstract = True
 
     id = models.CharField(primary_key=True, max_length=64)
@@ -51,8 +44,14 @@ class WordEntry(TimestampedModel):
 
 
 class DictionaryEntry(WordEntry):
+    """
+    An entry pulled from the Merriam-Webster Collegiate Dictionary API. Contains all attributes and properties defined in WordEntry, along with the JSON data from the API.
+    """
     json = models.TextField(_('Merriam-Webster dictionary entry'), default='')
 
 
 class ThesaurusEntry(WordEntry):
+    """
+    An entry pulled from the Merriam-Webster Collegiate Thesaurus API. Contains all attributes and properties defined in WordEntry, along with the JSON data from the API.
+    """
     json = models.TextField(_('Merriam-Webster thesaurus entry'), default='')

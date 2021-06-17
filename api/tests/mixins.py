@@ -143,7 +143,9 @@ class AssertMethodsMixin():
 
             value = obj[key]
 
-            if isinstance(value, dict):
+            if value == None:
+                pass
+            elif isinstance(value, dict):
                 self.assertDictTypes(value, _type)
             elif isinstance(value, list):
                 self.assertListType(value, _type[0])
