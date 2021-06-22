@@ -251,11 +251,23 @@ EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 
 SITE_ID = 1
 
-# Regular expression defining access and refresh tokens
+# Regular expressions
 
+# access and refresh tokens
 TOKEN_REGEX = r'^[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$'
 
-# Define default auto field to account for BigAutoField support added in 3.2
+# base-64 strings
+B64_REGEX = r'^(?:[A-Za-z\d+\/]{4})*(?:[A-Za-z\d+\/]{3}=|[A-Za-z\d+\/]{2}==)?$'
+
+# MD5 hashsums
+MD5_REGEX = r'^[a-f\d]{32}$'
+
+# integer and string IDs
+INT_ID_REGEX = r'^[1-9]\d*$'
+STR_ID_REGEX = r'^.{1,64}$'
+
+# Define default auto field to account for BigAutoField support added in Django
+# 3.2
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

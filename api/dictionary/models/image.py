@@ -10,6 +10,7 @@ from PIL import Image
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
+from django.utils.translation import gettext_lazy as _
 
 from api.models import TimestampedModel
 from ..utils import Base64Converter
@@ -33,7 +34,7 @@ class Image(TimestampedModel):
     image = models.ImageField(
         blank=True, null=True, default=None, upload_to=__relative_path)
     _hash = models.BinaryField(
-        editable=False, null=True, default=None, max_length=16)
+        _('MD5 hash'), editable=False, null=True, default=None, max_length=16)
 
     def __str__(self):
         """
@@ -91,6 +92,9 @@ class Image(TimestampedModel):
 
     @property
     def obj(self):
+        """
+        Serialize relevant fields and properties for JSON output.
+        """
         return OrderedDict(
             {
                 'id': self.id,

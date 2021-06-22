@@ -32,7 +32,7 @@ class ConflictError(APIException):
     default_code = 'conflict'
 
 
-class ServerError(APIException):
+class InternalServerError(APIException):
     """
     Exception to be used with the HTTP 500 INTERNAL SERVER ERROR status code. Inherits from rest_framework.exceptions.APIException.
     """

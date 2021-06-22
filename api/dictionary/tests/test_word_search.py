@@ -31,6 +31,8 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
     def test_options(self):
         """
         Ensure we can successfully get data from an OPTIONS request.
+
+        TODO: detail request parameters
         """
         response = self.client.options(self.url_path, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)

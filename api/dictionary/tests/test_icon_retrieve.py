@@ -53,6 +53,8 @@ class IconRetrieveTests(TestCaseShortcutsMixin, APITestCase):
     def test_options(self):
         """
         Ensure we can successfully get data from an OPTIONS request.
+
+        TODO: detail request parameters
         """
         response = self.client.options(self.url_path, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -72,12 +74,12 @@ class IconRetrieveTests(TestCaseShortcutsMixin, APITestCase):
         self.assertDictTypes(response.data, types)
 
         regexes = {
-            'icon':
-            r'^(?:[A-Za-z\d+\/]{4})*(?:[A-Za-z\d+\/]{3}=|[A-Za-z\d+\/]{2}==)?$',
-            'md5': r'^[a-f\d]{32}$',
+            'id': settings.INT_ID_REGEX,
+            'icon': settings.B64_REGEX,
+            'md5': settings.MD5_REGEX,
         }
         for key, value in regexes.items():
-            self.assertRegex(response.data[key], value)
+            self.assertRegex(str(response.data[key]), value)
 
     def test_not_found(self):
         """
@@ -92,5 +94,3 @@ class IconRetrieveTests(TestCaseShortcutsMixin, APITestCase):
             NON_FIELD_ERRORS_KEY: [ErrorDetail('Not found.', 'not_found')]
         }
         self.assertEqual(values, response.data)
-
-        # print(response.data)
