@@ -33,4 +33,4 @@ class Icon(Image):
 
 
 post_save.connect(Image.post_save, sender=Icon, dispatch_uid='0')
-post_save.connect(Icon.post_save, sender=Icon, weak=False, dispatch_uid='1')
+post_save.connect(Icon.post_save, sender=Icon, dispatch_uid='1')

@@ -42,7 +42,7 @@ class Image(TimestampedModel):
         """
         return self.image.name
 
-    def __hash_image(self):
+    def __hash(self):
         """
         Create a MD5 cryptographic hash of the image, store it in the database, and rename the file.
         """
@@ -65,9 +65,14 @@ class Image(TimestampedModel):
                 from ..models import Icon
                 post_save.disconnect(
                     Image.post_save, sender=Icon, dispatch_uid='0')
+                post_save.disconnect(
+                    Icon.post_save, sender=Icon, dispatch_uid='1')
+
                 self.save()
+
                 post_save.connect(
                     Image.post_save, sender=Icon, dispatch_uid='0')
+                post_save.connect(Icon.post_save, sender=Icon, dispatch_uid='1')
 
                 # Update filesystem
                 new_filename = os.path.join(
@@ -109,4 +114,4 @@ class Image(TimestampedModel):
         """
         Method to perform preliminary operations just after instance creation.
         """
-        instance.__hash_image()
+        instance.__hash()
