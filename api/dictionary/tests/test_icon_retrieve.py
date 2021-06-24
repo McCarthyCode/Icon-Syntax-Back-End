@@ -37,8 +37,9 @@ class IconRetrieveTests(TestCaseShortcutsMixin, APITestCase):
         filepath = os.path.join(
             settings.BASE_DIR, 'api/dictionary/tests/media/img/can.GIF')
         with open(filepath, 'rb') as f:
+            data = {'icon': f, 'dictEntry': 'hammer:1'}
             response = self.client.post(
-                reverse('api:dict:icon-upload'), {'icon': f})
+                reverse('api:dict:icon-upload'), data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

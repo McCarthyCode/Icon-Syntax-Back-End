@@ -35,6 +35,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         self.admin = User.objects.create_superuser(
             'bob', 'bob@example.com', 'Easypass123!')
 
+        self.dict_entry_id = 'hammer:1'
+
     def test_options_unauthenticated(self):
         """
         Ensure we can successfully get data from an OPTIONS request.
@@ -70,6 +72,14 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
                         'required': bool,
                         'read_only': bool,
                         'label': str,
+                    },
+                    'dictEntry': {
+                        'type': str,
+                        'required': bool,
+                        'read_only': bool,
+                        'label': str,
+                        'min_length': int,
+                        'max_length': int
                     }
                 }
             }
@@ -82,7 +92,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         """
         filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
-            response = self.client.post(self.url_path, {'icon': f})
+            data = {'icon': f, 'dictEntry': self.dict_entry_id}
+            response = self.client.post(self.url_path, data)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -103,7 +114,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
 
         filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
-            response = self.client.post(self.url_path, {'icon': f})
+            data = {'icon': f, 'dictEntry': self.dict_entry_id}
+            response = self.client.post(self.url_path, data)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -128,11 +140,42 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         values = {
-            NON_FIELD_ERRORS_KEY: [
-                ErrorDetail(
-                    'The request was invalid. Be sure to include an image of maximum width 60 pixels and exact height 54 pixels.',
-                    'bad_request')
-            ]
+            'icon': [ErrorDetail('No file was submitted.', 'required')],
+            'dictEntry': [ErrorDetail('This field is required.', 'required')]
+        }
+        self.assertDictValues(response.data, values)
+
+    def test_missing_icon(self):
+        """
+        Ensure we get an error response when the request is missing an icon.
+        """
+        self.spoof_verification()
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+
+        data = {'dictEntry': self.dict_entry_id}
+        response = self.client.post(self.url_path, data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        values = {'icon': [ErrorDetail('No file was submitted.', 'required')]}
+        self.assertDictValues(response.data, values)
+
+    def test_missing_dict_entry(self):
+        """
+        Ensure we get an error response when the request is missing a dictionary entry.
+        """
+        self.spoof_verification()
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
+
+        filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
+        with open(filepath, 'rb') as f:
+            data = {'icon': f}
+            response = self.client.post(self.url_path, data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        values = {
+            'dictEntry': [ErrorDetail('This field is required.', 'required')]
         }
 
     def test_success_user(self):
@@ -144,7 +187,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
 
         filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
-            response = self.client.post(self.url_path, {'icon': f})
+            data = {'icon': f, 'dictEntry': self.dict_entry_id}
+            response = self.client.post(self.url_path, data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -163,7 +207,8 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
 
         filepath = os.path.join(settings.BASE_DIR, self.relative_filepath)
         with open(filepath, 'rb') as f:
-            response = self.client.post(self.url_path, {'icon': f})
+            data = {'icon': f, 'dictEntry': self.dict_entry_id}
+            response = self.client.post(self.url_path, data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -182,14 +227,15 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
         filepath = os.path.join(
             settings.BASE_DIR, 'api/dictionary/tests/media/img/oversized.png')
         with open(filepath, 'rb') as f:
-            response = self.client.post(self.url_path, {'icon': f})
+            data = {'icon': f, 'dictEntry': self.dict_entry_id}
+            response = self.client.post(self.url_path, data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         values = {
-            NON_FIELD_ERRORS_KEY: [
+            'icon': [
                 ErrorDetail(
-                    'The request was invalid. Be sure to include an image of maximum width 60 pixels and exact height 54 pixels.',
+                    'The size of the uploaded image is invalid. Be sure to include an image of maximum width 64 pixels and exact height 54 pixels.',
                     'bad_request')
             ]
         }

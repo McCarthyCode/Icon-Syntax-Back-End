@@ -19,12 +19,7 @@ class WordEntry(TimestampedModel):
 
     id = models.CharField(primary_key=True, max_length=64)
     word = models.ForeignKey('dictionary.Word', on_delete=models.CASCADE)
-    icon = models.ForeignKey(
-        'dictionary.Icon',
-        blank=True,
-        null=True,
-        default=None,
-        on_delete=models.CASCADE)
+    icons = models.ManyToManyField('dictionary.Icon')
     mp3 = models.ForeignKey(
         'dictionary.MP3',
         blank=True,
@@ -37,7 +32,8 @@ class WordEntry(TimestampedModel):
         return OrderedDict(
             {
                 'id': self.id,
-                'icon': self.icon.b64 if self.icon else None,
+                'icons':
+                [icon.obj for icon in self.icons.filter(is_approved=True)],
                 'mp3': self.mp3.b64 if self.mp3 else None,
                 'data': json.loads(self.json),
             })

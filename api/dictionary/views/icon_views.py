@@ -3,7 +3,7 @@ from django.http import Http404
 
 from rest_framework import status, serializers, generics
 from rest_framework.exceptions import (
-    ErrorDetail, NotAuthenticated, PermissionDenied, NotFound)
+    ErrorDetail, NotAuthenticated, PermissionDenied, NotFound, ValidationError)
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 
@@ -38,20 +38,16 @@ class IconUploadView(generics.GenericAPIView):
 
     def post(self, request):
         """
-        Action to upload an icon.
+        Action to upload an icon and associate it with a corresponding dictionary entry.
         """
-        icon = request.FILES.get('icon')
-        if not icon:
-            return self.__bad_request()
-
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
         try:
-            icon = Icon.objects.create(image=icon)
-        except Icon.InvalidImageError as exc:
-            return self.__bad_request()
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-        if request.user.is_superuser:
-            icon.is_approved = True
-            icon.save()
+        serializer.save()
 
         return Response(
             {'success': 'File upload successful.'}, status=status.HTTP_200_OK)
