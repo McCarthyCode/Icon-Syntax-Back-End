@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.models import TimestampedModel
+
 
 class UserManager(BaseUserManager):
     """
@@ -36,12 +38,13 @@ class UserManager(BaseUserManager):
 
         user.is_staff = True
         user.is_superuser = True
+        user.is_verified = True
         user.save(using=self._db)
 
         return user
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
     """
     Custom user model including timestamps.
     """
@@ -55,10 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=None)
     is_active = models.BooleanField(_('is active'), default=True)
     is_staff = models.BooleanField(_('is staff'), default=False)
-    is_superuser = models.BooleanField(_('is superuser'), default=False)
     is_verified = models.BooleanField(_('is verified'), default=False)
-    created = models.DateTimeField(_('datetime created'), auto_now_add=True)
-    updated = models.DateTimeField(_('datetime updated'), auto_now=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'password']

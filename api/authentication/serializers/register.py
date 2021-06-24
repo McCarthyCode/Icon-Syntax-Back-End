@@ -11,11 +11,10 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from api.authentication import NON_FIELD_ERRORS_KEY
-
-from ..exceptions import ConflictError
-from ..models import User
+from api.exceptions import ConflictError
 
 from .credentials import CredentialsSerializer
+from ..models import User
 
 
 class RegisterSerializer(serializers.ModelSerializer):
