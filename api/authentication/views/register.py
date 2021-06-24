@@ -42,9 +42,9 @@ class RegisterView(GenericAPIView):
             return Response(exc.detail, exc.status_code)
 
         Util.send_email_link(
-            _('Verify your email address with Iconopedia'),
+            _('Verify your email address with Icon Syntax'),
             _(
-                'Thank you for registering an account with Iconopedia! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
+                'Thank you for registering an account with Icon Syntax! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
             ),
             serializer.save(),
             verify,

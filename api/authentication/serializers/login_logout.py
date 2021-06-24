@@ -36,7 +36,7 @@ class LoginSerializer(serializers.Serializer):
         _('The credentials used to login were invalid.'),
         'disabled':
         _(
-            'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.'
+            'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconsyntax.org.'
         ),
         'unverified':
         _(

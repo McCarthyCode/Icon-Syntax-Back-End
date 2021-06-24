@@ -64,7 +64,7 @@ class MP3Manager(models.Manager, ExternalAPIManager):
             elif response.status_code != status.HTTP_200_OK:
                 raise InternalServerError(
                     _(
-                        'The file could not retrieved. Please contact support at support@iconopedia.org.'
+                        'The file could not retrieved. Please contact support at support@iconsyntax.org.'
                     ))
 
             instance.mp3.save(

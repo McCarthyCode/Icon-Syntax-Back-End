@@ -32,7 +32,7 @@ class Util:
         Util.send_email(
             subject,
             body + f'\n\n{scheme}://{domain}{path}{query_string}\n\n' + _(
-                'This activation code will expire in 30 minutes. If you believe you are receiving this message in error, please contact support at support@iconopedia.org.'
+                'This activation code will expire in 30 minutes. If you believe you are receiving this message in error, please contact support at support@iconsyntax.org.'
             ),
             [user.email],
         )

@@ -299,7 +299,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         values = {
             NON_FIELD_ERRORS_KEY: [
                 ErrorDetail(
-                    'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconopedia.org.',
+                    'Your account has been temporarily disabled. Please contact the site administrator at webmaster@iconsyntax.org.',
                     'disabled')
             ]
         }

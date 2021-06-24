@@ -1,5 +1,5 @@
 """
-WSGI config for iconopedia project.
+WSGI config for icon_syntax project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'iconopedia.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'icon_syntax.settings')
 
 application = get_wsgi_application()

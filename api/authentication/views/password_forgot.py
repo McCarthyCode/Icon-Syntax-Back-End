@@ -38,7 +38,7 @@ class PasswordForgotView(GenericAPIView):
 
         if not user.is_anonymous:
             Util.send_email_link(
-                _('Reset your forgotten password with Iconopedia'),
+                _('Reset your forgotten password with Icon Syntax'),
                 _(
                     'We have received a request to reset a forgotten password. Please follow the link below to complete the password reset process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
                 ),
