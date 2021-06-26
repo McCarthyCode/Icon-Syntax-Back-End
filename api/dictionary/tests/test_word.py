@@ -74,7 +74,7 @@ class WordTests(TestCaseShortcutsMixin, APITestCase):
             'word': str,
             'dictionary': [dict],
             'thesaurus': None,
-            'word-net': None
+            'wordNet': None
         }
         self.assertDictTypes(response.data, types)
 
