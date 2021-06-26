@@ -123,6 +123,9 @@ class AssertMethodsMixin():
         """
         Method to check if the values of an object match the types defined in a second dictionary.
         """
+        if not types:
+            return
+
         self.assertIsInstance(obj, dict)
         self.assertIsInstance(types, dict)
 

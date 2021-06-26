@@ -25,6 +25,7 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
     url_path = f'/api/{settings.VERSION}/icon/upload'
 
     relative_filepath = 'api/dictionary/tests/media/img/can.GIF'
+    dict_entry_id = 'hammer:1'
 
     def setUp(self):
         """
@@ -34,8 +35,6 @@ class IconUploadTests(TestCaseShortcutsMixin, APITestCase):
             'alice', 'alice@example.com', 'Easypass123!')
         self.admin = User.objects.create_superuser(
             'bob', 'bob@example.com', 'Easypass123!')
-
-        self.dict_entry_id = 'hammer:1'
 
     def test_options_unauthenticated(self):
         """
