@@ -47,7 +47,6 @@ class IconUploadSerializer(serializers.Serializer):
             icon.save()
 
         dict_entry = self.validated_data['dictEntry']
-        dict_entry.icons.add(icon)
         dict_entry.save()
 
         return icon

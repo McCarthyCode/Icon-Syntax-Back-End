@@ -28,7 +28,7 @@ class Image(TimestampedModel):
 
     # Static variables
     __relative_path = 'img'
-    __block_size = 2**16
+    block_size = 2**16
 
     # Attributes
     image = models.ImageField(
@@ -50,7 +50,7 @@ class Image(TimestampedModel):
         filename = os.path.join(settings.MEDIA_ROOT, self.image.name)
 
         with open(filename, 'rb') as image:
-            for buffer in iter(partial(image.read, self.__block_size), b''):
+            for buffer in iter(partial(image.read, self.block_size), b''):
                 hasher.update(buffer)
 
             # Make changes if stored hash does not exist
@@ -85,7 +85,7 @@ class Image(TimestampedModel):
         Convert the image to a base-64 string.
         """
         return Base64Converter.encode(
-            self.image.name, block_size=self.__block_size)
+            self.image.name, block_size=self.block_size)
 
     @property
     def md5(self):

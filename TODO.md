@@ -2,16 +2,19 @@
 
 ## High Priorities
 
-_None at this time._
+- Build and run bulk uploader
+- Build front end
 
 ## Medium Priorities
 
+- Use JSONFields in place of CharFields where appropriate
+- Encrypt database on OS level
 - Metadata
   - Field attributes
-    - type:      str
-    - required:  bool
-    - read_only: bool
-    - label:     str
+    - type: _str_
+    - required: _bool_
+    - read\_only: _bool_
+    - label: _str_
   - Endpoints
     - Search Word
     - Word
@@ -21,8 +24,6 @@ _None at this time._
   - Cache near-misses with suggestions
 - Search endpoint
   - Check timestamps in get_word_and_entries
-- Encrypt database on OS level
-- Use JSONFields in place of CharFields where appropriate
 
 ## Low Priorities
 
