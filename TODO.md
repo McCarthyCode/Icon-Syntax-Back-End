@@ -2,7 +2,6 @@
 
 ## High Priorities
 
-- Build and run bulk uploader
 - Build front end
 
 ## Medium Priorities

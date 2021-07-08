@@ -48,7 +48,6 @@ class MP3Manager(models.Manager, ExternalAPIManager):
             f'https://media.merriam-webster.com/audio/prons/en/us/mp3/{subdir}/{id}.mp3'
         )
 
-
     @classmethod
     def get_mp3(cls, id):
         """
@@ -80,26 +79,25 @@ class MP3(TimestampedModel):
     """
     # Static Variables
     objects = MP3Manager()
-    relative_path = 'mp3'
-    block_size = 2**16
+    RELATIVE_PATH = 'mp3'
+    BLOCK_SIZE = 2**16
 
     # Attributes
     id = models.CharField(primary_key=True, max_length=64)
-    mp3 = models.FileField(_('MP3'), upload_to=relative_path)
-    _hash = models.BinaryField(
-        _('MD5 hash'), editable=False, null=True, default=None, max_length=16)
+    mp3 = models.FileField(_('MP3'), upload_to=RELATIVE_PATH)
+    _hash = models.BinaryField(_('MD5 hash'), null=True, max_length=16)
 
     def __hash(self):
         """
         Create a MD5 cryptographic hash of the file, store it in the database, and rename the file.
         """
         hasher = hashlib.md5()
-        working_dir = os.path.join(settings.MEDIA_ROOT, self.relative_path)
+        working_dir = os.path.join(settings.MEDIA_ROOT, self.RELATIVE_PATH)
         filename = os.path.join(working_dir, f'{self.id}.mp3')
 
         try:
             with open(filename, 'rb') as data:
-                for buffer in iter(partial(data.read, self.block_size), b''):
+                for buffer in iter(partial(data.read, self.BLOCK_SIZE), b''):
                     hasher.update(buffer)
 
                 # Make changes if stored hash does not exist
@@ -107,7 +105,7 @@ class MP3(TimestampedModel):
                     # Update hash and data name attributes
                     self._hash = hasher.digest()
                     self.mp3.name = os.path.join(
-                        self.relative_path,
+                        self.RELATIVE_PATH,
                         hasher.hexdigest().lower() + '.mp3')
 
                     # Save
@@ -137,7 +135,7 @@ class MP3(TimestampedModel):
         """
         from api.dictionary.utils import Base64Converter
 
-        return Base64Converter.encode(self.mp3.name, block_size=self.block_size)
+        return Base64Converter.encode(self.mp3.name, BLOCK_SIZE=self.BLOCK_SIZE)
 
     @property
     def md5(self):

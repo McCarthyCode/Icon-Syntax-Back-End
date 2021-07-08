@@ -27,14 +27,13 @@ class Image(TimestampedModel):
         abstract = True
 
     # Static variables
-    __relative_path = 'img'
-    block_size = 2**16
+    RELATIVE_PATH = 'img'
+    BLOCK_SIZE = 2**16
 
     # Attributes
     image = models.ImageField(
-        blank=True, null=True, default=None, upload_to=__relative_path)
-    _hash = models.BinaryField(
-        _('MD5 hash'), editable=False, null=True, default=None, max_length=16)
+        blank=True, null=True, default=None, upload_to=RELATIVE_PATH)
+    _hash = models.BinaryField(_('MD5 hash'), null=True, max_length=16)
 
     def __str__(self):
         """
@@ -50,7 +49,7 @@ class Image(TimestampedModel):
         filename = os.path.join(settings.MEDIA_ROOT, self.image.name)
 
         with open(filename, 'rb') as image:
-            for buffer in iter(partial(image.read, self.block_size), b''):
+            for buffer in iter(partial(image.read, self.BLOCK_SIZE), b''):
                 hasher.update(buffer)
 
             # Make changes if stored hash does not exist
@@ -58,21 +57,18 @@ class Image(TimestampedModel):
                 # Update hash and image name attributes
                 self._hash = hasher.digest()
                 self.image.name = os.path.join(
-                    self.__relative_path,
+                    self.RELATIVE_PATH,
                     hasher.hexdigest().lower())
 
                 # Save
                 from ..models import Icon
                 post_save.disconnect(
                     Image.post_save, sender=Icon, dispatch_uid='0')
-                post_save.disconnect(
-                    Icon.post_save, sender=Icon, dispatch_uid='1')
 
                 self.save()
 
                 post_save.connect(
                     Image.post_save, sender=Icon, dispatch_uid='0')
-                post_save.connect(Icon.post_save, sender=Icon, dispatch_uid='1')
 
                 # Update filesystem
                 new_filename = os.path.join(
@@ -85,7 +81,7 @@ class Image(TimestampedModel):
         Convert the image to a base-64 string.
         """
         return Base64Converter.encode(
-            self.image.name, block_size=self.block_size)
+            self.image.name, block_size=self.BLOCK_SIZE)
 
     @property
     def md5(self):
