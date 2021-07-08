@@ -1,35 +1,29 @@
-import json
-from collections import OrderedDict
-
 from django.conf import settings
-from django.core.paginator import (
-    Paginator, InvalidPage, EmptyPage, PageNotAnInteger)
-
-from requests.exceptions import RequestException
+from django.core.paginator import (Paginator, InvalidPage, PageNotAnInteger)
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.response import Response
 
 from api import NON_FIELD_ERRORS_KEY
-
-from ..models import Word, DictionaryEntry
-from ..utils import ExternalAPIManager
+from ..models import Icon
 
 
-class WordSearchView(generics.GenericAPIView):
+class IconSearchView(generics.GenericAPIView):
     """
     View class for getting search results.
     """
-    def __error_response(self, message, status):
-        return Response({
-            NON_FIELD_ERRORS_KEY: [message],
-        }, status=status)
+    def __error_response(self, error_detail, status):
+        return Response(
+            {
+                NON_FIELD_ERRORS_KEY: [error_detail],
+            }, status=status)
 
     def __success_response(self, paginator, page):
         return Response(
             {
-                'results': page.object_list,
+                'results': [x.obj for x in page.object_list],
                 'pagination': {
                     'totalResults': paginator.count,
                     'maxResultsPerPage': paginator.per_page,
@@ -45,7 +39,7 @@ class WordSearchView(generics.GenericAPIView):
 
     def get(self, request, word):
         """
-        GET method for obtaining search results, and creating a new model instance if a results object does not exist or has gone stale.
+        GET method for obtaining search results.
         """
         page_num = request.query_params.get('page', 1)
         results_per_page = min(
@@ -54,38 +48,23 @@ class WordSearchView(generics.GenericAPIView):
             settings.MAX_RESULTS_PER_PAGE,
         )
 
-        _word, entries = Word.objects.get_word_and_entries(word)
-        if type(entries) == list:
-            paginator = Paginator(entries, results_per_page)
-        else:
-            # The following variable names a list, and is not the dict type.
-            # Here, dict refers to a literal dictionary.
+        entries = Icon.objects.filter(word__icontains=word).extra(select={'relevance': 'char_length(word)'}, order_by=['relevance'])
+        paginator = Paginator(entries, results_per_page)
 
-            # Create results array for use in generating response
-            dict_entries = entries
-            meta_fields = {'id', 'sort', 'stems', 'offensive'}
-            results = sorted(
-                    [
-                        {key: json.loads(x.json)['meta'][key] \
-                            for key in meta_fields
-                        } for x in dict_entries
-                    ],
-                    key=lambda y: y['sort'])
-
-            paginator = Paginator(results, results_per_page)
         try:
             page = paginator.get_page(page_num)
         except PageNotAnInteger:
             return self.__error_response(
                 ErrorDetail(
-                    'Query parameter "page" must be an integer.',
+                    _('Query parameter "page" must be an integer.'),
                     'invalid_type'),
                 status.HTTP_400_BAD_REQUEST,
             )
         except InvalidPage:
             return self.__error_response(
                 ErrorDetail(
-                    'Query parameter "page" is invalid.', 'invalid_page_num'),
+                    _('Query parameter "page" does not exist.'),
+                    'invalid_page_num'),
                 status.HTTP_404_NOT_FOUND,
             )
 

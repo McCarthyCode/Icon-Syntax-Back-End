@@ -6,12 +6,12 @@ app_name = 'api.dictionary'
 
 urlpatterns = [
     re_path(
-        r'^(?P<word>[a-zA-Z0-9@:%._+~#]{1,256})$',
+        r'^(?P<word>[a-zA-Z0-9@:%._+~#]{1,80})$',
         WordView.as_view(),
         name='word'),
     re_path(
-        r'^search/(?P<word>[a-zA-Z0-9@:%._+~#]{1,256})$',
-        WordSearchView.as_view(),
+        r'^search/(?P<word>[a-zA-Z0-9@:%._+~#]{1,80})$',
+        IconSearchView.as_view(),
         name='search'),
     re_path(
         r'^icon/upload$',
