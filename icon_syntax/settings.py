@@ -59,7 +59,7 @@ try:
 except KeyError as exc:
     raise MissingEnvironmentVariable(exc)
 
-VERSION = 'v0-beta'
+VERSION = 'v0-alpha'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'api',
     'api.authentication',
     'api.dictionary',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -101,6 +102,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -109,6 +111,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if STAGE == 'production':
+    CORS_ORIGIN_ALLOW_ALL = False
+    CORS_ORIGIN_WHITELIST = (
+        'https://iconsyntax.com',
+        'https://iconsyntax.org',
+        'https://iconsyntax.net',
+    )
+else:
+    CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'icon_syntax.urls'
 
@@ -227,8 +239,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',
-        'user': '1000/day',
+        'anon': '1000/day',
+        'user': '10000/day',
     },
     'EXCEPTION_HANDLER':
     'api.exceptions.exception_handler'
@@ -309,8 +321,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 # Pagination
 
-DEFAULT_RESULTS_PER_PAGE = 20
-MAX_RESULTS_PER_PAGE = 100
+DEFAULT_RESULTS_PER_PAGE = 100
+MAX_RESULTS_PER_PAGE = 500
 
 # Count API calls (used in testing)
 COUNT_API_CALLS = False

@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.paginator import (Paginator, InvalidPage, PageNotAnInteger)
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 
@@ -86,3 +88,75 @@ class IconRetrieveView(generics.GenericAPIView):
         icon = get_object_or_404(Icon, id=id)
 
         return Response(icon.obj, status=status.HTTP_200_OK)
+
+
+class IconsRetrieveView(generics.GenericAPIView):
+    """
+    An API View for retrieving data for multiple icons.
+    """
+    serializer_class = IconRetrieveSerializer
+
+    def __success_response(self, paginator, page):
+        return Response(
+            {
+                'results': [x.obj for x in page.object_list],
+                'pagination': {
+                    'totalResults': paginator.count,
+                    'maxResultsPerPage': paginator.per_page,
+                    'numResultsThisPage': len(page.object_list),
+                    'thisPageNumber': page.number,
+                    'totalPages': paginator.num_pages,
+                    'prevPageExists': page.has_previous(),
+                    'nextPageExists': page.has_next(),
+                }
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def get(self, request):
+        """
+        Action to retrieve data pertaining to an icon, including ID, image data, and a MD5 hashsum.
+        """
+        part_speech = request.GET.get('partSpeech', 'any')
+        page_num = request.query_params.get('page', 1)
+        results_per_page = min(
+            request.query_params.get(
+                'results', settings.DEFAULT_RESULTS_PER_PAGE),
+            settings.MAX_RESULTS_PER_PAGE,
+        )
+
+        if part_speech == 'any':
+            icons = Icon.objects.all().order_by('word')
+        elif part_speech in Icon.PART_SPEECH.__set__:
+            icons = Icon.objects.filter(
+                part_speech=Icon.PART_SPEECH.STR_TO_ID[part_speech]).order_by('word')
+        else:
+            return Response(
+                {
+                    NON_FIELD_ERRORS_KEY: [
+                        ErrorDetail(
+                            'The request was invalid. Make sure "partSpeech" is one of the following: "adjective", "adverb", "connective", "noun", "preposition", "punctuation", "verb_2_part", "verb_irregular", "verb_modal", or "verb_regular".',
+                            'bad_request')
+                    ]
+                },
+                status=status.HTTP_400_BAD_REQUEST)
+
+        paginator = Paginator(icons, results_per_page)
+        try:
+            page = paginator.get_page(page_num)
+        except PageNotAnInteger:
+            return self.__error_response(
+                ErrorDetail(
+                    _('Query parameter "page" must be an integer.'),
+                    'invalid_type'),
+                status.HTTP_400_BAD_REQUEST,
+            )
+        except InvalidPage:
+            return self.__error_response(
+                ErrorDetail(
+                    _('Query parameter "page" does not exist.'),
+                    'invalid_page_num'),
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        return self.__success_response(paginator, page)
