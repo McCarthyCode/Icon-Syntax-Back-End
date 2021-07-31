@@ -18,8 +18,8 @@ class Icon(Image):
     BLOCK_SIZE = 2**12
 
     # Attributes
-    word = models.CharField(max_length=32)
-    descriptor = models.CharField(blank=True, null=True, max_length=64)
+    word = models.CharField(max_length=80)
+    descriptor = models.CharField(blank=True, null=True, max_length=80)
     category = models.ForeignKey(
         Category, blank=True, null=True, on_delete=models.CASCADE)
     is_approved = models.BooleanField(default=False)
@@ -37,6 +37,14 @@ class Icon(Image):
                 'icon': self.b64,
                 'md5': self.md5,
             })
+
+    @classmethod
+    def by_category(cls, category_id):
+        icons = cls.objects.none()
+        for category in Category.subcategories(category_id):
+            icons += cls.objects.filter(category=category)
+
+        return icons
 
 
 post_save.connect(Image.post_save, sender=Icon, dispatch_uid='0')

@@ -13,8 +13,7 @@ from api import NON_FIELD_ERRORS_KEY
 from api.authentication.permissions import IsVerified
 
 from ..models import Icon
-from ..serializers import (
-    IconUploadSerializer, IconApproveSerializer, IconRetrieveSerializer)
+from ..serializers import (IconUploadSerializer, IconApproveSerializer)
 
 
 class IconUploadView(generics.GenericAPIView):
@@ -79,7 +78,8 @@ class IconRetrieveView(generics.GenericAPIView):
     """
     An API View for retrieving icon data.
     """
-    serializer_class = IconRetrieveSerializer
+
+    # serializer_class = IconRetrieveSerializer
 
     def get(self, request, id):
         """
@@ -90,11 +90,12 @@ class IconRetrieveView(generics.GenericAPIView):
         return Response(icon.obj, status=status.HTTP_200_OK)
 
 
-class IconsRetrieveView(generics.GenericAPIView):
+class IconListView(generics.GenericAPIView):
     """
-    An API View for retrieving data for multiple icons.
+    An API View for listing multiple icons.
     """
-    serializer_class = IconRetrieveSerializer
+
+    # serializer_class = IconListSerializer
 
     def __success_response(self, paginator, page):
         return Response(
@@ -117,7 +118,8 @@ class IconsRetrieveView(generics.GenericAPIView):
         """
         Action to retrieve data pertaining to an icon, including ID, image data, and a MD5 hashsum.
         """
-        part_speech = request.GET.get('partSpeech', 'any')
+        # part_speech = request.GET.get('partSpeech', 'any')
+        category_id = request.query_params.get('category', None)
         page_num = request.query_params.get('page', 1)
         results_per_page = min(
             request.query_params.get(
@@ -125,21 +127,13 @@ class IconsRetrieveView(generics.GenericAPIView):
             settings.MAX_RESULTS_PER_PAGE,
         )
 
-        if part_speech == 'any':
+        icons = []
+        if category_id == None:
             icons = Icon.objects.all().order_by('word')
-        elif part_speech in Icon.PART_SPEECH.__set__:
-            icons = Icon.objects.filter(
-                part_speech=Icon.PART_SPEECH.STR_TO_ID[part_speech]).order_by('word')
         else:
-            return Response(
-                {
-                    NON_FIELD_ERRORS_KEY: [
-                        ErrorDetail(
-                            'The request was invalid. Make sure "partSpeech" is one of the following: "adjective", "adverb", "connective", "noun", "preposition", "punctuation", "verb_2_part", "verb_irregular", "verb_modal", or "verb_regular".',
-                            'bad_request')
-                    ]
-                },
-                status=status.HTTP_400_BAD_REQUEST)
+            category = get_object_or_404(Category, id=category_id)
+            icons = Icon.by_category(category.id).order_by(
+                'word', lambda x: len(x))
 
         paginator = Paginator(icons, results_per_page)
         try:

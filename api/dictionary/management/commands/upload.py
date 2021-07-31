@@ -6,16 +6,9 @@ class Command(BaseCommand):
     help = 'Uploads icons in a given directory based on its part of speech format.'
 
     def add_arguments(self, parser):
-        # parser.add_argument('part_speech', type=str)
-        # parser.add_argument('directory', type=str)
-        pass
+        parser.add_argument('directory', type=str)
 
     def handle(self, *args, **options):
-        BulkUploader.define_categories()
-
-        # try:
-        #     BulkUploader.upload(options['part_speech'], options['directory'])
-        # except Exception as exc:
-        #     raise CommandError(exc)
+        BulkUploader.upload(options['directory'])
 
         self.stdout.write(self.style.SUCCESS('Upload successful.'))

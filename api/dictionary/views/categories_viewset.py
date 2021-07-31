@@ -12,7 +12,12 @@ class CategoriesViewSet(GenericViewSet):
 
     def list(self, request):
         return Response(
-            {'results': [x.obj for x in Category.objects.filter(parent=None)]},
+            {
+                'results': [
+                    x.obj for x in Category.objects.filter(
+                        parent=None).order_by('name')
+                ]
+            },
             status=status.HTTP_200_OK,
         )
 

@@ -39,6 +39,18 @@ class Category(TimestampedModel):
 
         return OrderedDict({**common(self), 'children': children})
 
+    @classmethod
+    def subcategories(cls, root_id):
+        if not root_id:
+            return cls.objects.all()
+
+        category = cls.objects.get(id=root_id)
+        subcategories = [category]
+        for subcategory in cls.objects.filter(parent=category.id):
+            subcategories += cls.subcategories(subcategory.id)
+
+        return subcategories
+
     def save(self, *args, **kwargs):
         # prevent a category to be its own parent
         if self.id and self.parent and self.id == self.parent.id:
