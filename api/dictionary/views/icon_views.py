@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from api import NON_FIELD_ERRORS_KEY
 from api.authentication.permissions import IsVerified
 
-from ..models import Icon
+from ..models import Icon, Category
 from ..serializers import (IconUploadSerializer, IconApproveSerializer)
 
 
@@ -118,8 +118,9 @@ class IconListView(generics.GenericAPIView):
         """
         Action to retrieve data pertaining to an icon, including ID, image data, and a MD5 hashsum.
         """
-        # part_speech = request.GET.get('partSpeech', 'any')
+        search = request.query_params.get('search', None)
         category_id = request.query_params.get('category', None)
+
         page_num = request.query_params.get('page', 1)
         results_per_page = min(
             request.query_params.get(
@@ -128,12 +129,21 @@ class IconListView(generics.GenericAPIView):
         )
 
         icons = []
-        if category_id == None:
-            icons = Icon.objects.all().order_by('word')
-        else:
+        if search and category_id:
             category = get_object_or_404(Category, id=category_id)
-            icons = Icon.by_category(category.id).order_by(
-                'word', lambda x: len(x))
+            icons = Icon.by_category(
+                category.id, filter_kwargs={'word__icontains': search})
+        elif search and not category_id:
+            icons = list(Icon.objects.filter(word__icontains=search))
+        elif not search and category_id:
+            category = get_object_or_404(Category, id=category_id)
+            icons = Icon.by_category(category.id)
+        else:
+            icons = list(Icon.objects.all())
+
+        icons = sorted(icons, key=lambda x: x.word.lower())
+        if search:
+            icons = sorted(icons, key=lambda x: len(x.word))
 
         paginator = Paginator(icons, results_per_page)
         try:

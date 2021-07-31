@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from itertools import chain
 
 from django.db import models
 from django.db.models.signals import post_save
@@ -39,12 +40,13 @@ class Icon(Image):
             })
 
     @classmethod
-    def by_category(cls, category_id):
-        icons = cls.objects.none()
+    def by_category(cls, category_id, filter_kwargs={}):
+        querysets = []
         for category in Category.subcategories(category_id):
-            icons += cls.objects.filter(category=category)
+            querysets.append(
+                cls.objects.filter(category=category, **filter_kwargs))
 
-        return icons
+        return list(chain(*querysets))
 
 
 post_save.connect(Image.post_save, sender=Icon, dispatch_uid='0')
