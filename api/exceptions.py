@@ -22,6 +22,16 @@ def exception_handler(exc, context):
     return response
 
 
+class BadRequestError(APIException):
+    """
+    Exception to be used with the HTTP 400 BAD REQUEST status code. Inherits from rest_framework.exceptions.APIException.
+    """
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = _(
+        'Your browser sent a request that this server could not understand.')
+    default_code = 'bad_request'
+
+
 class ConflictError(APIException):
     """
     Exception to be used with the HTTP 409 CONFLICT status code. Inherits from rest_framework.exceptions.APIException.

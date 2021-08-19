@@ -41,7 +41,7 @@ class LoginView(GenericAPIView):
                 'redirect': redirect_uri,
                 'credentials': serializer.validated_data
             },
-            status=status.HTTP_303_SEE_OTHER)
+            status=status.HTTP_200_OK)
 
 
 class LogoutView(GenericAPIView):

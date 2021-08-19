@@ -135,7 +135,7 @@ class MP3(TimestampedModel):
         """
         from api.dictionary.utils import Base64Converter
 
-        return Base64Converter.encode(self.mp3.name, BLOCK_SIZE=self.BLOCK_SIZE)
+        return Base64Converter.encode(self.mp3.name, block_size=self.BLOCK_SIZE)
 
     @property
     def md5(self):

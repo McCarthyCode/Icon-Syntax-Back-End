@@ -28,7 +28,8 @@ class Category(TimestampedModel):
                 {
                     'id': obj.id,
                     'name': obj.name,
-                    'path': obj.__str__()
+                    'path': obj.__str__(),
+                    'parent': obj.parent.id if obj.parent else None,
                 })
 
         children = [

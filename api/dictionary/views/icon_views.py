@@ -120,8 +120,8 @@ class IconListView(generics.GenericAPIView):
         """
         search = request.query_params.get('search', None)
         category_id = request.query_params.get('category', None)
-
         page_num = request.query_params.get('page', 1)
+
         results_per_page = min(
             request.query_params.get(
                 'results', settings.DEFAULT_RESULTS_PER_PAGE),
