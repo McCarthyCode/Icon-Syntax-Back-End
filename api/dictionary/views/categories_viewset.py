@@ -2,8 +2,9 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from rest_framework import exceptions, status
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from ..models import Category
 from ..serializers import CategorySerializer
@@ -14,6 +15,17 @@ from api.exceptions import BadRequestError
 class CategoriesViewSet(GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = []
+        else:
+            permission_classes = [IsAdminUser]
+
+        return [permission() for permission in permission_classes]
 
     def list(self, request):
         return Response(
