@@ -15,9 +15,19 @@ class Category(TimestampedModel):
         related_name='children',
         on_delete=models.CASCADE)
 
+    @property
+    def path(self):
+        if self.parent:
+            if self.parent.path:
+                return self.parent.path + ' » ' + self.parent.name
+            else:
+                return self.parent.name
+
+        return ''
+
     def __str__(self):
         if self.parent:
-            return self.parent.__str__() + ' » ' + self.name
+            return self.path + ' » ' + self.name
 
         return self.name
 
@@ -28,7 +38,7 @@ class Category(TimestampedModel):
                 {
                     'id': obj.id,
                     'name': obj.name,
-                    'path': obj.__str__(),
+                    'path': obj.path,
                     'parent': obj.parent.id if obj.parent else None,
                 })
 

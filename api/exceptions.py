@@ -28,7 +28,7 @@ class BadRequestError(APIException):
     """
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = _(
-        'Your browser sent a request that this server could not understand.')
+        'Your browser sent a request that the server could not understand. Please check your input and try again.')
     default_code = 'bad_request'
 
 

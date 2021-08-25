@@ -24,8 +24,6 @@ class LoginView(GenericAPIView):
         """
         POST method for taking a token from a query string, checking if it is valid, and logging in the user if valid, or returning an error response if invalid.
         """
-        redirect_uri = request.query_params.get('next', '/')
-
         serializer = self.serializer_class(
             data=request.data, context={'user': request.user})
 
@@ -38,7 +36,6 @@ class LoginView(GenericAPIView):
         return Response(
             {
                 'success': str(_('You have successfully logged in.')),
-                'redirect': redirect_uri,
                 'credentials': serializer.validated_data
             },
             status=status.HTTP_200_OK)

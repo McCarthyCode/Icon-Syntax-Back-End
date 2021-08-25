@@ -11,24 +11,8 @@ class IconUploadSerializer(serializers.Serializer):
     Serializer for the icon upload action. Defines write-only attribute icon.
     """
     icon = serializers.ImageField(write_only=True, required=True)
-    dictEntry = serializers.CharField(
-        min_length=1, max_length=64, write_only=True, required=True)
-
-    def validate_dictEntry(self, id):
-        try:
-            dict_entry = DictionaryEntry.objects.get(id=id)
-        except DictionaryEntry.DoesNotExist:
-            _, entries = Word.objects.get_word_and_entries(id.split(':')[0])
-
-            for entry in entries:
-                if entry.id == id:
-                    return entry
-
-            raise ValidationError(
-                _('The specified dictionary entry ID does not exist.'),
-                'not_found')
-
-        return dict_entry
+    word = serializers.CharField(required=True, max_length=80)
+    descriptor = serializers.CharField(max_length=80)
 
     def validate_icon(self, icon):
         if icon.image.width > 64 or icon.image.height > 54:

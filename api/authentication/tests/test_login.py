@@ -189,7 +189,6 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
         values = {
             'success': 'You have successfully logged in.',
-            'redirect': '/',
             'credentials': None,
         }
 
@@ -212,7 +211,6 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
 
         values = {
             'success': 'You have successfully logged in.',
-            'redirect': '/',
             'credentials': None,
         }
 

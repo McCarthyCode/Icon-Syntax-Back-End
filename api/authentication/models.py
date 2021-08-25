@@ -102,6 +102,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
         return {
             'username': self.username,
             'email': self.email,
+            'isAdmin': self.is_superuser,
             'tokens': {
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),

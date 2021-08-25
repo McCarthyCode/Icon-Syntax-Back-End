@@ -93,7 +93,6 @@ class RefreshTests(TestCaseShortcutsMixin, APITestCase):
 
         values = {
             'success': 'You have successfully refreshed.',
-            'redirect': '/',
             'credentials': None
         }
         self.assertDictValues(response.data, values)
@@ -114,7 +113,6 @@ class RefreshTests(TestCaseShortcutsMixin, APITestCase):
 
         values = {
             'success': 'You have successfully refreshed.',
-            'redirect': '/',
             'credentials': None
         }
         self.assertDictValues(response.data, values)

@@ -20,7 +20,6 @@ class RefreshView(GenericAPIView):
         """
         POST method for refreshing an access token
         """
-        redirect_uri = request.query_params.get('redirect', '/')
         serializer = self.serializer_class(data=request.data)
 
         try:
@@ -32,7 +31,6 @@ class RefreshView(GenericAPIView):
         return Response(
             {
                 'success': str(_('You have successfully refreshed.')),
-                'redirect': redirect_uri,
                 'credentials': serializer.validated_data
             },
             status=status.HTTP_303_SEE_OTHER)
