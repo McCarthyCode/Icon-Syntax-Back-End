@@ -28,6 +28,3 @@ class CategorySerializer(serializers.ModelSerializer):
             return None
 
         return value
-
-    def create(self, validated_data):
-        return Category.objects.create(**validated_data)

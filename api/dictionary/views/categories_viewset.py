@@ -44,3 +44,26 @@ class CategoriesViewSet(GenericViewSet):
         category = serializer.save()
 
         return Response(category.obj, status=status.HTTP_201_CREATED)
+
+    def update(self, request, id):
+        if request.method != 'PUT':
+            raise exceptions.MethodNotAllowed(request.method)
+
+        category = get_object_or_404(Category, id=id)
+        serializer = self.serializer_class(data=request.data, instance=category)
+
+        if not serializer.is_valid():
+            raise BadRequestError()
+
+        category = serializer.save()
+
+        return Response(category.obj, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, id):
+        if request.method != 'DELETE':
+            raise exceptions.MethodNotAllowed(request.method)
+
+        category = get_object_or_404(Category, id=id)
+        category.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

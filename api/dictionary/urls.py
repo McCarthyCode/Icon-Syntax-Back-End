@@ -21,10 +21,18 @@ urlpatterns = [
         name='audio'),
     re_path(
         r'^categories$',
-        CategoriesViewSet.as_view({'get': 'list', 'post': 'create'}),
+        CategoriesViewSet.as_view({
+            'get': 'list',
+            'post': 'create'
+        }),
         name='word'),
     re_path(
         r'^categories/(?P<id>[1-9]\d*)$',
-        CategoriesViewSet.as_view({'get': 'retrieve'}),
+        CategoriesViewSet.as_view(
+            {
+                'get': 'retrieve',
+                'put': 'update',
+                'delete': 'delete'
+            }),
         name='word'),
 ]
