@@ -12,7 +12,7 @@ class IconUploadSerializer(serializers.Serializer):
     """
     icon = serializers.ImageField(write_only=True, required=True)
     word = serializers.CharField(required=True, max_length=80)
-    descriptor = serializers.CharField(max_length=80)
+    descriptor = serializers.CharField(required=False, max_length=80)
 
     def validate_icon(self, icon):
         if icon.image.width > 64 or icon.image.height > 54:
@@ -24,14 +24,24 @@ class IconUploadSerializer(serializers.Serializer):
         return icon
 
     def save(self):
-        icon = Icon.objects.create(image=self.validated_data['icon'])
+        icon = Icon.objects.create(
+            image=self.validated_data['icon'],
+            word=self.validated_data['word'],
+        )
+        should_save = False
+
+        try:
+            icon.descriptor = self.validated_data['descriptor']
+            should_save = True
+        except KeyError:
+            pass
 
         if self.context['request'].user.is_superuser:
             icon.is_approved = True
-            icon.save()
+            should_save = True
 
-        dict_entry = self.validated_data['dictEntry']
-        dict_entry.save()
+        if should_save:
+            icon.save()
 
         return icon
 

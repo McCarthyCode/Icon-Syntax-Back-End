@@ -2,7 +2,11 @@
 
 ## High Priorities
 
-- Build front end
+- Icon CRUD
+  - ~~Create~~
+  - ~~Read~~
+  - Update
+  - Destroy
 
 ## Medium Priorities
 
