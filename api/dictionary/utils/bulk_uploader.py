@@ -44,11 +44,10 @@ class BulkUploader:
         Method to obtain a word and a descriptor from a filename.
         """
         if filename[-4:].lower() != '.gif':
-            print(filename)
             raise CommandError(
                 _('All files uploaded must have a ".gif" extension.'))
 
-        filename = filename[:-4]
+        filename = filename[:-4].replace('_', ' ')
         filename_list = list(
             filter(lambda x: x != '', [x.strip() for x in filename.split(',')]))
 
