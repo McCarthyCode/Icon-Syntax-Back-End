@@ -31,7 +31,7 @@ class IconUploadView(generics.GenericAPIView):
             {
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
-                        'The request was invalid. Be sure to include an image of maximum width 60 pixels and exact height 54 pixels.',
+                        'The request was invalid. Be sure to include an image of maximum width 64 pixels and exact height 54 pixels.',
                         'bad_request')
                 ]
             },
@@ -48,10 +48,14 @@ class IconUploadView(generics.GenericAPIView):
         except ValidationError as exc:
             return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer.save()
+        icon = serializer.save()
 
         return Response(
-            {'success': 'File upload successful.'}, status=status.HTTP_200_OK)
+            {
+                'success': 'File upload successful.',
+                'icon': icon.obj
+            },
+            status=status.HTTP_201_CREATED)
 
 
 class IconApproveView(generics.GenericAPIView):

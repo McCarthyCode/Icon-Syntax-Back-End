@@ -863,7 +863,7 @@ class BulkUploader:
 
         # VIII
         punctuation = Category.objects.get_or_create(name=_('Punctuation'))[0]
-        cls.__upload(os.path.join(directory, 'Pronouns/Personal'), personal)
+        cls.__upload(os.path.join(directory, 'Punctuation'), punctuation)
 
         # IX
         verbs = Category.objects.get_or_create(name=_('Verbs'))[0]

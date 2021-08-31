@@ -35,6 +35,7 @@ class Icon(Image):
                 'id': self.id,
                 'word': self.word,
                 'descriptor': self.descriptor,
+                'category': self.category.id if self.category else None,
                 'icon': self.b64,
                 'md5': self.md5,
             })

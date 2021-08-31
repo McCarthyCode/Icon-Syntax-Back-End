@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from ..models import Word, Icon, DictionaryEntry
+from ..models import Word, Icon, DictionaryEntry, Category
 
 
 class IconUploadSerializer(serializers.Serializer):
@@ -12,7 +12,10 @@ class IconUploadSerializer(serializers.Serializer):
     """
     icon = serializers.ImageField(write_only=True, required=True)
     word = serializers.CharField(required=True, max_length=80)
-    descriptor = serializers.CharField(required=False, max_length=80)
+    descriptor = serializers.CharField(
+        required=False, allow_null=True, max_length=80)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), required=True)
 
     def validate_icon(self, icon):
         if icon.image.width > 64 or icon.image.height > 54:
@@ -27,6 +30,7 @@ class IconUploadSerializer(serializers.Serializer):
         icon = Icon.objects.create(
             image=self.validated_data['icon'],
             word=self.validated_data['word'],
+            category=self.validated_data['category'],
         )
         should_save = False
 
