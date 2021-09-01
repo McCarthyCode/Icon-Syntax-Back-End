@@ -71,3 +71,29 @@ class IconRetrieveSerializer(serializers.ModelSerializer):
 
     icon = serializers.CharField(max_length=16384, read_only=True)
     md5 = serializers.CharField(min_length=32, max_length=32, read_only=True)
+
+
+class IconUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the icon update action. Defines attributes id, icon, word, descriptor, and category.
+    """
+    class Meta:
+        """
+        Metaclass defining the model as Icon and fields used as read-only field 'id'.
+        """
+        model = Icon
+        fields = ['id', 'word', 'descriptor', 'category']
+
+    def save(self, *args, **kwargs):
+        if 'word' in self.validated_data and self.validated_data['word']:
+            self.instance.word = self.validated_data['word']
+        if 'descriptor' in self.validated_data and \
+            self.validated_data['descriptor']:
+            self.instance.descriptor = self.validated_data['descriptor']
+        if 'category' in self.validated_data and \
+            self.validated_data['category']:
+            self.instance.category = self.validated_data['category']
+
+        self.instance.save(*args, **kwargs)
+
+        return self.instance

@@ -10,6 +10,10 @@ urlpatterns = [
         r'^icons/(?P<id>[1-9]\d*)$',
         IconRetrieveView.as_view(),
         name='icon-retrieve'),
+    re_path(
+        r'^icons/update/(?P<id>[1-9]\d*)$',
+        IconUpdateView.as_view(),
+        name='icon-update'),
     re_path(r'^icons$', IconListView.as_view(), name='icons-list'),
     re_path(
         r'^icons/(?P<id>[1-9]\d*)/approve$',

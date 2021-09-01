@@ -13,7 +13,8 @@ from api import NON_FIELD_ERRORS_KEY
 from api.authentication.permissions import IsVerified
 
 from ..models import Icon, Category
-from ..serializers import (IconUploadSerializer, IconApproveSerializer)
+from ..serializers import (
+    IconUploadSerializer, IconApproveSerializer, IconUpdateSerializer)
 
 
 class IconUploadView(generics.GenericAPIView):
@@ -168,3 +169,34 @@ class IconListView(generics.GenericAPIView):
             )
 
         return self.__success_response(paginator, page)
+
+
+class IconUpdateView(generics.GenericAPIView):
+    """
+    An API View for updating an icon.
+    """
+
+    permission_classes = [IsAuthenticated, IsVerified]
+    serializer_class = IconUpdateSerializer
+
+    def put(self, request, id):
+        """
+        Action to update an icon.
+        """
+        icon = get_object_or_404(Icon, id=id)
+
+        serializer = self.serializer_class(
+            data=request.data, instance=icon, context={'request': request})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
+        icon = serializer.save()
+
+        return Response(
+            {
+                'success': 'File upload successful.',
+                'icon': icon.obj
+            },
+            status=status.HTTP_200_OK)
