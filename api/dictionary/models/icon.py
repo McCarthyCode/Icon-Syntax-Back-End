@@ -19,7 +19,7 @@ class Icon(Image):
     BLOCK_SIZE = 2**12
 
     # Attributes
-    word = models.CharField(max_length=80)
+    word = models.CharField(max_length=40)
     descriptor = models.CharField(blank=True, null=True, max_length=80)
     category = models.ForeignKey(
         Category, blank=True, null=True, on_delete=models.CASCADE)
