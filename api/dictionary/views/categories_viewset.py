@@ -76,6 +76,7 @@ class CategoriesViewSet(GenericViewSet):
             raise exceptions.MethodNotAllowed(request.method)
 
         category = get_object_or_404(Category, id=id)
-        category.delete()
+        for cat in Category.subcategories(category.id):
+            cat.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
