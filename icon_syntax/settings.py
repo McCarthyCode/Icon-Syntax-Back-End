@@ -189,10 +189,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME':
-        'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-    {
-        'NAME':
         'api.authentication.password_validation.ContainsUppercaseValidator',
     },
     {
@@ -312,7 +308,7 @@ SIMPLE_JWT = {
 
 FRONT_END_VERIFY_PATHS = {
     'REGISTER': '/register/verify',
-    'PASSWORD_FORGOT': '/password/forgot/verify',
+    'PASSWORD_FORGOT': '/forgot-password',
 }
 
 # Media definitions

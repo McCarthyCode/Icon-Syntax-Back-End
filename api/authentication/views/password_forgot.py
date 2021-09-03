@@ -12,7 +12,9 @@ from rest_framework.response import Response
 from api.authentication import NON_FIELD_ERRORS_KEY
 
 from ..permissions import IsVerified
-from ..serializers import PasswordForgotSerializer, PasswordResetSerializer
+from ..serializers import (
+    PasswordForgotSerializer, PasswordResetSerializer,
+    PasswordForgotVerifySerializer)
 from ..utils import Util
 
 
@@ -60,7 +62,7 @@ class PasswordForgotVerifyView(GenericAPIView):
     """
     Endpoint for last step of resetting a forgotten password.
     """
-    serializer_class = PasswordResetSerializer
+    serializer_class = PasswordForgotVerifySerializer
 
     def get_permissions(self):
         """
@@ -85,8 +87,10 @@ class PasswordForgotVerifyView(GenericAPIView):
         except (AuthenticationFailed, ValidationError) as exc:
             return Response(exc.detail, exc.status_code)
 
+        user = serializer.save()
+
         return Response(
             {
                 'success': _('Your password has been reset successfully.'),
-                'credentials': serializer.save()
+                'credentials': user.credentials
             }, status.HTTP_202_ACCEPTED)

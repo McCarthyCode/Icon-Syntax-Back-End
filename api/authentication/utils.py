@@ -23,15 +23,14 @@ class Util:
         """
         if settings.STAGE == 'development':
             scheme = 'http'
-            domain = 'localhost:8000'
+            domain = 'localhost:8100'
         else:
             scheme = 'https'
             domain = get_current_site(request).domain
-        query_string = f'?access={user.access}'
 
         Util.send_email(
             subject,
-            body + f'\n\n{scheme}://{domain}{path}{query_string}\n\n' + _(
+            body + f'\n\n{scheme}://{domain}{path}/{user.access}\n\n' + _(
                 'This activation code will expire in 30 minutes. If you believe you are receiving this message in error, please contact support at support@iconsyntax.org.'
             ),
             [user.email],
