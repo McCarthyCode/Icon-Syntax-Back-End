@@ -8,9 +8,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from rest_framework_simplejwt.exceptions import InvalidToken
-
 from api.authentication import NON_FIELD_ERRORS_KEY
-
 from ..serializers.login_logout import *
 
 
@@ -45,26 +43,16 @@ class LogoutView(GenericAPIView):
     """
     View for taking in a user's access token and logging them out.
     """
+
     serializer_class = LogoutSerializer
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.request.method.lower() == 'post':
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [AllowAny]
-
-        return [permission() for permission in permission_classes]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         """
         POST method for taking a token from a request body, checking if it is valid, and logging out the user if valid, or returning an error response if invalid.
         """
-        access = request.META.get('HTTP_AUTHORIZATION', '')
         serializer = self.serializer_class(
-            data={'access': access}, context={'user': request.user})
+            data={}, context={'user': request.user})
 
         try:
             serializer.is_valid(raise_exception=True)
