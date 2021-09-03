@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.paginator import (Paginator, InvalidPage, PageNotAnInteger)
+from django.db.models.signals import post_save
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from api import NON_FIELD_ERRORS_KEY
 from api.authentication.permissions import IsVerified
 
-from ..models import Icon, Category
+from ..models import Icon, Category, Image
 from ..serializers import (
     IconUploadSerializer, IconApproveSerializer, IconUpdateSerializer)
 
@@ -200,3 +201,20 @@ class IconUpdateView(generics.GenericAPIView):
                 'icon': icon.obj
             },
             status=status.HTTP_200_OK)
+
+
+class IconDeleteView(generics.GenericAPIView):
+    """
+    An API View for deleting an icon.
+    """
+
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, id):
+        icon = get_object_or_404(Icon, id=id)
+
+        post_save.disconnect(Image.post_save, sender=Icon, dispatch_uid='0')
+        icon.delete()
+        post_save.connect(Image.post_save, sender=Icon, dispatch_uid='0')
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

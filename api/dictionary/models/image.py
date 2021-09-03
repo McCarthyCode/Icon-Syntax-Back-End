@@ -75,6 +75,10 @@ class Image(TimestampedModel):
                     settings.MEDIA_ROOT, self.image.name)
                 os.rename(filename, new_filename)
 
+    def delete(self):
+        self.image.delete()
+        super().delete()
+
     @property
     def b64(self):
         """
