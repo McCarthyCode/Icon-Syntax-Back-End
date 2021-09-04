@@ -2,11 +2,7 @@
 
 ## High Priorities
 
-- Icon CRUD
-  - ~~Create~~
-  - ~~Read~~
-  - Update
-  - Destroy
+_None at this time._
 
 ## Medium Priorities
 

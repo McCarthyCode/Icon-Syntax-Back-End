@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from jwt.exceptions import DecodeError, ExpiredSignatureError
 
 from rest_framework import serializers
@@ -6,14 +7,14 @@ from rest_framework.exceptions import AuthenticationFailed, ErrorDetail
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .login_logout import LoginSerializer
+from api.authentication.models import User
 
-
-class RefreshSerializer(LoginSerializer):
+class RefreshSerializer(serializers.Serializer):
     """
     Serializer that takes in login credentials plus a refresh token to obtain a token pair with moderately strict security.
     """
     refresh = serializers.CharField(max_length=4096)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     def validate_refresh(self, value):
         """
@@ -28,4 +29,9 @@ class RefreshSerializer(LoginSerializer):
                 msg += '.'
             raise AuthenticationFailed(ErrorDetail(msg, 'invalid'))
 
-        return value
+        return token
+
+    def validate(self, data):
+        data['user'] = get_object_or_404(User, id=data['refresh']['user_id'])
+
+        return data
