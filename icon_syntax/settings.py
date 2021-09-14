@@ -314,7 +314,7 @@ SIMPLE_JWT = {
 # Default, front end paths for verification pages sent by email
 
 FRONT_END_VERIFY_PATHS = {
-    'REGISTER': '/register/verify',
+    'REGISTER': '/register',
     'PASSWORD_FORGOT': '/forgot-password',
 }
 
