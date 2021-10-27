@@ -78,7 +78,17 @@ elif STAGE == 'beta' or STAGE == 'production':
 else:
     raise InvalidEnvironmentVariable('STAGE')
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = [
+    'localhost',
+    'iconsyntax.org',
+    'www.iconsyntax.org',
+    'iconsyntax.com',
+    'www.iconsyntax.com',
+    'iconsyntax.net',
+    'www.iconsyntax.net',
+    'iconopedia.org',
+    'www.iconopedia.org',
+]
 
 # Application definition
 
