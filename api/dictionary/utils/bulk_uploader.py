@@ -888,13 +888,13 @@ class BulkUploader:
             name=_('Past Tense'), parent=iv)[0]
         cls.__upload(
             os.path.join(directory, 'Verbs/Irregular Verbs/Past Tense'),
-            regular)
+            iv_past)
 
         iv_present = Category.objects.get_or_create(
             name=_('Present Tense'), parent=iv)[0]
         cls.__upload(
             os.path.join(directory, 'Verbs/Irregular Verbs/Present Tense'),
-            regular)
+            iv_present)
 
         # X
         colors = Category.objects.get_or_create(name=_('Colors'))[0]
