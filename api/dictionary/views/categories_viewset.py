@@ -28,11 +28,14 @@ class CategoriesViewSet(GenericViewSet):
         return [permission() for permission in permission_classes]
 
     def list(self, request):
+        parent = request.GET.get('parent', None)
+        if parent: parent = int(parent)
+
         return Response(
             {
                 'results': [
                     x.obj for x in Category.objects.filter(
-                        parent=None).order_by('name')
+                        parent=parent).order_by('name')
                 ]
             },
             status=status.HTTP_200_OK,
