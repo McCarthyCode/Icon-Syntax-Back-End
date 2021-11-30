@@ -35,7 +35,7 @@ class CategoriesViewSet(GenericViewSet):
             {
                 'results': [
                     x.obj for x in Category.objects.filter(
-                        parent=parent).order_by('name')
+                        parent=parent).order_by('id')
                 ]
             },
             status=status.HTTP_200_OK,
