@@ -74,39 +74,15 @@ class BulkUploader:
         """
         Wrapper method to save icons in a local directory to the database and media store.
         """
+
         # I
-        adj = Category.objects.get_or_create(name=_('Adjectives'))[0]
-
-        # I.A
-        generic = Category.objects.get_or_create(
-            name=_('Generic'), parent=adj)[0]
-        cls.__upload(os.path.join(directory, 'Adjectives/Generic'), generic)
-
-        # II
-        adv = Category.objects.get_or_create(name=_('Adverbs'))[0]
-
-        # II.A
-        how = Category.objects.get_or_create(name=_('How'), parent=adv)[0]
-        cls.__upload(os.path.join(directory, 'Adverbs/How'), how)
-
-        how_much = Category.objects.get_or_create(
-            name=_('How Much'), parent=adv)[0]
-        cls.__upload(os.path.join(directory, 'Adverbs/How Much'), how_much)
-
-        when = Category.objects.get_or_create(name=_('When'), parent=adv)[0]
-        cls.__upload(os.path.join(directory, 'Adverbs/When'), when)
-
-        where = Category.objects.get_or_create(name=_('Where'), parent=adv)[0]
-        cls.__upload(os.path.join(directory, 'Adverbs/Where'), where)
-
-        # III
         nouns = Category.objects.get_or_create(name=_('Nouns'))[0]
 
-        # III.A
+        # I.A
         culture = Category.objects.get_or_create(
             name=_('Culture'), parent=nouns)[0]
 
-        # III.A.1
+        # I.A.1
         creating = Category.objects.get_or_create(
             name=_('Creating'), parent=culture)[0]
 
@@ -133,7 +109,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Creating/Negatives'),
             negatives)
 
-        # III.A.2
+        # I.A.2
         eating_drinking = Category.objects.get_or_create(
             name=_('Eating & Drinking'), parent=culture)[0]
 
@@ -207,11 +183,11 @@ class BulkUploader:
                 directory, 'Nouns/Culture/Eating & Drinking/Negatives'),
             negatives)
 
-        # III.A.3
+        # I.A.3
         feeling = Category.objects.get_or_create(
             name=_('Feeling'), parent=culture)[0]
 
-        # III.A.3.a
+        # I.A.3.a
         gestures = Category.objects.get_or_create(
             name=_('Gestures'), parent=feeling)[0]
 
@@ -227,7 +203,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Feeling/Gestures/Negatives'),
             negatives)
 
-        # III.A.3.b
+        # I.A.3.b
         hearts = Category.objects.get_or_create(
             name=_('Hearts'), parent=feeling)[0]
 
@@ -243,7 +219,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Feeling/Hearts/Negatives'),
             negatives)
 
-        # III.A.3.a
+        # I.A.3.a
         faces = Category.objects.get_or_create(
             name=_('Faces'), parent=feeling)[0]
 
@@ -261,7 +237,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Feeling/Faces/Mouths'),
             mouths)
 
-        # III.A.4
+        # I.A.4
         governing = Category.objects.get_or_create(
             name=_('Governing'), parent=culture)[0]
 
@@ -281,7 +257,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Governing/Negatives'),
             negatives)
 
-        # III.A.5
+        # I.A.5
         healing = Category.objects.get_or_create(
             name=_('Healing'), parent=culture)[0]
 
@@ -296,7 +272,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Healing/Negatives'),
             negatives)
 
-        # III.A.5.a
+        # I.A.5.a
         body = Category.objects.get_or_create(name=_('Body'), parent=healing)[0]
 
         generic = Category.objects.get_or_create(
@@ -331,7 +307,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Healing/Body/Senses'),
             senses)
 
-        # III.A.6
+        # I.A.6
         housing = Category.objects.get_or_create(
             name=_('Housing'), parent=culture)[0]
 
@@ -369,7 +345,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Housing/Negatives'),
             negatives)
 
-        # III.A.6.a
+        # I.A.6.a
         rooms = Category.objects.get_or_create(
             name=_('Rooms'), parent=housing)[0]
 
@@ -421,7 +397,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Housing/Rooms/Office'),
             office)
 
-        # III.A.7
+        # I.A.7
         learning = Category.objects.get_or_create(
             name=_('Learning'), parent=culture)[0]
 
@@ -455,7 +431,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Learning/Negatives'),
             negatives)
 
-        # III.A.7.a
+        # I.A.7.a
         math = Category.objects.get_or_create(
             name=_('Math'), parent=learning)[0]
 
@@ -487,7 +463,7 @@ class BulkUploader:
         cls.__upload(
             os.path.join(directory, 'Nouns/Culture/Learning/Math/Plot'), plot)
 
-        # III.A.7.b
+        # I.A.7.b
         reading = Category.objects.get_or_create(
             name=_('Reading'), parent=learning)[0]
 
@@ -503,7 +479,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Learning/Reading/Negatives'),
             negatives)
 
-        # III.A.7.c
+        # I.A.7.c
         school = Category.objects.get_or_create(
             name=_('School'), parent=learning)[0]
         generic = Category.objects.get_or_create(
@@ -517,7 +493,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Learning/School/Negatives'),
             negatives)
 
-        # III.A.8
+        # I.A.8
         playing = Category.objects.get_or_create(
             name=_('Playing'), parent=culture)[0]
 
@@ -537,7 +513,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Playing/Negatives'),
             negatives)
 
-        # III.A.9
+        # I.A.9
         praying = Category.objects.get_or_create(
             name=_('Praying'), parent=culture)[0]
 
@@ -556,7 +532,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Praying/Religion/Negatives'),
             negatives)
 
-        # III.A.10
+        # I.A.10
         relating = Category.objects.get_or_create(
             name=_('Relating'), parent=culture)[0]
 
@@ -566,7 +542,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Relating/Negatives'),
             negatives)
 
-        # III.A.10.a
+        # I.A.10.a
         adults = Category.objects.get_or_create(
             name=_('Adults'), parent=relating)[0]
 
@@ -602,7 +578,7 @@ class BulkUploader:
                 directory, 'Nouns/Culture/Relating/Adults/Single Person'),
             single)
 
-        # III.A.10.b
+        # I.A.10.b
         children = Category.objects.get_or_create(
             name=_('Children'), parent=relating)[0]
 
@@ -618,7 +594,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Relating/Children/Minors'),
             minors)
 
-        # III.A.10.b
+        # I.A.10.b
         family = Category.objects.get_or_create(
             name=_('Family'), parent=relating)[0]
 
@@ -651,7 +627,7 @@ class BulkUploader:
         cls.__upload(
             os.path.join(directory, 'Nouns/Culture/Relating/Family/Step'), step)
 
-        # III.A.11
+        # I.A.11
         speaking = Category.objects.get_or_create(
             name=_('Speaking'), parent=culture)[0]
 
@@ -672,7 +648,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Speaking/Negatives'),
             negatives)
 
-        # III.A.12
+        # I.A.12
         spending = Category.objects.get_or_create(
             name=_('Spending'), parent=culture)[0]
 
@@ -687,7 +663,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Spending/Negatives'),
             negatives)
 
-        # III.A.13
+        # I.A.13
         thinking = Category.objects.get_or_create(
             name=_('Thinking'), parent=culture)[0]
 
@@ -702,7 +678,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Thinking/Negatives'),
             negatives)
 
-        # III.A.14
+        # I.A.14
         traveling = Category.objects.get_or_create(
             name=_('Traveling'), parent=culture)[0]
 
@@ -736,7 +712,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Traveling/Negatives'),
             negatives)
 
-        # III.A.15
+        # I.A.15
         wearing = Category.objects.get_or_create(
             name=_('Wearing'), parent=culture)[0]
 
@@ -762,7 +738,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Wearing/Negatives'),
             negatives)
 
-        # III.A.16
+        # I.A.16
         working = Category.objects.get_or_create(
             name=_('Working'), parent=culture)[0]
 
@@ -770,7 +746,7 @@ class BulkUploader:
         cls.__upload(
             os.path.join(directory, 'Nouns/Culture/Working/Jobs'), jobs)
 
-        # III.A.16.a
+        # I.A.16.a
         work = Category.objects.get_or_create(name=_('Work'), parent=working)[0]
 
         generic = Category.objects.get_or_create(
@@ -785,87 +761,7 @@ class BulkUploader:
             os.path.join(directory, 'Nouns/Culture/Working/Work/Negatives'),
             work)
 
-        # IV
-        connectives = Category.objects.get_or_create(name=_('Connectives'))[0]
-        cls.__upload(os.path.join(directory, 'Connectives'), connectives)
-
-        # V
-        counting = Category.objects.get_or_create(name=_('Counting'))[0]
-
-        # V.A
-        numbers = Category.objects.get_or_create(
-            name=_('Numbers'), parent=counting)[0]
-
-        cardinal = Category.objects.get_or_create(
-            name=_('Cardinal'), parent=numbers)[0]
-        cls.__upload(
-            os.path.join(directory, 'Counting/Numbers/Cardinal'), cardinal)
-
-        fractional = Category.objects.get_or_create(
-            name=_('Fractional'), parent=numbers)[0]
-        cls.__upload(
-            os.path.join(directory, 'Counting/Numbers/Fractional'), fractional)
-
-        ordinal = Category.objects.get_or_create(
-            name=_('Ordinal'), parent=numbers)[0]
-        cls.__upload(
-            os.path.join(directory, 'Counting/Numbers/Ordinal'), ordinal)
-
-        # V.B
-        time = Category.objects.get_or_create(
-            name=_('Time'), parent=counting)[0]
-
-        analog = Category.objects.get_or_create(
-            name=_('Analog'), parent=time)[0]
-        cls.__upload(os.path.join(directory, 'Counting/Time/Analog'), analog)
-
-        calendar = Category.objects.get_or_create(
-            name=_('Calendar'), parent=time)[0]
-        cls.__upload(
-            os.path.join(directory, 'Counting/Time/Calendar'), calendar)
-
-        day_night = Category.objects.get_or_create(
-            name=_('Day & Night'), parent=time)[0]
-        cls.__upload(
-            os.path.join(directory, 'Counting/Time/Day & Night'), day_night)
-
-        digital = Category.objects.get_or_create(
-            name=_('Digital'), parent=time)[0]
-        cls.__upload(os.path.join(directory, 'Counting/Time/Digital'), digital)
-
-        hours = Category.objects.get_or_create(name=_('Hours'), parent=time)[0]
-        cls.__upload(os.path.join(directory, 'Counting/Time/Hours'), hours)
-
-        weekdays = Category.objects.get_or_create(
-            name=_('Weekdays'), parent=time)[0]
-        cls.__upload(
-            os.path.join(directory, 'Counting/Time/Weekdays'), weekdays)
-
-        # VI
-        prepositions = Category.objects.get_or_create(name=_('Prepositions'))[0]
-        cls.__upload(os.path.join(directory, 'Prepositions'), prepositions)
-
-        # VII
-        pronouns = Category.objects.get_or_create(name=_('Pronouns'))[0]
-
-        contractions = Category.objects.get_or_create(
-            name=_('Contractions'), parent=pronouns)[0]
-        cls.__upload(
-            os.path.join(directory, 'Pronouns/Contractions'), contractions)
-
-        indefinite = Category.objects.get_or_create(
-            name=_('Indefinite'), parent=pronouns)[0]
-        cls.__upload(os.path.join(directory, 'Pronouns/Indefinite'), indefinite)
-
-        personal = Category.objects.get_or_create(
-            name=_('Personal'), parent=pronouns)[0]
-        cls.__upload(os.path.join(directory, 'Pronouns/Personal'), personal)
-
-        # VIII
-        punctuation = Category.objects.get_or_create(name=_('Punctuation'))[0]
-        cls.__upload(os.path.join(directory, 'Punctuation'), punctuation)
-
-        # IX
+        # II
         verbs = Category.objects.get_or_create(name=_('Verbs'))[0]
 
         modals = Category.objects.get_or_create(
@@ -880,7 +776,7 @@ class BulkUploader:
             name=_('Regular Verbs'), parent=verbs)[0]
         cls.__upload(os.path.join(directory, 'Verbs/Regular Verbs'), regular)
 
-        # IX.A
+        # II.A
         iv = Category.objects.get_or_create(
             name=_('Irregular Verbs'), parent=verbs)[0]
 
@@ -896,24 +792,157 @@ class BulkUploader:
             os.path.join(directory, 'Verbs/Irregular Verbs/Present Tense'),
             iv_present)
 
-        # X
-        colors = Category.objects.get_or_create(name=_('Colors'))[0]
-        cls.__upload(os.path.join(directory, 'Colors'), colors)
+        # III
+        modifiers = Category.objects.get_or_create(name=_('Modifiers'))[0]
 
-        # XI
+        # III.A
+        adj = Category.objects.get_or_create(
+            name=_('Adjectives'), parent=modifiers)[0]
+
+        # III.A.1
+        a_z = Category.objects.get_or_create(name=_('A-Z'), parent=adj)[0]
+        cls.__upload(
+            os.path.join(directory, 'Modifiers/Adjectives/A-Z'), generic)
+
+        # III.B
+        adv = Category.objects.get_or_create(
+            name=_('Adverbs'), parent=modifiers)[0]
+
+        # III.B.1
+        how = Category.objects.get_or_create(name=_('How'), parent=adv)[0]
+        cls.__upload(os.path.join(directory, 'Modifiers/Adverbs/How'), how)
+
+        how_much = Category.objects.get_or_create(
+            name=_('How Much'), parent=adv)[0]
+        cls.__upload(
+            os.path.join(directory, 'Modifiers/Adverbs/How Much'), how_much)
+
+        when = Category.objects.get_or_create(name=_('When'), parent=adv)[0]
+        cls.__upload(os.path.join(directory, 'Modifiers/Adverbs/When'), when)
+
+        where = Category.objects.get_or_create(name=_('Where'), parent=adv)[0]
+        cls.__upload(os.path.join(directory, 'Modifiers/Adverbs/Where'), where)
+
+        # IV
+        other = Category.objects.get_or_create(name=_('Other'))[0]
+
+        # IV.A
+        colors = Category.objects.get_or_create(
+            name=_('Colors'), parent=other)[0]
+        cls.__upload(os.path.join(directory, 'Other/Colors'), colors)
+
+        # IV.B
+        connectives = Category.objects.get_or_create(
+            name=_('Connectives'), parent=other)[0]
+        cls.__upload(os.path.join(directory, 'Other/Connectives'), connectives)
+
+        # IV.C
+        counting = Category.objects.get_or_create(
+            name=_('Counting'), parent=other)[0]
+
+        # IV.C.1
+        numbers = Category.objects.get_or_create(
+            name=_('Numbers'), parent=counting)[0]
+
+        cardinal = Category.objects.get_or_create(
+            name=_('Cardinal'), parent=numbers)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Numbers/Cardinal'),
+            cardinal)
+
+        fractional = Category.objects.get_or_create(
+            name=_('Fractional'), parent=numbers)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Numbers/Fractional'),
+            fractional)
+
+        ordinal = Category.objects.get_or_create(
+            name=_('Ordinal'), parent=numbers)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Numbers/Ordinal'), ordinal)
+
+        # IV.C.2
+        time = Category.objects.get_or_create(
+            name=_('Time'), parent=counting)[0]
+
+        analog = Category.objects.get_or_create(
+            name=_('Analog'), parent=time)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Time/Analog'), analog)
+
+        calendar = Category.objects.get_or_create(
+            name=_('Calendar'), parent=time)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Time/Calendar'), calendar)
+
+        day_night = Category.objects.get_or_create(
+            name=_('Day & Night'), parent=time)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Time/Day & Night'),
+            day_night)
+
+        digital = Category.objects.get_or_create(
+            name=_('Digital'), parent=time)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Time/Digital'), digital)
+
+        hours = Category.objects.get_or_create(name=_('Hours'), parent=time)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Time/Hours'), hours)
+
+        weekdays = Category.objects.get_or_create(
+            name=_('Weekdays'), parent=time)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Counting/Time/Weekdays'), weekdays)
+
+        # IV.D
         flags_languages = Category.objects.get_or_create(
-            name=_('Flags & Languages'))[0]
+            name=_('Flags & Languages'), parent=other)[0]
 
         flags = Category.objects.get_or_create(
             name=_('Flags'), parent=flags_languages)[0]
-        cls.__upload(os.path.join(directory, 'Flags & Languages/Flags'), flags)
+        cls.__upload(
+            os.path.join(directory, 'Other/Flags & Languages/Flags'), flags)
 
         _global = Category.objects.get_or_create(
             name=_('Global Icons'), parent=flags_languages)[0]
         cls.__upload(
-            os.path.join(directory, 'Flags & Languages/Global Icons'), _global)
+            os.path.join(directory, 'Other/Flags & Languages/Global Icons'),
+            _global)
 
-        # XII
+        # IV.E
+        prepositions = Category.objects.get_or_create(
+            name=_('Prepositions'), parent=other)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Prepositions'), prepositions)
+
+        # IV.F
+        pronouns = Category.objects.get_or_create(
+            name=_('Pronouns'), parent=other)[0]
+
+        contractions = Category.objects.get_or_create(
+            name=_('Contractions'), parent=pronouns)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Pronouns/Contractions'),
+            contractions)
+
+        indefinite = Category.objects.get_or_create(
+            name=_('Indefinite'), parent=pronouns)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Pronouns/Indefinite'), indefinite)
+
+        personal = Category.objects.get_or_create(
+            name=_('Personal'), parent=pronouns)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Pronouns/Personal'), personal)
+
+        # IV.G
+        punctuation = Category.objects.get_or_create(
+            name=_('Punctuation'), parent=other)[0]
+        cls.__upload(os.path.join(directory, 'Other/Punctuation'), punctuation)
+
+        # IV.H
         titles_labels = Category.objects.get_or_create(
-            name=_('Titles & Labels'))[0]
-        cls.__upload(os.path.join(directory, 'Titles & Labels'), titles_labels)
+            name=_('Titles & Labels'), parent=other)[0]
+        cls.__upload(
+            os.path.join(directory, 'Other/Titles & Labels'), titles_labels)
