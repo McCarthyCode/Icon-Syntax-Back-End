@@ -802,7 +802,7 @@ class BulkUploader:
         # III.A.1
         a_z = Category.objects.get_or_create(name=_('A-Z'), parent=adj)[0]
         cls.__upload(
-            os.path.join(directory, 'Modifiers/Adjectives/A-Z'), generic)
+            os.path.join(directory, 'Modifiers/Adjectives/A-Z'), a_z)
 
         # III.B
         adv = Category.objects.get_or_create(
