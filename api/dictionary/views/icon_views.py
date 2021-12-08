@@ -138,9 +138,9 @@ class IconListView(generics.GenericAPIView):
         if search and category_id:
             category = get_object_or_404(Category, id=category_id)
             icons = Icon.by_category(
-                category.id, filter_kwargs={'word__icontains': search})
+                category.id, filter_kwargs={'word__istartswith': search})
         elif search and not category_id:
-            icons = list(Icon.objects.filter(word__icontains=search))
+            icons = list(Icon.objects.filter(word__istartswith=search))
         elif not search and category_id:
             category = get_object_or_404(Category, id=category_id)
             icons = Icon.by_category(category.id)
