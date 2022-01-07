@@ -2,7 +2,11 @@
 
 ## High Priorities
 
-_None at this time._
+- PDF manager
+  - Model
+  - Viewset
+    - CRUD
+    - Permissions
 
 ## Medium Priorities
 

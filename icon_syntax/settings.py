@@ -96,6 +96,7 @@ INSTALLED_APPS = [
     'api',
     'api.authentication',
     'api.dictionary',
+    'api.pdf',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.admindocs',
