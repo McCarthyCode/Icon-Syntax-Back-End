@@ -5,4 +5,5 @@ app_name = 'api'
 urlpatterns = [
     re_path('^auth/', include('api.authentication.urls', namespace='auth')),
     re_path('^', include('api.dictionary.urls', namespace='dict')),
+    re_path('^', include('api.pdf.urls', namespace='pdf')),
 ]

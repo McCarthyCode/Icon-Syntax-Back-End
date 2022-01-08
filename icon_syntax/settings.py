@@ -333,8 +333,8 @@ FRONT_END_VERIFY_PATHS = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-# Pagination
 
+# Pagination
 DEFAULT_RESULTS_PER_PAGE = 100
 MAX_RESULTS_PER_PAGE = 500
 
