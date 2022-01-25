@@ -2,11 +2,22 @@
 
 ## High Priorities
 
-- PDF manager
-  - Model
-  - Viewset
-    - CRUD
-    - Permissions
+- Media manager
+  - Models
+    - Media ABC
+    - PDF model
+    - Video model
+  - Viewsets
+    - PDF (done)
+    - Video
+    - About
+- Diary/Blog
+  - Models
+    - Post
+    - Comment
+  - Viewsets
+    - Post
+    - Comment
 
 ## Medium Priorities
 

@@ -1,6 +1,8 @@
-import string
 from django.urls import re_path, include
+from rest_framework.routers import SimpleRouter
+
 from .views import *
+from .viewsets import *
 
 app_name = 'api.dictionary'
 
@@ -27,20 +29,25 @@ urlpatterns = [
         r'^audio/(?P<id>[a-z0-9\W_]+)\.mp3$',
         MP3RetrieveView.as_view(),
         name='audio'),
-    re_path(
-        r'^categories$',
-        CategoriesViewSet.as_view({
-            'get': 'list',
-            'post': 'create'
-        }),
-        name='word'),
-    re_path(
-        r'^categories/(?P<id>[1-9]\d*)$',
-        CategoriesViewSet.as_view(
-            {
-                'get': 'retrieve',
-                'put': 'update',
-                'delete': 'delete'
-            }),
-        name='word'),
+    # re_path(
+    #     r'^categories$',
+    #     CategoriesViewSet.as_view({
+    #         'get': 'list',
+    #         'post': 'create'
+    #     }),
+    #     name='word'),
+    # re_path(
+    #     r'^categories/(?P<id>[1-9]\d*)$',
+    #     CategoriesViewSet.as_view(
+    #         {
+    #             'get': 'retrieve',
+    #             'put': 'update',
+    #             'delete': 'delete'
+    #         }),
+    #     name='word'),
 ]
+
+categories_router = SimpleRouter(trailing_slash=False)
+categories_router.register(r'^categories', CategoriesViewSet)
+
+urlpatterns += categories_router.urls

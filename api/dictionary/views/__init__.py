@@ -1,4 +1,3 @@
-from .categories_viewset import *
 from .icon_search_view import *
 from .icon_views import *
 from .mp3_views import *
