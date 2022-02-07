@@ -41,9 +41,9 @@ class CategoriesViewSet(GenericViewSet):
             status=status.HTTP_200_OK,
         )
 
-    def retrieve(self, request, id=None):
+    def retrieve(self, request, *args, **kwargs):
         return Response(
-            {'data': get_object_or_404(Category, id=id).obj},
+            {'data': get_object_or_404(Category, *args, **kwargs).obj},
             status=status.HTTP_200_OK,
         )
 
