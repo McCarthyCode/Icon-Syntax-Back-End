@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext_lazy as _
 
 from rest_framework import exceptions, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -34,7 +33,6 @@ class CategoriesViewSet(GenericViewSet):
 
         return Response(
             {
-                'success': _('Category list retrieval successful.'),
                 'data': [
                     x.obj for x in Category.objects.filter(
                         parent=parent).order_by('id')
@@ -43,13 +41,9 @@ class CategoriesViewSet(GenericViewSet):
             status=status.HTTP_200_OK,
         )
 
-    def retrieve(self, request, pk=None):
-        breakpoint()
+    def retrieve(self, request, id=None):
         return Response(
-            {
-                'success': _('Category retrieval successful.'),
-                'data': get_object_or_404(Category, pk=pk).obj,
-            },
+            {'data': get_object_or_404(Category, id=id).obj},
             status=status.HTTP_200_OK,
         )
 
@@ -66,11 +60,11 @@ class CategoriesViewSet(GenericViewSet):
 
         return Response(category.obj, status=status.HTTP_201_CREATED)
 
-    def update(self, request, pk):
+    def update(self, request, id):
         if request.method != 'PUT':
             raise exceptions.MethodNotAllowed(request.method)
 
-        category = get_object_or_404(Category, pk=pk)
+        category = get_object_or_404(Category, id=id)
         serializer = self.serializer_class(data=request.data, instance=category)
 
         if not serializer.is_valid():
@@ -80,12 +74,12 @@ class CategoriesViewSet(GenericViewSet):
 
         return Response(category.obj, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, pk):
+    def delete(self, request, id):
         if request.method != 'DELETE':
             raise exceptions.MethodNotAllowed(request.method)
 
-        category = get_object_or_404(Category, pk=pk)
-        for cat in Category.subcategories(category.pk):
+        category = get_object_or_404(Category, id=id)
+        for cat in Category.subcategories(category.id):
             cat.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
