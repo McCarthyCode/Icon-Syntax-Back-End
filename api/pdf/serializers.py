@@ -9,15 +9,16 @@ class PDFSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PDF
-        fields = ['id', 'pdf', 'title', 'topic', 'md5']
-        read_only_fields = ['id', 'pdf', 'md5']
+        fields = ['id', 'topic', 'title', 'pdf', 'md5']
+        read_only_fields = ['id', 'md5']
 
     @property
     def data(self):
         return OrderedDict(
             {
                 'id': self.instance.id,
+                'topic': self.instance.topic,
                 'title': self.instance.title,
                 'pdf': self.instance.pdf.name,
-                'topic': self.instance.topic,
+                'md5': self.instance.md5
             })
