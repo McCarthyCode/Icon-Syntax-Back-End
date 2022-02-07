@@ -33,7 +33,7 @@ class CategoriesViewSet(GenericViewSet):
 
         return Response(
             {
-                'results': [
+                'data': [
                     x.obj for x in Category.objects.filter(
                         parent=parent).order_by('id')
                 ]
@@ -43,7 +43,7 @@ class CategoriesViewSet(GenericViewSet):
 
     def retrieve(self, request, id=None):
         return Response(
-            get_object_or_404(Category, id=id).obj,
+            {'data': get_object_or_404(Category, id=id).obj},
             status=status.HTTP_200_OK,
         )
 

@@ -25,19 +25,24 @@ class PDF(TimestampedModel):
     # Static variables
     RELATIVE_PATH = 'pdf'
     BLOCK_SIZE = 2**16
+    TOPIC_CHOICES = (
+        (1, 'About IconSyntax'),
+        (2, 'Icon Diary'),
+        (3, 'Icon Bookshelf'),
+    )
 
     # Attributes
-    # title = models.CharField(_('Title'), max_length=160)
-    # subtitle = models.CharField(
-    #     _('Subtitle'), max_length=160, null=True, blank=True)
+    title = models.CharField(_('Title'), max_length=80)
     pdf = models.FileField(_('PDF'), upload_to=RELATIVE_PATH, max_length=160)
+    topic = models.PositiveSmallIntegerField(
+        _('Topic'), choices=TOPIC_CHOICES, default=3)
     _hash = models.BinaryField(_('MD5 hash'), null=True, max_length=16)
 
     def __str__(self):
         """
         The value of the class instance when typecast as a string.
         """
-        return self.pdf.name
+        return self.title
 
     def __hash(self):
         """
@@ -71,15 +76,11 @@ class PDF(TimestampedModel):
                 os.rename(filename, new_filename)
 
     def delete(self):
+        """
+        Delete the file before deleting the model instance.
+        """
         self.pdf.delete()
         super().delete()
-
-    @property
-    def b64(self):
-        """
-        Convert the PDF to a base-64 string.
-        """
-        return Base64Converter.encode(self.pdf.name, block_size=self.BLOCK_SIZE)
 
     @property
     def md5(self):
@@ -94,11 +95,13 @@ class PDF(TimestampedModel):
         """
         Serialize relevant fields and properties for JSON output.
         """
-        return OrderedDict({
-            'id': self.id,
-            'pdf': self.b64,
-            'md5': self.md5,
-        })
+        return OrderedDict(
+            {
+                'id': self.id,
+                'title': self.title,
+                'pdf': self.pdf.url,
+                'md5': self.md5,
+            })
 
     @classmethod
     def post_save(
@@ -107,7 +110,8 @@ class PDF(TimestampedModel):
         """
         Method to perform preliminary operations just after instance creation.
         """
-        instance.__hash()
+        if instance.pdf:
+            instance.__hash()
 
 
 post_save.connect(PDF.post_save, sender=PDF, dispatch_uid='3')

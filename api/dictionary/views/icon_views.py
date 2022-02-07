@@ -93,7 +93,7 @@ class IconRetrieveView(generics.GenericAPIView):
         """
         icon = get_object_or_404(Icon, id=id)
 
-        return Response(icon.obj, status=status.HTTP_200_OK)
+        return Response({'data': icon.obj}, status=status.HTTP_200_OK)
 
 
 class IconListView(generics.GenericAPIView):
@@ -106,7 +106,7 @@ class IconListView(generics.GenericAPIView):
     def __success_response(self, paginator, page):
         return Response(
             {
-                'results': [x.obj for x in page.object_list],
+                'data': [x.obj for x in page.object_list],
                 'pagination': {
                     'totalResults': paginator.count,
                     'maxResultsPerPage': paginator.per_page,
