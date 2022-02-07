@@ -112,6 +112,12 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
 ]
 
+SHARED_APPS = [
+    'api',
+    'api.authentication',
+    'api.dictionary',
+]
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
