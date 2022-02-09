@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 
 from api.authentication.permissions import IsAdminOrReadOnly
@@ -19,15 +19,25 @@ class PDFViewSet(viewsets.ModelViewSet):
         res = super().create(request, *args, **kwargs)
         obj = {'success': 'PDF upload successful.', 'data': res.data}
 
-        return Response(obj)
+        return Response(obj, status=status.HTTP_201_CREATED)
 
     def list(self, request, *args, **kwargs):
-        res = super().list(request, *args, **kwargs)
-        count = len(res.data)
+        objs = PDF.objects.all()
+
+        if 'topic' in request.query_params:
+            kwargs['topic'] = request.query_params.get('topic')
+            objs = objs.filter(topic=request.query_params.get('topic'))
+
+        if 'page' in request.query_params:
+            objs = objs[:100] # TODO: add pagination
+
+        objs = list(map(lambda x: x.obj, objs))
+
+        count = len(objs)
         obj = {
             'success':
             f'Found {count} PDF{"" if count == 1 else "s"} that match{"es" if count == 1 else ""} the given query.',
-            'data': res.data
+            'data': objs
         }
 
         return Response(obj)
