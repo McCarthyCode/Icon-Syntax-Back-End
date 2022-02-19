@@ -26,6 +26,14 @@ class IconUploadSerializer(serializers.Serializer):
 
         return icon
 
+    def validate_descriptor(self, descriptor):
+        if len(descriptor) > 80:
+            raise ValidationError(
+                _('The descriptor must not exceed 80 characters.'),
+                'bad_request')
+
+        return descriptor
+
     def save(self):
         icon = Icon.objects.create(
             image=self.validated_data['icon'],
@@ -61,6 +69,7 @@ class IconRetrieveSerializer(serializers.ModelSerializer):
     """
     Serializer for the icon retrieve action. Defines read-only attributes id, icon, and md5.
     """
+
     class Meta:
         """
         Metaclass defining the model as Icon and fields used as read-only field 'id'.
@@ -77,6 +86,7 @@ class IconUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for the icon update action. Defines attributes id, icon, word, descriptor, and category.
     """
+
     class Meta:
         """
         Metaclass defining the model as Icon and fields used as read-only field 'id'.
