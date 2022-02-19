@@ -26,16 +26,18 @@ class PDF(TimestampedModel):
     RELATIVE_PATH = 'pdf'
     BLOCK_SIZE = 2**16
     TOPIC_CHOICES = (
-        (1, 'About IconSyntax'),
-        (2, 'Icon Diary'),
-        (3, 'Icon Bookshelf'),
+        (1, 'Bookshelf'),
+        (2, 'About Us'),
+        (3, 'About Syntax'),
+        (4, 'About Literacy'),
+        (5, 'Notes'),
     )
 
     # Attributes
     title = models.CharField(_('Title'), max_length=80)
     pdf = models.FileField(_('PDF'), upload_to=RELATIVE_PATH, max_length=160)
     topic = models.PositiveSmallIntegerField(
-        _('Topic'), choices=TOPIC_CHOICES, default=3)
+        _('Topic'), choices=TOPIC_CHOICES, default=1)
     _hash = models.BinaryField(_('MD5 hash'), null=True, max_length=16)
 
     def __str__(self):
