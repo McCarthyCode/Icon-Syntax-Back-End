@@ -9,7 +9,9 @@ from PIL import Image
 
 from django.conf import settings
 from django.db import models
+from django.db.utils import IntegrityError
 from django.db.models.signals import post_save
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from api.models import TimestampedModel
@@ -20,24 +22,23 @@ from api.dictionary.utils import Base64Converter
 
 class PDF(TimestampedModel):
     """
-    A model storing a PDF and its title.
+    A model storing a PDF, its title, and its Bookshelf category.
     """
+
+    class Category(TimestampedModel):
+        """
+        A model storing a categorical name.
+        """
+        name = models.CharField(_('Name'), max_length=40, unique=True)
+
     # Static variables
     RELATIVE_PATH = 'pdf'
     BLOCK_SIZE = 2**16
-    TOPIC_CHOICES = (
-        (1, 'Bookshelf'),
-        (2, 'About Us'),
-        (3, 'About Syntax'),
-        (4, 'About Literacy'),
-        (5, 'Notes'),
-    )
 
     # Attributes
     title = models.CharField(_('Title'), max_length=80)
     pdf = models.FileField(_('PDF'), upload_to=RELATIVE_PATH, max_length=160)
-    topic = models.PositiveSmallIntegerField(
-        _('Topic'), choices=TOPIC_CHOICES, default=1)
+    categories = models.ManyToManyField(Category, related_name=_('Category'))
     _hash = models.BinaryField(_('MD5 hash'), null=True, max_length=16)
 
     def __str__(self):
@@ -83,6 +84,34 @@ class PDF(TimestampedModel):
         """
         self.pdf.delete()
         super().delete()
+
+    def add_category(self, name):
+        category = Category.objects.get_or_create(name=name)
+
+        if category not in self.category_set:
+            try:
+                self.categories_set.add(category)
+            except IntegrityError:
+                pass
+
+    def rename_category(self, old_name, new_name):
+        old_category = get_object_or_404(Category, name=old_name)
+        new_category = Category.objects.get_or_create(name=new_name)
+
+        for pdf in category.pdfs_set:
+            pdf.categories_set.remove(old_category)
+            pdf.categories_set.add(new_category)
+
+        old_category.delete()
+
+    def remove_category(self, name):
+        category = get_object_or_404(Category, name=name)
+
+        if category in self.category_set:
+            self.categories_set.remove(category)
+
+            if len(category.pdfs_set) == 0:
+                category.delete()
 
     @property
     def md5(self):
