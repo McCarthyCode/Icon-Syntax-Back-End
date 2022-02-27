@@ -31,6 +31,13 @@ class PDF(TimestampedModel):
         """
         name = models.CharField(_('Name'), max_length=40, unique=True)
 
+        @property
+        def obj(self):
+            return OrderedDict({
+                'id': self.id,
+                'name': self.name,
+            })
+
     # Static variables
     RELATIVE_PATH = 'pdf'
     BLOCK_SIZE = 2**16
@@ -38,7 +45,7 @@ class PDF(TimestampedModel):
     # Attributes
     title = models.CharField(_('Title'), max_length=80)
     pdf = models.FileField(_('PDF'), upload_to=RELATIVE_PATH, max_length=160)
-    categories = models.ManyToManyField(Category, related_name=_('Category'))
+    categories = models.ManyToManyField(Category)
     _hash = models.BinaryField(_('MD5 hash'), null=True, max_length=16)
 
     def __str__(self):
@@ -126,11 +133,15 @@ class PDF(TimestampedModel):
         """
         Serialize relevant fields and properties for JSON output.
         """
+        categories_str = ','.join(
+            map(lambda x: x['name'], self.categories.values('name')))
+
         return OrderedDict(
             {
                 'id': self.id,
                 'title': self.title,
                 'pdf': self.pdf.url,
+                'categories': categories_str,
                 'md5': self.md5,
             })
 

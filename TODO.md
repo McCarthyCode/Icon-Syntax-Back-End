@@ -4,12 +4,18 @@
 
 - Media manager
   - Models
-    - Media ABC
     - PDF model
-    - Video model
+    - Post model
+    - Comment model
   - Viewsets
-    - PDF (done)
-    - Video
+    - PDF
+      - update
+      - partial_update
+      - delete
+    - PDF Category
+      - update
+      - partial_update
+      - delete
     - About
 - Diary/Blog
   - Models
