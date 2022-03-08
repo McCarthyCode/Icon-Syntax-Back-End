@@ -61,7 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
     is_verified = models.BooleanField(_('is verified'), default=False)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'password']
+    REQUIRED_FIELDS = ['password']
 
     objects = UserManager()
 
