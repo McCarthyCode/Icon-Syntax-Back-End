@@ -168,21 +168,8 @@ DATABASES = {
         'NAME': DEFAULT_DATABASE_NAME,
         'USER': DEFAULT_DATABASE_USER,
         'PASSWORD': DEFAULT_DATABASE_PASSWORD,
-        'TEST': {
-            'DEPENDENCIES': ['admin_db'],
-        },
     },
-    # 'admin_db': {
-    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    #     'NAME': ADMIN_DATABASE_NAME,
-    #     'USER': ADMIN_DATABASE_USER,
-    #     'PASSWORD': ADMIN_DATABASE_PASSWORD,
-    #     'TEST': {
-    #         'DEPENDENCIES': [],
-    #     },
-    # },
 }
-# DATABASE_ROUTERS = ['api.authentication.routers.AdminDBRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
