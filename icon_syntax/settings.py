@@ -20,6 +20,7 @@ class MissingEnvironmentVariable(Exception):
     """
     Exception to be raised when an environment variable is not defined.
     """
+
     def __init__(self, variable):
         """
         Initialization method called at exception creation. Here, the error message is defined.
@@ -31,6 +32,7 @@ class InvalidEnvironmentVariable(Exception):
     """
     Exception to be raised when the value of an environment variable is invalid.
     """
+
     def __init__(self, variable):
         """
         Initialization method called at exception creation. Here, the error message is defined.
@@ -40,22 +42,12 @@ class InvalidEnvironmentVariable(Exception):
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
+
 try:
-    SECRET_KEY = os.environ['SECRET_KEY']
-    STAGE = os.environ['STAGE']
-
-    ADMIN_DATABASE_NAME = os.environ['ADMIN_DATABASE_NAME']
-    ADMIN_DATABASE_USER = os.environ['ADMIN_DATABASE_USER']
-    ADMIN_DATABASE_PASSWORD = os.environ['ADMIN_DATABASE_PASSWORD']
-
-    DEFAULT_DATABASE_NAME = os.environ['DEFAULT_DATABASE_NAME']
-    DEFAULT_DATABASE_USER = os.environ['DEFAULT_DATABASE_USER']
-    DEFAULT_DATABASE_PASSWORD = os.environ['DEFAULT_DATABASE_PASSWORD']
-
-    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-    EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-
-    MW_DICTIONARY_API_KEY = os.environ['MW_DICTIONARY_API_KEY']
+    for var in {'SECRET_KEY', 'STAGE', 'DATABASE_NAME', 'DATABASE_USER',
+                'DATABASE_PASSWORD', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD',
+                'MW_DICTIONARY_API_KEY'}:
+        locals()[var] = os.environ[var]
 except KeyError as exc:
     raise MissingEnvironmentVariable(exc)
 
@@ -165,9 +157,9 @@ WSGI_APPLICATION = 'icon_syntax.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': DEFAULT_DATABASE_NAME,
-        'USER': DEFAULT_DATABASE_USER,
-        'PASSWORD': DEFAULT_DATABASE_PASSWORD,
+        'NAME': DATABASE_NAME,
+        'USER': DATABASE_USER,
+        'PASSWORD': DATABASE_PASSWORD,
     },
 }
 
@@ -282,8 +274,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # DRF Simple JWT
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=8*60 if DEBUG else 5),
-    # 'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=8 * 60 if DEBUG else 5),
     'ROTATE_REFRESH_TOKENS': True,
     # 'BLACKLIST_AFTER_ROTATION': True,
     # 'UPDATE_LAST_LOGIN': False,
