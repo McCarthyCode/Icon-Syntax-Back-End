@@ -23,7 +23,7 @@ class PDFSerializer(serializers.ModelSerializer):
         if not re.match(r'[a-zA-Z0-9 ,]+', categories_str):
             raise ValidationError(
                 _(
-                    'The categories list may only contain letters, digits, and spaces.'
+                    'The categories list may only contain letters, digits, and spaces separated by commas.'
                 ),
                 'invalid_str',
             )
@@ -52,7 +52,7 @@ class PDFSerializer(serializers.ModelSerializer):
         return categories_str
 
     def create(self, validated_data):
-        kwargs = dict(validated_data)
+        kwargs = dict(validated_data) # use dict typecast for a deep copy
         kwargs.pop('categories')
 
         obj = PDF.objects.create(**kwargs)

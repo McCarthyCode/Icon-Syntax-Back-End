@@ -27,8 +27,7 @@ class PDFViewSet(viewsets.ModelViewSet):
 
         if 'categories' in request.query_params:
             categories = request.query_params.get('categories', '').split(',')
-            objs = PDF.objects.filter(
-                categories__id__in=set(map(int, categories)))
+            objs = PDF.objects.filter(categories__name__in=set(categories))
 
         if 'page' in request.query_params:
             objs = objs[:100]  # TODO add pagination
@@ -49,6 +48,18 @@ class PDFViewSet(viewsets.ModelViewSet):
         obj = {'success': 'PDF retrieved successfully.', 'data': res.data}
 
         return Response(obj)
+
+    def destroy(self, request, *args, **kwargs):
+        categories = PDF.Category.objects.filter(pdf__id=kwargs['pk'])
+
+        # iterate through categories associated w/ PDF to delete
+        for category in categories:
+            # if category has only one PDF associated with it, that PDF is the
+            # one being deleted, so also delete the category
+            if PDF.objects.filter(categories__id=category.id).count() == 1:
+                category.delete()
+
+        return super().destroy(request, *args, **kwargs)
 
 
 class PDFCategoryViewset(viewsets.ModelViewSet):
