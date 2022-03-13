@@ -12,7 +12,7 @@ from api.pdf.models import PDF
 
 class PDFSerializer(serializers.ModelSerializer):
     pdf = serializers.FileField()
-    categories = serializers.CharField(max_length=80)
+    categories = serializers.CharField(max_length=160)
 
     class Meta:
         model = PDF
@@ -37,22 +37,10 @@ class PDFSerializer(serializers.ModelSerializer):
                 'invalid_cat',
             )
 
-        # original_obj_set = self.instance.categories_set \
-        #     if self.instance else set({})
-        # updated_obj_set = set({})
-
-        # for category_str in categories_set:
-        #     updated_obj_set.add(
-        #         PDF.Category.objects.get_or_create(name=category_str))
-
-        # for category_obj in original_obj_set - updated_obj_set:
-        #     if PDF.Category.objects.filter(name=category_obj.name).count() == 1:
-        #         category_obj.delete()
-
         return categories_str
 
     def create(self, validated_data):
-        kwargs = dict(validated_data) # use dict typecast for a deep copy
+        kwargs = dict(validated_data)  # use dict typecast for a deep copy
         kwargs.pop('categories')
 
         obj = PDF.objects.create(**kwargs)
@@ -67,6 +55,30 @@ class PDFSerializer(serializers.ModelSerializer):
             obj.categories.add(category)
 
         return obj
+
+    def save(self, *args, **kwargs):
+        categories = self.validated_data.get('categories', '')
+        categories = categories.split(',')
+        self.validated_data.pop('categories')
+
+        add_set = set({})
+        del_set = set(
+            map(
+                lambda x: x.name,
+                self.instance.categories.filter(pdf=self.instance.id)))
+
+        for name in categories:
+            category, created = PDF.Category.objects.get_or_create(name=name)
+            self.instance.categories.add(category)
+
+            add_set.add(name)
+            del_set.discard(name)
+
+        for name in del_set:
+            if PDF.objects.filter(categories__name=name).count() == 1:
+                PDF.Category.objects.filter(name=name).delete()
+
+        return super().save(*args, **kwargs)
 
     @property
     def data(self):

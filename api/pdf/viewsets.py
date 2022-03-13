@@ -16,11 +16,11 @@ class PDFViewSet(viewsets.ModelViewSet):
     serializer_class = PDFSerializer
     permission_classes = [IsAdminOrReadOnly]
 
-    def create(self, request, *args, **kwargs):
-        res = super().create(request, *args, **kwargs)
-        obj = {'success': 'PDF upload successful.', 'data': res.data}
+    def retrieve(self, request, *args, **kwargs):
+        res = super().retrieve(request, *args, **kwargs)
+        obj = {'success': 'PDF retrieved successfully.', 'data': res.data}
 
-        return Response(obj, status=status.HTTP_201_CREATED)
+        return Response(obj)
 
     def list(self, request, *args, **kwargs):
         objs = PDF.objects.all()
@@ -43,11 +43,26 @@ class PDFViewSet(viewsets.ModelViewSet):
 
         return Response(obj)
 
-    def retrieve(self, request, *args, **kwargs):
-        res = super().retrieve(request, *args, **kwargs)
-        obj = {'success': 'PDF retrieved successfully.', 'data': res.data}
+    def create(self, request, *args, **kwargs):
+        res = super().create(request, *args, **kwargs)
+        obj = {'success': 'PDF upload successful.', 'data': res.data}
 
-        return Response(obj)
+        return Response(obj, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        res = super().update(request, *args, **kwargs)
+        obj = {'success': 'PDF Category update successful.', 'data': res.data}
+
+        return Response(obj, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        res = super().partial_update(request, *args, **kwargs)
+        obj = {
+            'success': 'PDF Category partial update successful.',
+            'data': res.data
+        }
+
+        return Response(obj, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         categories = PDF.Category.objects.filter(pdf__id=kwargs['pk'])
@@ -70,15 +85,6 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
     serializer_class = PDFCategorySerializer
     permission_classes = [AllowAny]
 
-    def create(self, request, *args, **kwargs):
-        res = super().create(request, *args, **kwargs)
-        obj = {
-            'success': 'PDF category created successfully.',
-            'data': res.data
-        }
-
-        return Response(obj, status=status.HTTP_201_CREATED)
-
     def list(self, request, *args, **kwargs):
         objs = PDF.Category.objects.all()
 
@@ -96,6 +102,15 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
 
         return Response(obj, status=status.HTTP_200_OK)
 
+    def create(self, request, *args, **kwargs):
+        res = super().create(request, *args, **kwargs)
+        obj = {
+            'success': 'PDF category created successfully.',
+            'data': res.data
+        }
+
+        return Response(obj, status=status.HTTP_201_CREATED)
+
     def update(self, request, *args, **kwargs):
         res = super().update(request, *args, **kwargs)
         obj = {'success': 'PDF Category update successful.', 'data': res.data}
@@ -103,4 +118,10 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
         return Response(obj, status=status.HTTP_200_OK)
 
     def partial_update(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        res = self.update(request, *args, **kwargs)
+        obj = {
+            'success': 'PDF Category partial update successful.',
+            'data': res.data
+        }
+
+        return Response(obj, status=status.HTTP_200_OK)
