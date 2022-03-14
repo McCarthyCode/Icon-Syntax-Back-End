@@ -56,29 +56,30 @@ class PDFSerializer(serializers.ModelSerializer):
 
         return obj
 
-    def save(self, *args, **kwargs):
-        categories = self.validated_data.get('categories', '')
-        categories = categories.split(',')
-        self.validated_data.pop('categories')
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.pdf = validated_data.get('title', instance.pdf)
 
-        add_set = set({})
+        categories = validated_data.get('categories', instance.categories or '')
+        categories = categories.split(',')
+
+        # add new categories and delete orphaned ones
         del_set = set(
             map(
                 lambda x: x.name,
-                self.instance.categories.filter(pdf=self.instance.id)))
+                self.instance.categories.filter(pdf=instance.id)))
 
         for name in categories:
             category, created = PDF.Category.objects.get_or_create(name=name)
             self.instance.categories.add(category)
 
-            add_set.add(name)
             del_set.discard(name)
 
         for name in del_set:
             if PDF.objects.filter(categories__name=name).count() == 1:
                 PDF.Category.objects.filter(name=name).delete()
 
-        return super().save(*args, **kwargs)
+        return instance
 
     @property
     def data(self):
