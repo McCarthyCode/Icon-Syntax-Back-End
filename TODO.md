@@ -4,20 +4,10 @@
 
 - Media manager
   - Models
-    - PDF model
+    - PDF model (topic column)
     - Post model
     - Comment model
-  - Viewsets
-    - PDF
-      - update
-      - partial_update
-      - delete
-    - PDF Category
-      - update
-      - partial_update
-      - delete
-    - About
-- Diary/Blog
+- Blog
   - Models
     - Post
     - Comment
@@ -27,6 +17,7 @@
 
 ## Medium Priorities
 
+- Handle hash collisions
 - Use JSONFields in place of CharFields where appropriate
 - Encrypt database on OS level
 - Metadata

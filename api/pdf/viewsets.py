@@ -32,7 +32,7 @@ class PDFViewSet(viewsets.ModelViewSet):
         if 'page' in request.query_params:
             objs = objs[:100]  # TODO add pagination
 
-        objs = list(map(lambda x: x.obj, objs))
+        objs = list(map(lambda x: x.obj, set(objs)))
 
         count = len(objs)
         obj = {
