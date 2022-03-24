@@ -78,6 +78,9 @@ class PDFSerializer(serializers.ModelSerializer):
         for name in del_set:
             if PDF.objects.filter(categories__name=name).count() == 1:
                 PDF.Category.objects.filter(name=name).delete()
+            else:
+                self.instance.categories.remove(
+                    PDF.Category.objects.get(name=name))
 
         return instance
 

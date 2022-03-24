@@ -88,8 +88,14 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         objs = PDF.Category.objects.all()
 
+        """
         if 'page' in request.query_params:
-            objs = objs[:100]  # TODO: add pagination
+            TODO: add pagination
+        """
+
+        if 'pdf' in request.query_params:
+            pdf = int(request.query_params.get('pdf'))
+            objs = PDF.objects.get(pk=pdf).categories.all()
 
         objs = list(map(lambda x: x.obj, objs))
 
