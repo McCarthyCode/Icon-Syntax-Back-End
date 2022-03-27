@@ -20,6 +20,7 @@ class Image(TimestampedModel):
     """
     Abstract model containing an image, a hash of that image, and operation methods.
     """
+
     class Meta:
         """
         The metaclass defining its parent as abstract.
@@ -74,10 +75,6 @@ class Image(TimestampedModel):
                 new_filename = os.path.join(
                     settings.MEDIA_ROOT, self.image.name)
                 os.rename(filename, new_filename)
-
-    def delete(self):
-        self.image.delete()
-        super().delete()
 
     @property
     def b64(self):

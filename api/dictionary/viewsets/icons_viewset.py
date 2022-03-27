@@ -13,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 from api import NON_FIELD_ERRORS_KEY
 from api.exceptions import BadRequestError
 
-from ..models import Icon
+from ..models import Icon, Image
 from ..serializers.icon_serializers import *
 
 
@@ -159,13 +159,16 @@ class IconsViewSet(GenericViewSet):
             },
             status=status.HTTP_200_OK)
 
-    def delete(self, request, pk=None):
+    def destroy(self, request, pk=None):
         if request.method != 'DELETE':
             raise exceptions.MethodNotAllowed(request.method)
 
+        post_save.disconnect(Image.post_save, sender=Icon, dispatch_uid='0')
         icon = get_object_or_404(Icon, pk=pk)
 
-        post_save.disconnect(Image.post_save, sender=Icon, dispatch_uid='0')
+        if Icon.objects.filter(_hash=icon._hash).count() == 1:
+            icon.image.delete()
+
         icon.delete()
         post_save.connect(Image.post_save, sender=Icon, dispatch_uid='0')
 
