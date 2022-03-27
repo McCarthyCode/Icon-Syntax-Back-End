@@ -37,6 +37,18 @@ class IconsViewSet(GenericViewSet):
 
         return [permission() for permission in permission_classes]
 
+    def get_serializer_class(self):
+        serializers = {
+            'create': IconUploadSerializer,
+            'update': IconUpdateSerializer,
+            'partial_update': IconUpdateSerializer,
+        }
+
+        if self.request.method in serializers:
+            return serializers[self.request.method]
+
+        return IconRetrieveSerializer
+
     def list(self, request):
         if request.method != 'GET':
             raise exceptions.MethodNotAllowed(request.method)
@@ -137,11 +149,11 @@ class IconsViewSet(GenericViewSet):
             },
             status=status.HTTP_201_CREATED)
 
-    def update(self, request, id):
+    def update(self, request, pk=None):
         if request.method not in ['PATCH', 'PUT']:
             raise exceptions.MethodNotAllowed(request.method)
 
-        icon = get_object_or_404(Icon, id=id)
+        icon = get_object_or_404(Icon, pk=pk)
 
         serializer = IconUpdateSerializer(
             data=request.data, instance=icon, context={'request': request})
@@ -158,6 +170,12 @@ class IconsViewSet(GenericViewSet):
                 'data': icon.obj
             },
             status=status.HTTP_200_OK)
+
+    def partial_update(self, request, pk=None):
+        if request.method != 'PATCH':
+            raise exceptions.MethodNotAllowed(request.method)
+
+        return self.update(request, pk)
 
     def destroy(self, request, pk=None):
         if request.method != 'DELETE':
