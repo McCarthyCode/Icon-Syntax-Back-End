@@ -30,7 +30,7 @@ class IconsViewSet(GenericViewSet):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action in {'list', 'retrieve'}:
             permission_classes = []
         else:
             permission_classes = [IsAdminUser]
@@ -44,7 +44,7 @@ class IconsViewSet(GenericViewSet):
             'partial_update': IconUpdateSerializer,
         }
 
-        if self.request.method in serializers:
+        if self.action in serializers:
             return serializers[self.request.method]
 
         return IconRetrieveSerializer
