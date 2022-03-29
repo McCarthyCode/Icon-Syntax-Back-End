@@ -32,7 +32,6 @@ class PDFViewSet(viewsets.ModelViewSet):
         if 'categories' in request.query_params:
             categories = request.query_params.get('categories', '').split(',')
             objs = objs.filter(categories__name__in=set(categories))
-
         """
         TODO add pagination
 
@@ -95,7 +94,6 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         objs = PDF.Category.objects.all().order_by('name')
-
         """
         TODO: add pagination
 

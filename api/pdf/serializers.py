@@ -82,6 +82,8 @@ class PDFSerializer(serializers.ModelSerializer):
                 self.instance.categories.remove(
                     PDF.Category.objects.get(name=name))
 
+        instance.save()
+
         return instance
 
     @property
