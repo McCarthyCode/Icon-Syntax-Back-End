@@ -25,12 +25,20 @@ class PDFViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         objs = PDF.objects.all()
 
+        if 'topic' in request.query_params:
+            topic = request.query_params.get('topic', 1)
+            objs = PDF.objects.filter(topic=topic)
+
         if 'categories' in request.query_params:
             categories = request.query_params.get('categories', '').split(',')
-            objs = PDF.objects.filter(categories__name__in=set(categories))
+            objs = objs.filter(categories__name__in=set(categories))
+
+        """
+        TODO add pagination
 
         if 'page' in request.query_params:
-            objs = objs[:100]  # TODO add pagination
+            objs = objs[:100]
+        """
 
         objs = list(map(lambda x: x.obj, set(objs)))
 
@@ -86,16 +94,21 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def list(self, request, *args, **kwargs):
-        objs = PDF.Category.objects.all()
+        objs = PDF.Category.objects.all().order_by('name')
 
         """
+        TODO: add pagination
+
         if 'page' in request.query_params:
-            TODO: add pagination
         """
 
         if 'pdf' in request.query_params:
             pdf = int(request.query_params.get('pdf'))
-            objs = PDF.objects.get(pk=pdf).categories.all()
+            objs = PDF.objects.get(pk=pdf).categories.all().order_by('name')
+
+        if 'topic' in request.query_params:
+            topic = request.query_params.get('topic', 1)
+            objs = objs.filter(pdf__topic=topic)
 
         objs = list(map(lambda x: x.obj, objs))
 

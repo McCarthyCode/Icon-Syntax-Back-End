@@ -16,7 +16,7 @@ class PDFSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PDF
-        fields = ['id', 'title', 'categories', 'pdf', 'md5']
+        fields = ['id', 'title', 'categories', 'topic', 'pdf', 'md5']
         read_only_fields = ['id', 'md5']
 
     def validate_categories(self, categories_str):
@@ -58,7 +58,7 @@ class PDFSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
-        instance.pdf = validated_data.get('title', instance.pdf)
+        instance.topic = validated_data.get('topic', instance.topic)
 
         categories = validated_data.get('categories', instance.categories or '')
         categories = categories.split(',')
@@ -86,17 +86,7 @@ class PDFSerializer(serializers.ModelSerializer):
 
     @property
     def data(self):
-        categories_str = ','.join(
-            map(lambda x: x['name'], self.instance.categories.values('name')))
-
-        return OrderedDict(
-            {
-                'id': self.instance.id,
-                'categories': categories_str,
-                'title': self.instance.title,
-                'pdf': self.instance.pdf.name,
-                'md5': self.instance.md5
-            })
+        return self.instance.obj
 
 
 class PDFCategorySerializer(serializers.ModelSerializer):

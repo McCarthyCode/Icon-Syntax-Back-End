@@ -29,6 +29,7 @@ class PDF(TimestampedModel):
         """
         A model storing a categorical name.
         """
+
         name = models.CharField(_('Name'), max_length=40, unique=True)
 
         @property
@@ -44,11 +45,19 @@ class PDF(TimestampedModel):
     # Static variables
     RELATIVE_PATH = 'pdf'
     BLOCK_SIZE = 2**16
+    TOPIC_CHOICES = (
+        # (0, None),
+        (1, 'Icon Literature'),
+        (2, 'About Us'),
+        (3, 'About Syntax'),
+        (4, 'About Literacy'),
+    )
 
     # Attributes
     title = models.CharField(_('Title'), max_length=80)
     pdf = models.FileField(_('PDF'), upload_to=RELATIVE_PATH, max_length=160)
     categories = models.ManyToManyField(Category)
+    topic = models.PositiveSmallIntegerField(choices=TOPIC_CHOICES, default=1)
     _hash = models.BinaryField(_('MD5 hash'), null=True, max_length=16)
 
     def __str__(self):
@@ -144,8 +153,9 @@ class PDF(TimestampedModel):
                 'id': self.id,
                 'title': self.title,
                 'pdf': self.pdf.url,
-                'categories': categories_str,
                 'md5': self.md5,
+                'categories': categories_str,
+                'topic': self.topic,
             })
 
     @classmethod
