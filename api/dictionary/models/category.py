@@ -48,8 +48,8 @@ class Category(TimestampedModel):
         return OrderedDict({**common(self), 'children': children})
 
     @classmethod
-    def subcategories(cls, root_id):
-        if not root_id:
+    def subcategories(cls, root_id=0):
+        if root_id == 0:
             return cls.objects.all()
 
         category = cls.objects.get(id=root_id)
