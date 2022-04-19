@@ -19,39 +19,46 @@ from api.models import TimestampedModel
 from api.models import TimestampedModel
 from api.dictionary.utils import Base64Converter
 
+TOPIC_CHOICES = (
+    (1, 'About'),
+    (2, 'Icon Literature'),
+    (3, 'Personal'),
+)
+
 
 class PDF(TimestampedModel):
     """
     A model storing a PDF, its title, and its Bookshelf category.
     """
 
+    # Static variables
+    RELATIVE_PATH = 'pdf'
+    BLOCK_SIZE = 2**16
+    TOPIC_CHOICES = TOPIC_CHOICES
+
     class Category(TimestampedModel):
         """
         A model storing a categorical name.
         """
 
+        # Static variables
+        TOPIC_CHOICES = TOPIC_CHOICES
+
+        # Attributes
         name = models.CharField(_('Name'), max_length=40, unique=True)
+        topic = models.PositiveSmallIntegerField(
+            choices=TOPIC_CHOICES, default=1)
 
         @property
         def obj(self):
             return OrderedDict({
                 'id': self.id,
                 'name': self.name,
+                'topic': self.topic,
             })
 
         def __str__(self):
             return self.name
-
-    # Static variables
-    RELATIVE_PATH = 'pdf'
-    BLOCK_SIZE = 2**16
-    TOPIC_CHOICES = (
-        # (0, None),
-        (1, 'Icon Literature'),
-        (2, 'About Us'),
-        (3, 'About Syntax'),
-        (4, 'About Literacy'),
-    )
 
     # Attributes
     title = models.CharField(_('Title'), max_length=80)
@@ -128,9 +135,6 @@ class PDF(TimestampedModel):
 
         if category in self.category_set:
             self.categories_set.remove(category)
-
-            if len(category.pdfs_set) == 0:
-                category.delete()
 
     @property
     def md5(self):

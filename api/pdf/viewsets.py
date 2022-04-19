@@ -26,7 +26,7 @@ class PDFViewSet(viewsets.ModelViewSet):
         objs = PDF.objects.all()
 
         if 'topic' in request.query_params:
-            topic = request.query_params.get('topic', 1)
+            topic = request.query_params.get('topic')
             objs = PDF.objects.filter(topic=topic)
 
         if 'categories' in request.query_params:
@@ -106,9 +106,9 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
 
         if 'topic' in request.query_params:
             topic = request.query_params.get('topic', 1)
-            objs = objs.filter(pdf__topic=topic)
+            objs = objs.filter(topic=topic)
 
-        objs = list(map(lambda x: x.obj, objs))
+        objs = list(map(lambda x: x.obj, set(objs)))
 
         count = len(objs)
         obj = {
