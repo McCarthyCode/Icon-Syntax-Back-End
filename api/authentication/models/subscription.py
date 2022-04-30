@@ -3,4 +3,4 @@ from api.models import TimestampedModel
 
 
 class Subscription(TimestampedModel):
-    email = models.EmailField()
+    email = models.EmailField(unique=True)

@@ -13,5 +13,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.email = validated_data.get('email', instance.email)
+        instance.save()
 
         return instance

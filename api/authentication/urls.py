@@ -1,5 +1,5 @@
 from django.urls import re_path, include
-from rest_framework.routers import SimpleRouter
+from .routers import SubscriptionRouter
 
 from .views import *
 from .viewsets import *
@@ -27,7 +27,7 @@ urlpatterns = [
     re_path('^refresh$', RefreshView.as_view(), name='refresh'),
 ]
 
-router = SimpleRouter(trailing_slash=False)
-router.register(r'^subscription', SubscriptionViewSet)
+router = SubscriptionRouter(trailing_slash=False)
+router.register(r'^subscriptions', SubscriptionViewSet)
 
 urlpatterns += router.urls
