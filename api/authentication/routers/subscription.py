@@ -17,6 +17,14 @@ class SubscriptionRouter(SimpleRouter):
             detail=False,
             initkwargs={'suffix': 'Unsubscribe'}),
         Route(
+            url=r'^subscriptions/lookup$',
+            mapping={'get': 'lookup'},
+            name='{basename}-lookup',
+            detail=True,
+            initkwargs={
+                'suffix': 'Lookup',
+            }),
+        Route(
             url=r'^subscriptions/(?P<pk>[1-9]\d*)$',
             mapping={
                 'get': 'retrieve',
@@ -29,7 +37,7 @@ class SubscriptionRouter(SimpleRouter):
                 'suffix': 'Instance',
             }),
         Route(
-            url=r'^subscriptions(\.(?P<ext>json|txt|csv))?',
+            url=r'^subscriptions(\.(?P<ext>json|txt|csv))?$',
             mapping={'get': 'list'},
             name='{basename}-list',
             detail=False,
