@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     'api',
     'api.authentication',
     'api.dictionary',
+    'api.blog',
     'api.pdf',
     'corsheaders',
     'django.contrib.admin',
@@ -102,12 +103,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-]
-
-SHARED_APPS = [
-    'api',
-    'api.authentication',
-    'api.dictionary',
 ]
 
 MIDDLEWARE = [
