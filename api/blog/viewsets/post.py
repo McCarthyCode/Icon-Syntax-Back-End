@@ -26,6 +26,16 @@ class PostViewSet(viewsets.ModelViewSet):
         self.queryset = Post.objects.filter(*args, **kwargs)
         return self.queryset
 
+    def retrieve(self, request, pk=None):
+        response = super().retrieve(request, pk)
+        response.data = OrderedDict(
+            {
+                'success': 'Successfully retrieved a blog post.',
+                'data': response.data
+            })
+
+        return response
+
     def list(self, request):
         page_num = request.query_params.get('page', 1)
         results_per_page = min(
@@ -34,7 +44,7 @@ class PostViewSet(viewsets.ModelViewSet):
             settings.MAX_RESULTS_PER_PAGE,
         )
 
-        posts = sorted(self.get_queryset(), key=lambda x: x.created)
+        posts = self.get_queryset().order_by('-updated')
         paginator = Paginator(posts, results_per_page)
 
         try:
@@ -61,6 +71,7 @@ class PostViewSet(viewsets.ModelViewSet):
                 'data': [
                     OrderedDict(
                         {
+                            'id': x.id,
                             'title': x.title,
                             'content': x.content[:500],
                             'created': x.created,
@@ -79,3 +90,33 @@ class PostViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
+    def update(self, request, pk=None):
+        response = super().update(request, pk)
+        response.data = OrderedDict(
+            {
+                'success': 'Successfully updated a blog post.',
+                'data': response.data
+            })
+
+        return response
+
+    def partial_update(self, request, pk=None):
+        response = super().partial_update(request, pk)
+        response.data = OrderedDict(
+            {
+                'success': 'Successfully updated a blog post.',
+                'data': response.data
+            })
+
+        return response
+
+    def create(self, request):
+        response = super().create(request)
+        response.data = OrderedDict(
+            {
+                'success': 'Successfully created a blog post.',
+                'data': response.data
+            })
+
+        return response

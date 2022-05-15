@@ -17,6 +17,7 @@ class Post(TimestampedModel):
     def obj(self):
         return OrderedDict(
             {
+                'id': self.id,
                 'title': self.title,
                 'content': self.content,
                 'created': self.created,
