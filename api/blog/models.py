@@ -14,7 +14,7 @@ class Post(TimestampedModel):
         post = models.ForeignKey('Post', on_delete=models.CASCADE)
         content = models.TextField()
         parent = models.ForeignKey(
-            'Comment', null=True, on_delete=models.SET_NULL)
+            'Comment', null=True, on_delete=models.CASCADE)
         owner = models.ForeignKey(
             User, default=None, null=True, on_delete=models.SET_NULL)
 
