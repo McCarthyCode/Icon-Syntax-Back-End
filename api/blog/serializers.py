@@ -11,7 +11,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_comments(self, instance):
         queryset = Post.Comment.objects.filter(
-            post__pk=instance.id, parent__pk=None)
+            post__pk=instance.id, parent__pk=None).order_by('-created')
 
         return [x.obj for x in queryset]
 

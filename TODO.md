@@ -2,18 +2,7 @@
 
 ## High Priorities
 
-- Media manager
-  - Models
-    - PDF model (topic column)
-    - Post model
-    - Comment model
-- Blog
-  - Models
-    - Post
-    - Comment
-  - Viewsets
-    - Post
-    - Comment
+_None at this time._
 
 ## Medium Priorities
 
