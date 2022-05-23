@@ -18,13 +18,15 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         page_num = request.query_params.get('page', 1)
+        post = request.query_params.get('post', None)
         results_per_page = min(
             request.query_params.get(
                 'results', settings.DEFAULT_RESULTS_PER_PAGE),
             settings.MAX_RESULTS_PER_PAGE,
         )
 
-        comments = self.get_queryset().order_by('-updated')
+        comments = self.get_queryset(
+            post__pk=post, parent=None).order_by('-updated')
         paginator = Paginator(comments, results_per_page)
 
         try:
@@ -47,7 +49,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 'success':
-                f'Found {paginator.count} comment{"" if paginator.count == 1 else "s"}.',
+                f'Listing {len(page.object_list)} of {paginator.count} comment{"" if paginator.count == 1 else "s"}.',
                 'data': [x.obj for x in page.object_list],
                 'pagination': {
                     'totalResults': paginator.count,

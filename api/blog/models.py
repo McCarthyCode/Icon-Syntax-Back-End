@@ -37,15 +37,11 @@ class Post(TimestampedModel):
 
     @property
     def obj(self):
-        queryset = Comment.objects.filter(post__pk=self.id, parent=None)
-        comments = [x.obj for x in queryset]
-
         return OrderedDict(
             {
                 'id': self.id,
                 'title': self.title,
                 'content': self.content,
-                'comments': comments,
                 'created': self.created,
                 'updated': self.updated
             })
