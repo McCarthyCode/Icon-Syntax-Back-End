@@ -21,8 +21,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         post = request.query_params.get('post', None)
         results_per_page = min(
             request.query_params.get(
-                'results', settings.DEFAULT_RESULTS_PER_PAGE),
-            settings.MAX_RESULTS_PER_PAGE,
+                'results', settings.DEFAULT_PAGE_LEN['comment']),
+            settings.MAX_PAGE_LEN['comment'],
         )
 
         comments = self.get_queryset(

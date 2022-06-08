@@ -38,13 +38,13 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         page_num = request.query_params.get('page', 1)
-        default_results_per_page = 5
-        results_per_page = min(
-            int(request.query_params.get('results', default_results_per_page)),
-            default_results_per_page)
+        default_page_len = 5
+        page_len = min(
+            int(request.query_params.get('results', default_page_len)),
+            default_page_len)
 
         posts = self.get_queryset().order_by('-updated')
-        paginator = Paginator(posts, results_per_page)
+        paginator = Paginator(posts, page_len)
 
         try:
             page = paginator.get_page(page_num)

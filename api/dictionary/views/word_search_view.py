@@ -21,6 +21,7 @@ class WordSearchView(generics.GenericAPIView):
     """
     View class for getting search results.
     """
+
     def __error_response(self, message, status):
         return Response({
             NON_FIELD_ERRORS_KEY: [message],
@@ -50,8 +51,8 @@ class WordSearchView(generics.GenericAPIView):
         page_num = request.query_params.get('page', 1)
         results_per_page = min(
             request.query_params.get(
-                'results', settings.DEFAULT_RESULTS_PER_PAGE),
-            settings.MAX_RESULTS_PER_PAGE,
+                'results', settings.DEFAULT_PAGE_LEN['icon']),
+            settings.MAX_PAGE_LEN['icon'],
         )
 
         _word, entries = Word.objects.get_word_and_entries(word)

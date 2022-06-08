@@ -310,8 +310,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Pagination
-DEFAULT_RESULTS_PER_PAGE = 100
-MAX_RESULTS_PER_PAGE = 500
+DEFAULT_PAGE_LEN = {
+    'icon': 100,
+    'post': 5,
+    'comment': 5,
+}
+MAX_PAGE_LEN = {k: v * 5 for k, v in DEFAULT_PAGE_LEN.items()}
 
 # Count API calls (used in testing)
 COUNT_API_CALLS = False
