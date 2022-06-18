@@ -3,6 +3,9 @@ from django.core.paginator import (Paginator, InvalidPage, PageNotAnInteger)
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
+
+from api.authentication.permissions import IsSafeMethod, IsVerified, IsOwner
 
 from ..models import Post
 from ..serializers import CommentSerializer
@@ -11,10 +14,23 @@ from ..serializers import CommentSerializer
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     queryset = Post.Comment.objects.all()
+    permission_classes = [IsSafeMethod | IsAdminUser | (IsVerified & IsOwner)]
 
     def get_queryset(self, *args, **kwargs):
-        self.queryset = Post.Comment.objects.filter(*args, **kwargs)
-        return self.queryset
+        return Post.Comment.objects.filter(*args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        data = {**request.data.dict(), 'owner': request.user.pk}
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request):
         page_num = request.query_params.get('page', 1)

@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 
 from api import NON_FIELD_ERRORS_KEY
-from api.authentication.permissions import IsVerified
+from api.authentication.permissions import IsVerified, IsOwner
 
 from ..models import Icon, Category, Image
 from ..serializers import (
@@ -177,7 +177,7 @@ class IconUpdateView(generics.GenericAPIView):
     An API View for updating an icon.
     """
 
-    permission_classes = [IsAuthenticated, IsVerified]
+    permission_classes = [IsAuthenticated, IsVerified, IsOwner]
     serializer_class = IconUpdateSerializer
 
     def put(self, request, id):
@@ -208,7 +208,7 @@ class IconDeleteView(generics.GenericAPIView):
     An API View for deleting an icon.
     """
 
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser, IsOwner]
 
     def delete(self, request, id):
         icon = get_object_or_404(Icon, id=id)

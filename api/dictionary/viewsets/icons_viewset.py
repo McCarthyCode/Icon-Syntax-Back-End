@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from api import NON_FIELD_ERRORS_KEY
+from api.authentication.permissions import IsSafeMethod, IsVerified
 from api.exceptions import BadRequestError
 
 from ..models import Icon, Image
@@ -19,23 +20,13 @@ from ..serializers.icon_serializers import *
 
 class IconsViewSet(GenericViewSet):
     queryset = Icon.objects.all()
+    permission_classes = [IsSafeMethod | IsVerified | IsAdminUser]
 
     def __error_response(self, error_detail, status):
         return Response(
             {
                 NON_FIELD_ERRORS_KEY: [error_detail],
             }, status=status)
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.action in {'list', 'retrieve'}:
-            permission_classes = []
-        else:
-            permission_classes = [IsAdminUser]
-
-        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         serializers = {
@@ -131,8 +122,6 @@ class IconsViewSet(GenericViewSet):
     def create(self, request):
         if request.method != 'POST':
             raise exceptions.MethodNotAllowed(request.method)
-
-        print(request.data)
 
         serializer = IconUploadSerializer(
             data=request.data, context={'request': request})

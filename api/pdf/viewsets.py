@@ -1,8 +1,8 @@
 from rest_framework import status, viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from api.authentication.permissions import IsAdminOrReadOnly
+from api.authentication.permissions import IsSafeMethod
 
 from .models import PDF
 from .serializers import *
@@ -14,7 +14,7 @@ class PDFViewSet(viewsets.ModelViewSet):
     """
     queryset = PDF.objects.all()
     serializer_class = PDFSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsSafeMethod | IsAdminUser]
 
     def retrieve(self, request, *args, **kwargs):
         res = super().retrieve(request, *args, **kwargs)
@@ -90,7 +90,6 @@ class PDFCategoryViewset(viewsets.ModelViewSet):
     """
     queryset = PDF.Category.objects.all()
     serializer_class = PDFCategorySerializer
-    permission_classes = [AllowAny]
 
     def list(self, request, *args, **kwargs):
         objs = PDF.Category.objects.all().order_by('name')

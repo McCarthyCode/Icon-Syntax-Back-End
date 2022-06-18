@@ -48,7 +48,8 @@ class IconUploadSerializer(serializers.Serializer):
         except KeyError:
             pass
 
-        if self.context['request'].user.is_superuser:
+        user = self.context['request'].user
+        if user and (user.is_staff or user.is_superuser):
             icon.is_approved = True
             should_save = True
 

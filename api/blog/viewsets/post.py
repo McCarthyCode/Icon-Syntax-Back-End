@@ -4,9 +4,11 @@ from django.conf import settings
 from django.core.paginator import (Paginator, InvalidPage, PageNotAnInteger)
 
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from api import NON_FIELD_ERRORS_KEY
+from api.authentication.permissions import *
 
 from ..models import Post
 from ..serializers import PostSerializer
@@ -15,6 +17,7 @@ from ..serializers import PostSerializer
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
+    permission_classes = [IsSafeMethod | IsAdminUser]
 
     def __error_response(self, error_detail, status):
         return Response(

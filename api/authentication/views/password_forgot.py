@@ -63,17 +63,7 @@ class PasswordForgotVerifyView(GenericAPIView):
     Endpoint for last step of resetting a forgotten password.
     """
     serializer_class = PasswordForgotVerifySerializer
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.request.method.lower() == 'post':
-            permission_classes = [IsAuthenticated & IsVerified]
-        else:
-            permission_classes = [AllowAny]
-
-        return [permission() for permission in permission_classes]
+    permission_classes = [IsAuthenticated & IsVerified]
 
     def post(self, request):
         """
