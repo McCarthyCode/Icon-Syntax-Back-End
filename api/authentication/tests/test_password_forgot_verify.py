@@ -16,7 +16,6 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
     Tests to ensure that users can get a password reset email when they have forgetten their password.
     """
     client = APIClient
-    databases = {'admin_db'}
 
     def setUp(self):
         """

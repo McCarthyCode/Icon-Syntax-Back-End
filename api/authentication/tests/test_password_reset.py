@@ -19,7 +19,6 @@ class PasswordResetTests(TestCaseShortcutsMixin, APITestCase):
     """
     client = APIClient()
     user = None
-    databases = {'admin_db'}
 
     def setUp(self):
         """

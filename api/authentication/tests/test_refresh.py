@@ -19,7 +19,6 @@ class RefreshTests(TestCaseShortcutsMixin, APITestCase):
     client = APIClient()
     user = None
     refresh = None
-    databases = {'admin_db'}
 
     def setUp(self):
         """
