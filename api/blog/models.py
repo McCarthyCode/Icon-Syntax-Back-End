@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from django.db import models
+
 from api.models import TimestampedModel
 from api.authentication.models import User
 
@@ -30,7 +31,10 @@ class Post(TimestampedModel):
                     'post': self.post.pk,
                     'content': self.content,
                     'replies': comments,
-                    'owner': self.owner.pk if self.owner else None,
+                    'owner': {
+                        'id': self.owner.pk,
+                        'username': self.owner.username
+                    } if self.owner else None,
                     'created': self.created,
                     'updated': self.updated
                 })

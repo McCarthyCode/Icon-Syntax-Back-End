@@ -111,3 +111,14 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
                 'refresh': str(refresh),
             }
         }
+
+    @property
+    def obj(self):
+        """
+        Returns the user's id and username.
+        """
+
+        return {
+            'id': self.id,
+            'username': self.username,
+        }
