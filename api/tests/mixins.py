@@ -43,6 +43,25 @@ class TypeDictsMixin():
                     'min_length': int,
                     'max_length': int
                 },
+                'isAdmin': {
+                    'type': str,
+                    'required': bool,
+                    'read_only': bool,
+                    'label': str
+                },
+                'isVerified': {
+                    'type': str,
+                    'required': bool,
+                    'read_only': bool,
+                    'label': str
+                },
+                'userId': {
+                    'type': str,
+                    'required': bool,
+                    'read_only': bool,
+                    'label': str,
+                    'min_value': int
+                },
                 'tokens': {
                     'type': str,
                     'required': bool,
@@ -74,6 +93,7 @@ class AssertMethodsMixin():
     """
     Class containing methods to help with comparing types, keys, and values.
     """
+
     def assertListType(self, _list, _type):
         """
         Method to check the type of members of a given list, based on a given type.
@@ -156,11 +176,24 @@ class AssertMethodsMixin():
                 self.assertIsInstance(value, _type)
 
     def assertCredentialsValid(
-            self, obj, username='alice', email='alice@example.com'):
+            self,
+            obj,
+            username='alice',
+            email='alice@example.com',
+            is_admin=False,
+            is_verified=True):
         """
         Method to check fields within a credentials dictionary, comparing username and email values to given parameters and comparing tokens to settings.TOKEN_REGEX.
         """
-        fields = {'username': username, 'email': email, 'tokens': None}
+        fields = {
+            'username': username,
+            'email': email,
+            'isAdmin': is_admin,
+            'isVerified': is_verified,
+            'userId': None,
+            'tokens': None
+        }
+        self.assertIsInstance(obj['userId'], int)
         self.assertDictValues(obj, fields)
 
         tokens = obj['tokens']
@@ -195,12 +228,16 @@ class TestCaseUtilsMixin:
     """
     Utility methods that are useful across tests.
     """
-    def spoof_verification(self):
+
+    def spoof_verification(self, user=None):
         """
-        Method to set self.user.is_verified field to True, simulating the user receiving a verification email and clicking the link.
+        Method to set self.user.is_verified field to True and call user.save(), simulating the user receiving a verification email and clicking the link.
         """
-        self.user.is_verified = True
-        self.user.save()
+        if not user:
+            user = self.user
+
+        user.is_verified = True
+        user.save()
 
 
 class TestCaseShortcutsMixin(
