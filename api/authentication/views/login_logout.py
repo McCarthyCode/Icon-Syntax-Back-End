@@ -8,7 +8,10 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from rest_framework_simplejwt.exceptions import InvalidToken
+
 from api.authentication import NON_FIELD_ERRORS_KEY
+from api.authentication.permissions import IsSafeMethod
+
 from ..serializers.login_logout import *
 
 
@@ -17,6 +20,7 @@ class LoginView(GenericAPIView):
     View for taking in an existing user's credentials and authorizing them if valid or denying access if invalid.
     """
     serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request):
         """
@@ -45,7 +49,7 @@ class LogoutView(GenericAPIView):
     """
 
     serializer_class = LogoutSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsSafeMethod | IsAuthenticated]
 
     def post(self, request):
         """
