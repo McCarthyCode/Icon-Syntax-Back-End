@@ -8,11 +8,16 @@ class Util:
     """
     Class defining utility methods.
     """
+
     @staticmethod
     def send_email(subject, body, to):
         """
         Sends a single email for basic use.
         """
+
+        if not settings.SEND_EMAIL:
+            return
+
         email = EmailMessage(subject=subject, body=body, to=to)
         email.send()
 
@@ -21,6 +26,10 @@ class Util:
         """
         Sends a single email that contains an activation link.
         """
+
+        if not settings.SEND_EMAIL:
+            return
+
         if settings.STAGE == 'development':
             scheme = 'http'
             domain = 'localhost:8100'

@@ -305,3 +305,4 @@ MAX_PAGE_LEN = {k: v * 5 for k, v in DEFAULT_PAGE_LEN.items()}
 
 # Count API calls (used in testing)
 COUNT_API_CALLS = False
+SEND_EMAIL = True
