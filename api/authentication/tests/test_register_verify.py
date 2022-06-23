@@ -112,6 +112,7 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
             None,
         }
         self.assertDictValues(response.data, values)
-        self.assertCredentialsValid(response.data['credentials'])
+        self.assertCredentialsValid(
+            response.data['credentials'], is_verified=False)
 
         self.assertTrue(User.objects.get(username='alice').is_verified)
