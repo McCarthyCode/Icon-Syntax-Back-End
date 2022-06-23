@@ -5,7 +5,8 @@ from rest_framework import serializers
 
 
 class PasswordForgotVerifySerializer(serializers.Serializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        write_only=True, min_length=8, max_length=64)
 
     def validate_password(self, value):
         validate_password(value, self.context['user'])

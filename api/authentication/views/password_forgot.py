@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from api.authentication import NON_FIELD_ERRORS_KEY
+from api.authentication.permissions import IsSafeMethod
 
 from ..permissions import IsVerified
 from ..serializers import (
@@ -63,7 +64,7 @@ class PasswordForgotVerifyView(GenericAPIView):
     Endpoint for last step of resetting a forgotten password.
     """
     serializer_class = PasswordForgotVerifySerializer
-    permission_classes = [IsAuthenticated & IsVerified]
+    permission_classes = [IsSafeMethod | (IsAuthenticated & IsVerified)]
 
     def post(self, request):
         """

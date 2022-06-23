@@ -10,6 +10,7 @@ class ContainsUppercaseValidator:
     """
     Validate whether the password contains a specified minimum number of uppercase letters.
     """
+
     def __init__(self, min_chars=1):
         """
         Initialization method called at validator creation. Here, the minimum number of letters is validated and stored, with an appropriate message displayed on error.
@@ -45,6 +46,7 @@ class ContainsLowercaseValidator:
     """
     Validate whether the password contains a specified minimum number of lowercase letters.
     """
+
     def __init__(self, min_chars=1):
         """
         Initialization method called at validator creation. Here, the minimum number of letters is validated and stored, with an appropriate message displayed on error.
@@ -80,6 +82,7 @@ class ContainsNumberValidator:
     """
     Validate whether the password contains a specified minimum number of numbers.
     """
+
     def __init__(self, min_nums=1):
         """
         Initialization method called at validator creation. Here, the minimum number of numbers is validated and stored, with an appropriate message displayed on error.
@@ -96,8 +99,7 @@ class ContainsNumberValidator:
         Validation method which counts numbers and throws a ValidationError if there are not enough.
         """
         if len(re.findall(r'\d', password)) < self.min_nums:
-            raise ValidationError(
-                self.get_help_text(), 'password_missing_num')
+            raise ValidationError(self.get_help_text(), 'password_missing_num')
 
     def get_help_text(self):
         """
@@ -115,6 +117,7 @@ class ContainsPunctuationValidator:
     """
     Validate whether the password contains a specified minimum number of punctuation characters.
     """
+
     def __init__(self, min_chars=1):
         """
         Initialization method called at validator creation. Here, the minimum number of characters is validated and stored, with an appropriate message displayed on error.

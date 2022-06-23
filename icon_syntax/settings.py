@@ -162,34 +162,20 @@ DATABASES = {
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME':
-        'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME':
-        'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME':
-        'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsUppercaseValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsLowercaseValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsNumberValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsPunctuationValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.' + validator } \
+    for validator in (
+        'UserAttributeSimilarityValidator',
+        'MinimumLengthValidator',
+        'CommonPasswordValidator',
+    )
+] + [
+    { 'NAME': 'api.authentication.password_validation.' + validator } \
+        for validator in (
+        'ContainsUppercaseValidator',
+        'ContainsLowercaseValidator',
+        'ContainsNumberValidator',
+        'ContainsPunctuationValidator',
+    )
 ]
 
 # Internationalization
