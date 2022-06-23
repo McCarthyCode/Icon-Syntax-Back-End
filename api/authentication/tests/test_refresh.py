@@ -48,29 +48,12 @@ class RefreshTests(TestCaseShortcutsMixin, APITestCase):
                         'label': str,
                         'max_length': int
                     },
-                    'username': {
+                    'user': {
                         'type': str,
                         'required': bool,
                         'read_only': bool,
-                        'label': str,
-                        'max_length': int
-                    },
-                    'email': {
-                        'type': str,
-                        'required': bool,
-                        'read_only': bool,
-                        'label': str,
-                        'max_length': int
-                    },
-                    'password': {
-                        'type': str,
-                        'required': bool,
-                        'read_only': bool,
-                        'label': str,
-                        'min_length': int,
-                        'max_length': int
-                    },
-                    **self.credentials_types
+                        'label': str
+                    }
                 }
             },
             **self.options_types
@@ -88,7 +71,7 @@ class RefreshTests(TestCaseShortcutsMixin, APITestCase):
         }
 
         response = self.client.post(self.url_path, body, format='json')
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         values = {
             'success': 'You have successfully refreshed.',
@@ -108,7 +91,7 @@ class RefreshTests(TestCaseShortcutsMixin, APITestCase):
         }
 
         response = self.client.post(self.url_path, body, format='json')
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         values = {
             'success': 'You have successfully refreshed.',
