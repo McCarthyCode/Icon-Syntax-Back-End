@@ -57,6 +57,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                         'min_length': int,
                         'max_length': int
                     },
+                    **self.credentials_types
                 }
             },
             **self.options_types
@@ -163,12 +164,12 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             _(
                 'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.'
             ),
-            'username':
-            'alice',
-            'email':
-            'alice@example.com',
+            'credentials':
+            None,
         }
         self.assertDictValues(response.data, values)
+        self.assertCredentialsValid(
+            response.data['credentials'], is_verified=False)
 
     def test_invalid_email(self):
         """

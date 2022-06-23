@@ -21,20 +21,23 @@ class RegisterSerializer(serializers.ModelSerializer):
     """
     Serializes username, email, and password and creates users for use in registration.
     """
+
     class Meta:
         """
         The serializer's metaclass defining the type of model being serialized and any fields used for serialization I/O.
         """
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'credentials']
 
-    username = serializers.CharField(max_length=64)
-    email = serializers.EmailField(label='Email Address', max_length=254)
+    username = serializers.CharField(write_only=True, max_length=64)
+    email = serializers.EmailField(
+        label='Email Address', write_only=True, max_length=254)
     password = serializers.CharField(
         min_length=8,
         max_length=64,
         write_only=True,
         style={'input_type': 'password'})
+    credentials = CredentialsSerializer(read_only=True)
 
     default_error_messages = {
         'invalid':
