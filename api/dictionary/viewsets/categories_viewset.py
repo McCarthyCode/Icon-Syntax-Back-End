@@ -19,7 +19,7 @@ class CategoriesViewSet(GenericViewSet):
     permission_classes = [IsSafeMethod | IsVerified | IsAdminUser]
 
     def list(self, request):
-        parent = request.data.get('parent', None)
+        parent = request.query_params.get('parent', None)
         if parent: parent = int(parent)
 
         return Response(
