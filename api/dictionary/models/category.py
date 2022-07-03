@@ -30,22 +30,13 @@ class Category(TimestampedModel):
 
     @property
     def obj(self):
-        def common(obj):
-            return OrderedDict(
-                {
-                    'id': obj.id,
-                    'name': obj.name,
-                    'path': obj.path,
-                    'parent': obj.parent.id if obj.parent else None,
-                })
-
-        children = [
-            OrderedDict({
-                **common(x),
-            }) for x in Category.objects.filter(parent=self)
-        ]
-
-        return OrderedDict({**common(self), 'children': children})
+        return OrderedDict(
+            {
+                'id': self.id,
+                'name': self.name,
+                'path': self.path,
+                'parent': self.parent.id if self.parent else None,
+            })
 
     @classmethod
     def subcategories(cls, root_id=0):
