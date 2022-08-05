@@ -45,8 +45,8 @@ class InvalidEnvironmentVariable(Exception):
 
 try:
     for var in {'SECRET_KEY', 'STAGE', 'DATABASE_NAME', 'DATABASE_USER',
-                'DATABASE_PASSWORD', 'EMAIL_HOST_USER', 'EMAIL_HOST_PASSWORD',
-                'MW_DICTIONARY_API_KEY'}:
+                'DATABASE_PASSWORD', 'EMAIL_HOST', 'EMAIL_HOST_USER',
+                'EMAIL_HOST_PASSWORD', 'EMAIL_PORT', 'MW_DICTIONARY_API_KEY'}:
         locals()[var] = os.environ[var]
 except KeyError as exc:
     raise MissingEnvironmentVariable(exc)
@@ -222,11 +222,9 @@ AUTH_USER_MODEL = 'authentication.User'
 # Email
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL = EMAIL_HOST_USER
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST = 'smtp.zoho.com'
-EMAIL_PORT = 465
-EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
+EMAIL_USE_SSL = False
+EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Site ID
 

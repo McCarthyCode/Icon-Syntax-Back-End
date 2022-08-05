@@ -35,7 +35,7 @@ class Util:
             domain = 'localhost:8100'
         else:
             scheme = 'https'
-            domain = get_current_site(request).domain
+            domain = 'iconsyntax.org'
 
         Util.send_email(
             subject,
