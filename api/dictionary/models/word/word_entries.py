@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from api.models import TimestampedModel
+from api.dictionary.models import Icon
 
 
 class WordEntry(TimestampedModel):
@@ -19,7 +20,6 @@ class WordEntry(TimestampedModel):
 
     id = models.CharField(primary_key=True, max_length=64)
     word = models.ForeignKey('dictionary.Word', on_delete=models.CASCADE)
-    icons = models.ManyToManyField('dictionary.Icon')
     mp3 = models.ForeignKey(
         'dictionary.MP3',
         blank=True,
@@ -31,11 +31,16 @@ class WordEntry(TimestampedModel):
     def obj(self):
         return OrderedDict(
             {
-                'id': self.id,
-                'icons':
-                [icon.obj for icon in self.icons.filter(is_approved=True)],
-                'mp3': self.mp3.b64 if self.mp3 else None,
-                'data': json.loads(self.json),
+                'id':
+                self.id,
+                'icons': [
+                    icon.obj for icon in Icon.objects.filter(
+                        word=self.id, is_approved=True)
+                ],
+                'mp3':
+                self.mp3.b64 if self.mp3 else None,
+                'data':
+                json.loads(self.json),
             })
 
 

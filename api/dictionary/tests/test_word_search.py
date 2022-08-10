@@ -8,7 +8,7 @@ from api.tests.mixins import TestCaseShortcutsMixin
 from ..models import Word, DictionaryEntry
 from ..utils import DictionaryAPIManager
 
-
+'''
 class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
     """
     Tests to check search endpoints. Checks against a hard-coded URL and a reverse-lookup name in nine tests, which check for an OPTIONS request and POST requests that validate user input.
@@ -191,3 +191,4 @@ class WordSearchTests(TestCaseShortcutsMixin, APITestCase):
         self.assertDictTypes(response.data, types)
         self.assertEqual(len(response.data['results']), 20)
         self.__check_dict_entries()
+'''

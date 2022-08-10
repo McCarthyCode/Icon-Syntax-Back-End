@@ -41,14 +41,15 @@ class RegisterView(GenericAPIView):
                         return Response(exc.detail, status.HTTP_409_CONFLICT)
             return Response(exc.detail, exc.status_code)
 
+        user = serializer.save()
+
         Util.send_email_link(
             _('Verify your email address with Icon Syntax'),
             _(
                 'Thank you for registering an account with Icon Syntax! Please follow the link below to complete the registration process. If clicking it does not work, try copying the entire URL and pasting it into your address bar.'
             ),
-            serializer.save(),
-            verify,
-        )
+            user,
+            verify)
 
         return Response(
             {
@@ -56,7 +57,8 @@ class RegisterView(GenericAPIView):
                 _(
                     'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.'
                 ),
-                **serializer.data
+                'credentials':
+                user.credentials
             }, status.HTTP_201_CREATED)
 
 

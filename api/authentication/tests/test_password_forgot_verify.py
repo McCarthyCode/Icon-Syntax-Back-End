@@ -16,7 +16,6 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
     Tests to ensure that users can get a password reset email when they have forgetten their password.
     """
     client = APIClient
-    databases = {'admin_db'}
 
     def setUp(self):
         """
@@ -28,7 +27,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.url_name = 'api:auth:password-forgot-verify'
         self.url_path = f'/api/{settings.VERSION}/auth/password/forgot/verify'
 
-    def test_options_unauthenticated(self):
+    def test_options(self):
         """
         Ensure we can successfully get data from an unauthenticated OPTIONS request.
         """
@@ -37,50 +36,11 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
 
         self.assertDictTypes(response.data, self.options_types)
 
-    def test_options_authenticated(self):
-        """
-        Ensure we can successfully get data from an authenticated OPTIONS request.
-        """
-        self.spoof_verification()
-
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
-        response = self.client.options(self.url_path, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        types = {
-            'actions': {
-                'POST': {
-                    'oldPassword': {
-                        'type': str,
-                        'required': bool,
-                        'read_only': bool,
-                        'label': str,
-                        'min_length': int,
-                        'max_length': int
-                    },
-                    'newPassword': {
-                        'type': str,
-                        'required': bool,
-                        'read_only': bool,
-                        'label': str,
-                        'min_length': int,
-                        'max_length': int
-                    },
-                    **self.credentials_types
-                }
-            },
-            **self.options_types
-        }
-        self.assertDictTypes(response.data, types)
-
     def test_blank_input(self):
         """
         Ensure that the proper error messages are sent on blank input.
         """
-        body = {
-            'oldPassword': '',
-            'newPassword': '',
-        }
+        body = {'password': ''}
 
         self.spoof_verification()
 
@@ -88,15 +48,9 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         response = self.client.post(self.url_path, body, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        values = dict(
-            [
-                (
-                    key, [
-                        ErrorDetail(
-                            'This field may not be blank.', 'blank')
-                    ] \
-                ) for key in body
-            ])
+        values = {
+            'password': [ErrorDetail('This field may not be blank.', 'blank')]
+        }
         self.assertDictValues(response.data, values)
 
     def test_missing_input(self):
@@ -111,47 +65,17 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         response = self.client.post(self.url_path, body, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        values = dict(
-            [
-                (
-                    key, [
-                        ErrorDetail(
-                            'This field is required.', 'required')
-                    ] \
-                ) for key in {'oldPassword', 'newPassword'}
-            ])
+        values = {
+            'password': [ErrorDetail('This field is required.', 'required')]
+        }
+
         self.assertDictValues(response.data, values)
-
-    def test_partial_input(self):
-        """
-        Ensure that the proper error messages are sent on partial input.
-        """
-        keys = {'oldPassword', 'newPassword'}
-        bodies = [{key: 'Easypass123!'} for key in keys]
-
-        self.spoof_verification()
-
-        for body in bodies:
-            self.client.credentials(
-                HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
-            response = self.client.post(self.url_path, body, format='json')
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            for key in keys.intersection(response.data):
-                values = {
-                    key: [ErrorDetail('This field is required.', 'required')]
-                }
-                self.assertDictValues(response.data, values)
 
     def test_success(self):
         """
         Ensure that the user can successfully reset a password, and that the proper credentials are outputted.
         """
-        body = {
-            'oldPassword': 'Easypass123!',
-            'newPassword': 'Newerpass123!',
-        }
-        self.assertTrue(self.user.check_password(body['oldPassword']))
+        body = {'password': 'Newerpass123!'}
 
         self.spoof_verification()
 
@@ -167,18 +91,15 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.assertCredentialsValid(response.data['credentials'])
 
         self.user = User.objects.get(pk=self.user.pk)
-        self.assertTrue(self.user.check_password(body['newPassword']))
 
     def test_unverified(self):
         """
         Ensure that the user cannot reset their password without first verifying their email address.
         """
         body = {
-            'oldPassword': 'Easypass123!',
-            'newPassword': 'Newerpass123!',
+            'password': 'Newerpass123!',
         }
 
-        self.assertTrue(self.user.check_password(body['oldPassword']))
         self.assertFalse(self.user.is_verified)
 
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
@@ -195,16 +116,12 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.assertDictValues(response.data, values)
 
         self.user = User.objects.get(pk=self.user.pk)
-        self.assertTrue(self.user.check_password(body['oldPassword']))
 
     def test_no_header(self):
         """
         Ensure that the user cannot successfully reset a password if there is no Authorization header.
         """
-        body = {
-            'oldPassword': 'Easypass123!',
-            'newPassword': 'Newerpass123!',
-        }
+        body = {'password': 'Easypass123!'}
 
         self.spoof_verification()
 
@@ -220,40 +137,11 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         }
         self.assertDictValues(response.data, values)
 
-    def test_old_password_mismatch(self):
-        """
-        Ensure that the user cannot successfully reset a password if the old password supplied does not match the user's current password.
-        """
-        body = {
-            'oldPassword': 'wrongpass123',
-            'newPassword': 'Newerpass123!',
-        }
-        self.assertFalse(self.user.check_password(body['oldPassword']))
-
-        self.spoof_verification()
-
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user.access}')
-        response = self.client.post(self.url_path, body)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        values = {
-            NON_FIELD_ERRORS_KEY: [
-                ErrorDetail(
-                    'The old password was not correct. If you have forgotten your password, please use the "forgot password" link.',
-                    'mismatch')
-            ]
-        }
-        self.assertDictValues(response.data, values)
-
     def test_new_password_missing_uppercase(self):
         """
         Ensure that the user cannot successfully reset a password if the new password supplied does not contain an uppercase letter.
         """
-        body = {
-            'oldPassword': 'Easypass123!',
-            'newPassword': 'easypass123!',
-        }
-        self.assertTrue(self.user.check_password(body['oldPassword']))
+        body = {'password': 'easypass123!'}
 
         self.spoof_verification()
 
@@ -262,7 +150,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         values = {
-            'newPassword': [
+            'password': [
                 ErrorDetail(
                     'Your password must contain at least 1 uppercase letter.',
                     'password_missing_upper')
@@ -274,11 +162,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that the user cannot successfully reset a password if the new password supplied does not contain a lowercase letter.
         """
-        body = {
-            'oldPassword': 'Easypass123!',
-            'newPassword': 'EASYPASS123!',
-        }
-        self.assertTrue(self.user.check_password(body['oldPassword']))
+        body = {'password': 'EASYPASS123!'}
 
         self.spoof_verification()
 
@@ -287,7 +171,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         values = {
-            'newPassword': [
+            'password': [
                 ErrorDetail(
                     'Your password must contain at least 1 lowercase letter.',
                     'password_missing_lower')
@@ -299,11 +183,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that the user cannot successfully reset a password if the new password supplied does not contain a number.
         """
-        body = {
-            'oldPassword': 'Easypass123!',
-            'newPassword': 'Easypass!',
-        }
-        self.assertTrue(self.user.check_password(body['oldPassword']))
+        body = {'password': 'Easypass!'}
 
         self.spoof_verification()
 
@@ -312,7 +192,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         values = {
-            'newPassword': [
+            'password': [
                 ErrorDetail(
                     'Your password must contain at least 1 number.',
                     'password_missing_num')
@@ -324,11 +204,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that the user cannot successfully reset a password if the new password supplied does not contain a punctuation character.
         """
-        body = {
-            'oldPassword': 'Easypass123!',
-            'newPassword': 'Easypass123',
-        }
-        self.assertTrue(self.user.check_password(body['oldPassword']))
+        body = {'password': 'Easypass123'}
 
         self.spoof_verification()
 
@@ -337,7 +213,7 @@ class PasswordForgotVerifyTests(TestCaseShortcutsMixin, APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         values = {
-            'newPassword': [
+            'password': [
                 ErrorDetail(
                     'Your password must contain at least 1 of the following punctuation characters: !"#$%&'
                     "'"

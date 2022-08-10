@@ -20,6 +20,7 @@ class MissingEnvironmentVariable(Exception):
     """
     Exception to be raised when an environment variable is not defined.
     """
+
     def __init__(self, variable):
         """
         Initialization method called at exception creation. Here, the error message is defined.
@@ -31,6 +32,7 @@ class InvalidEnvironmentVariable(Exception):
     """
     Exception to be raised when the value of an environment variable is invalid.
     """
+
     def __init__(self, variable):
         """
         Initialization method called at exception creation. Here, the error message is defined.
@@ -40,26 +42,16 @@ class InvalidEnvironmentVariable(Exception):
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
+
 try:
-    SECRET_KEY = os.environ['SECRET_KEY']
-    STAGE = os.environ['STAGE']
-
-    ADMIN_DATABASE_NAME = os.environ['ADMIN_DATABASE_NAME']
-    ADMIN_DATABASE_USER = os.environ['ADMIN_DATABASE_USER']
-    ADMIN_DATABASE_PASSWORD = os.environ['ADMIN_DATABASE_PASSWORD']
-
-    DEFAULT_DATABASE_NAME = os.environ['DEFAULT_DATABASE_NAME']
-    DEFAULT_DATABASE_USER = os.environ['DEFAULT_DATABASE_USER']
-    DEFAULT_DATABASE_PASSWORD = os.environ['DEFAULT_DATABASE_PASSWORD']
-
-    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-    EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-
-    MW_DICTIONARY_API_KEY = os.environ['MW_DICTIONARY_API_KEY']
+    for var in {'SECRET_KEY', 'STAGE', 'DATABASE_NAME', 'DATABASE_USER',
+                'DATABASE_PASSWORD', 'EMAIL_HOST', 'EMAIL_HOST_USER',
+                'EMAIL_HOST_PASSWORD', 'EMAIL_PORT', 'MW_DICTIONARY_API_KEY'}:
+        locals()[var] = os.environ[var]
 except KeyError as exc:
     raise MissingEnvironmentVariable(exc)
 
-VERSION = 'v0-beta'
+VERSION = 'v0-alpha'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -78,7 +70,17 @@ elif STAGE == 'beta' or STAGE == 'production':
 else:
     raise InvalidEnvironmentVariable('STAGE')
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = [
+    'localhost',
+    'iconsyntax.org',
+    'www.iconsyntax.org',
+    'iconsyntax.com',
+    'www.iconsyntax.com',
+    'iconsyntax.net',
+    'www.iconsyntax.net',
+    'iconopedia.org',
+    'www.iconopedia.org',
+]
 
 # Application definition
 
@@ -86,6 +88,9 @@ INSTALLED_APPS = [
     'api',
     'api.authentication',
     'api.dictionary',
+    'api.blog',
+    'api.pdf',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -101,6 +106,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -109,6 +115,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if STAGE == 'production':
+    CORS_ORIGIN_ALLOW_ALL = False
+    CORS_ORIGIN_WHITELIST = (
+        'https://iconsyntax.com',
+        'https://iconsyntax.org',
+        'https://iconsyntax.net',
+    )
+else:
+    CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'icon_syntax.urls'
 
@@ -136,65 +152,30 @@ WSGI_APPLICATION = 'icon_syntax.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': DEFAULT_DATABASE_NAME,
-        'USER': DEFAULT_DATABASE_USER,
-        'PASSWORD': DEFAULT_DATABASE_PASSWORD,
-        'HOST': '',
-        'PORT': '',
-        'TEST': {
-            'DEPENDENCIES': ['admin_db'],
-        },
-    },
-    'admin_db': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': ADMIN_DATABASE_NAME,
-        'USER': ADMIN_DATABASE_USER,
-        'PASSWORD': ADMIN_DATABASE_PASSWORD,
-        'HOST': '',
-        'PORT': '',
-        'TEST': {
-            'DEPENDENCIES': [],
-        },
+        'NAME': DATABASE_NAME,
+        'USER': DATABASE_USER,
+        'PASSWORD': DATABASE_PASSWORD,
     },
 }
-DATABASE_ROUTERS = ['api.authentication.routers.AdminDBRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME':
-        'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME':
-        'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME':
-        'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME':
-        'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsUppercaseValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsLowercaseValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsNumberValidator',
-    },
-    {
-        'NAME':
-        'api.authentication.password_validation.ContainsPunctuationValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.' + validator } \
+    for validator in (
+        'UserAttributeSimilarityValidator',
+        'MinimumLengthValidator',
+        'CommonPasswordValidator',
+    )
+] + [
+    { 'NAME': 'api.authentication.password_validation.' + validator } \
+        for validator in (
+        'ContainsUppercaseValidator',
+        'ContainsLowercaseValidator',
+        'ContainsNumberValidator',
+        'ContainsPunctuationValidator',
+    )
 ]
 
 # Internationalization
@@ -227,8 +208,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',
-        'user': '1000/day',
+        'anon': '10000/day',
+        'user': '100000/day',
     },
     'EXCEPTION_HANDLER':
     'api.exceptions.exception_handler'
@@ -241,11 +222,9 @@ AUTH_USER_MODEL = 'authentication.User'
 # Email
 
 DEFAULT_FROM_EMAIL = SERVER_EMAIL = EMAIL_HOST_USER
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST = 'smtp.zoho.com'
-EMAIL_PORT = 465
-EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
+EMAIL_USE_SSL = False
+EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Site ID
 
@@ -274,43 +253,54 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # DRF Simple JWT
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Changed from default
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,  # Changed from default
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': False,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-    'AUTH_HEADER_TYPES': ('Bearer', ),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken', ),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-    'JTI_CLAIM': 'jti',
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=30),  # Changed from default
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=8 * 60 if DEBUG else 5),
+    'ROTATE_REFRESH_TOKENS': True,
+    # 'BLACKLIST_AFTER_ROTATION': True,
+    # 'UPDATE_LAST_LOGIN': False,
+
+    # 'ALGORITHM': 'HS256',
+    # 'SIGNING_KEY': SECRET_KEY,
+    # 'VERIFYING_KEY': None,
+    # 'AUDIENCE': None,
+    # 'JWK_URL': None,
+    # 'ISSUER': None,
+
+    # 'AUTH_HEADER_TYPES': ('Bearer', ),
+    # 'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    # 'USER_ID_FIELD': 'id',
+    # 'USER_ID_CLAIM': 'user_id',
+    # 'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    # 'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken', ),
+    # 'TOKEN_TYPE_CLAIM': 'token_type',
+
+    # 'JTI_CLAIM': 'jti',
+
+    # 'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    # 'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    # 'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 # Default, front end paths for verification pages sent by email
 
 FRONT_END_VERIFY_PATHS = {
-    'REGISTER': '/register/verify',
-    'PASSWORD_FORGOT': '/password/forgot/verify',
+    'REGISTER': '/register',
+    'PASSWORD_FORGOT': '/forgot-password',
 }
 
 # Media definitions
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-# Pagination
 
-DEFAULT_RESULTS_PER_PAGE = 20
-MAX_RESULTS_PER_PAGE = 100
+# Pagination
+DEFAULT_PAGE_LEN = {
+    'icon': 100,
+    'post': 5,
+    'comment': 5,
+}
+MAX_PAGE_LEN = {k: v * 5 for k, v in DEFAULT_PAGE_LEN.items()}
 
 # Count API calls (used in testing)
 COUNT_API_CALLS = False
+SEND_EMAIL = True

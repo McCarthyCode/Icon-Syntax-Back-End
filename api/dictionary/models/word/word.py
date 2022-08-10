@@ -72,5 +72,5 @@ class Word(TimestampedModel):
                 'word': self.id,
                 'dictionary': dictionary,
                 'thesaurus': None,
-                'word-net': None,
+                'wordNet': None,
             })

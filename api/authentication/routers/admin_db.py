@@ -1,5 +1,7 @@
 class AdminDBRouter:
     """
+    DEPRECATED
+
     A router to control all database operations on models in the authentication application, all and any dependent applications, and Django administrative applications.
     """
     route_app_labels = {

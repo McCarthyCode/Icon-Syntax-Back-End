@@ -17,7 +17,6 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
     """
     client = APIClient()
     user = None
-    databases = {'admin_db'}
 
     def setUp(self):
         """
@@ -128,6 +127,10 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
                 'email': 'alice@example.com',
             },
             {
+                'username': 'alice',
+                'email': 'alice@example.com',
+            },
+            {
                 'password': 'Easypass123!'
             },
         ]
@@ -185,11 +188,10 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         }
 
         response = self.client.post(self.url_path, body, format='json')
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         values = {
             'success': 'You have successfully logged in.',
-            'redirect': '/',
             'credentials': None,
         }
 
@@ -208,11 +210,10 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         }
 
         response = self.client.post(self.url_path, body, format='json')
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         values = {
             'success': 'You have successfully logged in.',
-            'redirect': '/',
             'credentials': None,
         }
 
@@ -284,7 +285,7 @@ class LoginTests(TestCaseShortcutsMixin, APITestCase):
         """
         Ensure that a deactivated user cannot login, even with the correct credentials.
         """
-        self.spoof_verification()
+        self.user.is_verified = True
         self.user.is_active = False
         self.user.save()
 

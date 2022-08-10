@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
@@ -6,6 +7,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from api.authentication import NON_FIELD_ERRORS_KEY
+from api.authentication.models import User
 
 from ..serializers import RefreshSerializer
 
@@ -20,7 +22,6 @@ class RefreshView(GenericAPIView):
         """
         POST method for refreshing an access token
         """
-        redirect_uri = request.query_params.get('redirect', '/')
         serializer = self.serializer_class(data=request.data)
 
         try:
@@ -32,7 +33,6 @@ class RefreshView(GenericAPIView):
         return Response(
             {
                 'success': str(_('You have successfully refreshed.')),
-                'redirect': redirect_uri,
-                'credentials': serializer.validated_data
+                'credentials': serializer.validated_data['user'].credentials
             },
-            status=status.HTTP_303_SEE_OTHER)
+            status=status.HTTP_200_OK)

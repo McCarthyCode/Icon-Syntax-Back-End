@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from api.authentication import NON_FIELD_ERRORS_KEY
 
-from ..permissions import IsVerified
+from ..permissions import IsSafeMethod, IsVerified
 from ..serializers import PasswordResetSerializer
 
 
@@ -18,17 +18,7 @@ class PasswordResetView(GenericAPIView):
     First step in the process of resetting a password when the original one is known.
     """
     serializer_class = PasswordResetSerializer
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.request.method.lower() == 'post':
-            permission_classes = [IsAuthenticated & IsVerified]
-        else:
-            permission_classes = [AllowAny]
-
-        return [permission() for permission in permission_classes]
+    permission_classes = [IsSafeMethod | (IsAuthenticated & IsVerified)]
 
     def post(self, request):
         """

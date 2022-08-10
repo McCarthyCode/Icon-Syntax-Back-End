@@ -10,9 +10,12 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from api.authentication import NON_FIELD_ERRORS_KEY
+from api.authentication.permissions import IsSafeMethod
 
 from ..permissions import IsVerified
-from ..serializers import PasswordForgotSerializer, PasswordResetSerializer
+from ..serializers import (
+    PasswordForgotSerializer, PasswordResetSerializer,
+    PasswordForgotVerifySerializer)
 from ..utils import Util
 
 
@@ -60,18 +63,8 @@ class PasswordForgotVerifyView(GenericAPIView):
     """
     Endpoint for last step of resetting a forgotten password.
     """
-    serializer_class = PasswordResetSerializer
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.request.method.lower() == 'post':
-            permission_classes = [IsAuthenticated & IsVerified]
-        else:
-            permission_classes = [AllowAny]
-
-        return [permission() for permission in permission_classes]
+    serializer_class = PasswordForgotVerifySerializer
+    permission_classes = [IsSafeMethod | (IsAuthenticated & IsVerified)]
 
     def post(self, request):
         """
@@ -85,8 +78,10 @@ class PasswordForgotVerifyView(GenericAPIView):
         except (AuthenticationFailed, ValidationError) as exc:
             return Response(exc.detail, exc.status_code)
 
+        user = serializer.save()
+
         return Response(
             {
                 'success': _('Your password has been reset successfully.'),
-                'credentials': serializer.save()
+                'credentials': user.credentials
             }, status.HTTP_202_ACCEPTED)

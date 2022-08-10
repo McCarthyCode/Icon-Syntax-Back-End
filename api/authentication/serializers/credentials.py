@@ -33,4 +33,7 @@ class CredentialsSerializer(serializers.Serializer):
         write_only=True,
         required=False,
         style={'input_type': 'password'})
+    isAdmin = serializers.BooleanField(label='Is Admin')
+    isVerified = serializers.BooleanField(label='Is Verified')
+    userId = serializers.IntegerField(label='User ID', min_value=1)
     tokens = TokensSerializer()

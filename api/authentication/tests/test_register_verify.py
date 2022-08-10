@@ -16,7 +16,6 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
     Tests to check email verification endpoints. Checks against a hard-coded URL and a reverse-lookup name in five tests, which check for an OPTIONS request and POST requests that validate a query string.
     """
     client = APIClient()
-    databases = {'admin_db'}
 
     def setUp(self):
         """
@@ -113,6 +112,7 @@ class RegisterVerifyTests(TestCaseShortcutsMixin, APITestCase):
             None,
         }
         self.assertDictValues(response.data, values)
-        self.assertCredentialsValid(response.data['credentials'])
+        self.assertCredentialsValid(
+            response.data['credentials'], is_verified=False)
 
         self.assertTrue(User.objects.get(username='alice').is_verified)

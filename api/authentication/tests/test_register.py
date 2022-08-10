@@ -17,7 +17,6 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
     Tests to check registration endpoints. Checks against a hard-coded URL and a reverse-lookup name in fifteen tests, which check for an OPTIONS request and POST requests that validate user input.
     """
     client = APIClient()
-    databases = {'admin_db'}
 
     def setUp(self):
         """
@@ -58,6 +57,7 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
                         'min_length': int,
                         'max_length': int
                     },
+                    **self.credentials_types
                 }
             },
             **self.options_types
@@ -164,12 +164,12 @@ class RegisterTests(TestCaseShortcutsMixin, APITestCase):
             _(
                 'Step 1 of user registration successful. Check your email for a confirmation link to complete the process.'
             ),
-            'username':
-            'alice',
-            'email':
-            'alice@example.com',
+            'credentials':
+            None,
         }
         self.assertDictValues(response.data, values)
+        self.assertCredentialsValid(
+            response.data['credentials'], is_verified=False)
 
     def test_invalid_email(self):
         """

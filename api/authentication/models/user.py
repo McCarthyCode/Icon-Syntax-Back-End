@@ -12,6 +12,7 @@ class UserManager(BaseUserManager):
     """
     Manager for User class as a whole, as oppposed to individual instances.
     """
+
     def create_user(self, username, email, password):
         """
         Creates and saves a User with the given username, email, and raw password.
@@ -102,8 +103,22 @@ class User(AbstractBaseUser, PermissionsMixin, TimestampedModel):
         return {
             'username': self.username,
             'email': self.email,
+            'isAdmin': self.is_staff or self.is_superuser,
+            'isVerified': self.is_verified,
+            'userId': self.pk,
             'tokens': {
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
             }
+        }
+
+    @property
+    def obj(self):
+        """
+        Returns the user's id and username.
+        """
+
+        return {
+            'id': self.id,
+            'username': self.username,
         }

@@ -1,3 +1,6 @@
+from django.conf import settings
+from django.core.paginator import (Paginator, InvalidPage, PageNotAnInteger)
+from django.db.models.signals import post_save
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 
@@ -8,11 +11,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 
 from api import NON_FIELD_ERRORS_KEY
-from api.authentication.permissions import IsVerified
+from api.authentication.permissions import IsVerified, IsOwner
 
-from ..models import Icon
+from ..models import Icon, Category, Image
 from ..serializers import (
-    IconUploadSerializer, IconApproveSerializer, IconRetrieveSerializer)
+    IconUploadSerializer, IconApproveSerializer, IconUpdateSerializer)
 
 
 class IconUploadView(generics.GenericAPIView):
@@ -30,7 +33,7 @@ class IconUploadView(generics.GenericAPIView):
             {
                 NON_FIELD_ERRORS_KEY: [
                     ErrorDetail(
-                        'The request was invalid. Be sure to include an image of maximum width 60 pixels and exact height 54 pixels.',
+                        'The request was invalid. Be sure to include an image of maximum width 64 pixels and exact height 54 pixels.',
                         'bad_request')
                 ]
             },
@@ -47,10 +50,14 @@ class IconUploadView(generics.GenericAPIView):
         except ValidationError as exc:
             return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer.save()
+        icon = serializer.save()
 
         return Response(
-            {'success': 'File upload successful.'}, status=status.HTTP_200_OK)
+            {
+                'success': 'File upload successful.',
+                'icon': icon.obj
+            },
+            status=status.HTTP_201_CREATED)
 
 
 class IconApproveView(generics.GenericAPIView):
@@ -77,7 +84,8 @@ class IconRetrieveView(generics.GenericAPIView):
     """
     An API View for retrieving icon data.
     """
-    serializer_class = IconRetrieveSerializer
+
+    # serializer_class = IconRetrieveSerializer
 
     def get(self, request, id):
         """
@@ -85,4 +93,128 @@ class IconRetrieveView(generics.GenericAPIView):
         """
         icon = get_object_or_404(Icon, id=id)
 
-        return Response(icon.obj, status=status.HTTP_200_OK)
+        return Response({'data': icon.obj}, status=status.HTTP_200_OK)
+
+
+class IconListView(generics.GenericAPIView):
+    """
+    An API View for listing multiple icons.
+    """
+
+    # serializer_class = IconListSerializer
+
+    def __success_response(self, paginator, page):
+        return Response(
+            {
+                'data': [x.obj for x in page.object_list],
+                'pagination': {
+                    'totalResults': paginator.count,
+                    'maxResultsPerPage': paginator.per_page,
+                    'numResultsThisPage': len(page.object_list),
+                    'thisPageNumber': page.number,
+                    'totalPages': paginator.num_pages,
+                    'prevPageExists': page.has_previous(),
+                    'nextPageExists': page.has_next(),
+                }
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def get(self, request):
+        """
+        Action to retrieve data pertaining to an icon, including ID, image data, and a MD5 hashsum.
+        """
+        search = request.query_params.get('search', None)
+        category_id = request.query_params.get('category', None)
+        page_num = request.query_params.get('page', 1)
+
+        results_per_page = min(
+            request.query_params.get(
+                'results', settings.DEFAULT_PAGE_LEN['icon']),
+            settings.MAX_PAGE_LEN['icon'],
+        )
+
+        icons = []
+        if search and category_id:
+            category = get_object_or_404(Category, id=category_id)
+            icons = Icon.by_category(
+                category.id, filter_kwargs={'word__istartswith': search})
+        elif search and not category_id:
+            icons = list(Icon.objects.filter(word__istartswith=search))
+        elif not search and category_id:
+            category = get_object_or_404(Category, id=category_id)
+            icons = Icon.by_category(category.id)
+        else:
+            icons = list(Icon.objects.all())
+
+        icons = sorted(icons, key=lambda x: x.word.lower())
+        if search:
+            icons = sorted(icons, key=lambda x: len(x.word))
+
+        paginator = Paginator(icons, results_per_page)
+        try:
+            page = paginator.get_page(page_num)
+        except PageNotAnInteger:
+            return self.__error_response(
+                ErrorDetail(
+                    _('Query parameter "page" must be an integer.'),
+                    'invalid_type'),
+                status.HTTP_400_BAD_REQUEST,
+            )
+        except InvalidPage:
+            return self.__error_response(
+                ErrorDetail(
+                    _('Query parameter "page" does not exist.'),
+                    'invalid_page_num'),
+                status.HTTP_404_NOT_FOUND,
+            )
+
+        return self.__success_response(paginator, page)
+
+
+class IconUpdateView(generics.GenericAPIView):
+    """
+    An API View for updating an icon.
+    """
+
+    permission_classes = [IsAuthenticated, IsVerified, IsOwner]
+    serializer_class = IconUpdateSerializer
+
+    def put(self, request, id):
+        """
+        Action to update an icon.
+        """
+        icon = get_object_or_404(Icon, id=id)
+
+        serializer = self.serializer_class(
+            data=request.data, instance=icon, context={'request': request})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as exc:
+            return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+
+        icon = serializer.save()
+
+        return Response(
+            {
+                'success': 'File upload successful.',
+                'icon': icon.obj
+            },
+            status=status.HTTP_200_OK)
+
+
+class IconDeleteView(generics.GenericAPIView):
+    """
+    An API View for deleting an icon.
+    """
+
+    permission_classes = [IsAdminUser, IsOwner]
+
+    def delete(self, request, id):
+        icon = get_object_or_404(Icon, id=id)
+
+        post_save.disconnect(Image.post_save, sender=Icon, dispatch_uid='0')
+        icon.delete()
+        post_save.connect(Image.post_save, sender=Icon, dispatch_uid='0')
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
